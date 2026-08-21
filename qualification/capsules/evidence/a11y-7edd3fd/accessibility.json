@@ -1,0 +1,120 @@
+{
+ "explanation": "Each preference is applied on its own and reverted before the next, so no figure below is measured against a desktop another setting has already changed. Text scaling: 0.192378 at 125%, 0.257501 at 150%, 0.296761 at 200%. High contrast: 0.970784. Noise floor 0.00053, measured from a screenshot taken at the same settings as the baseline. The default stylesheet is generated and carries 75 font sizes, 75 of them absolute pixels.",
+ "measurements": {
+  "comparisons": [
+   {
+    "boundingBox": {
+     "height": 404,
+     "width": 1566,
+     "x": 272,
+     "y": 5
+    },
+    "isTheControl": false,
+    "note": "reduced motion, alone",
+    "pixelsDiffering": 1068,
+    "screenshot": "a11y-02-reduced-motion",
+    "shareOfScreen": 0.000515,
+    "timesNoiseFloor": 1.0
+   },
+   {
+    "boundingBox": {
+     "height": 1060,
+     "width": 1920,
+     "x": 0,
+     "y": 0
+    },
+    "isTheControl": false,
+    "note": "text-scaling-factor 1.25, alone",
+    "pixelsDiffering": 398915,
+    "screenshot": "a11y-06-text-125",
+    "shareOfScreen": 0.192378,
+    "timesNoiseFloor": 363.0
+   },
+   {
+    "boundingBox": {
+     "height": 1060,
+     "width": 1920,
+     "x": 0,
+     "y": 0
+    },
+    "isTheControl": false,
+    "note": "text-scaling-factor 1.5, alone",
+    "pixelsDiffering": 533954,
+    "screenshot": "a11y-03-large-text",
+    "shareOfScreen": 0.257501,
+    "timesNoiseFloor": 485.9
+   },
+   {
+    "boundingBox": {
+     "height": 1060,
+     "width": 1920,
+     "x": 0,
+     "y": 0
+    },
+    "isTheControl": false,
+    "note": "text-scaling-factor 2.0, alone",
+    "pixelsDiffering": 615363,
+    "screenshot": "a11y-07-text-200",
+    "shareOfScreen": 0.296761,
+    "timesNoiseFloor": 559.9
+   },
+   {
+    "boundingBox": {
+     "height": 1080,
+     "width": 1920,
+     "x": 0,
+     "y": 0
+    },
+    "isTheControl": false,
+    "note": "high contrast, alone",
+    "pixelsDiffering": 2013017,
+    "screenshot": "a11y-04-high-contrast",
+    "shareOfScreen": 0.970784,
+    "timesNoiseFloor": 1831.7
+   },
+   {
+    "boundingBox": {
+     "height": 404,
+     "width": 1566,
+     "x": 272,
+     "y": 5
+    },
+    "isTheControl": true,
+    "note": "everything restored: the control",
+    "pixelsDiffering": 1099,
+    "screenshot": "a11y-05-restored",
+    "shareOfScreen": 0.00053,
+    "timesNoiseFloor": 1.0
+   }
+  ],
+  "noiseFloorShare": 0.00053,
+  "screen": {
+   "height": 1080,
+   "width": 1920
+  },
+  "stylesheet": {
+   "absolutePixelFontSizes": 75,
+   "colourLiterals": 229,
+   "fontSizeDeclarations": 75,
+   "note": "The generated sheet is one theme rendered at one scale, so its literals are expected. What matters is that they are output: tests/shell/test_design_system.py measures that every one of them moves when a setting does."
+  }
+ },
+ "schemaVersion": 2,
+ "screenshots": {
+  "a11y-01-default.png": "88d45321118272addcd4993f8cd16396c15ae80b738ea866adfc911ab9b207aa",
+  "a11y-02-reduced-motion.png": "68ca9011df6287eec518c1f72303b85900d2d5862542c7a89a36bdd3f473c267",
+  "a11y-03-large-text.png": "5b474a2434dec5cdfa0c3c106e9cfc50242519e102968d173e18202846b7c8c8",
+  "a11y-04-high-contrast.png": "aa892dc54c922de540dcfc0759576a039a8e946a67dfe89787d32235e2f8f674",
+  "a11y-05-restored.png": "de55eac2d767ef5130f0c7c8e2d0599b824a8ea59cfc75bb7ed5fd9932e03530",
+  "a11y-06-text-125.png": "ba2c94b5c647e2976ea324818ef12e0826d774f683b54939cc150fff9dca0e81",
+  "a11y-07-text-200.png": "bedfc7cdfbd9c3477be8fd6a858cf81ab0dd1f02cbd373e4fb68743bd11a4319"
+ },
+ "section": "accessibility",
+ "verdicts": {
+  "high-contrast": "PASS",
+  "reduced-motion": "NOT_MEASURABLE_BY_SCREENSHOT",
+  "text-scaling-125": "PASS",
+  "text-scaling-150": "PASS",
+  "text-scaling-200": "PASS"
+ }
+}

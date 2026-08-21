@@ -166,7 +166,27 @@ if [[ "${interact}" == "1" ]]; then
   echo "--- interaction (clicking the Bunny UI) ---"
   # The driver blocks until the guest's probe announces itself on the control
   # channel, so it is started after the screenshots rather than racing them.
+  a11y_flag=()
+  if [[ "${BUNNY_DESKTOP_ACCESSIBILITY:-0}" == "1" ]]; then
+    a11y_flag=(--accessibility)
+  fi
+  # Separate from --accessibility on purpose. Orca is started before the journey
+  # and left running through it, which slows every interaction in the run and
+  # changes what the desktop is doing while the pixels are compared; a text
+  # scaling measurement taken with a screen reader running is a measurement of
+  # something else.
+  if [[ "${BUNNY_DESKTOP_SCREEN_READER:-0}" == "1" ]]; then
+    a11y_flag+=(--screen-reader)
+  fi
+  # Idle CPU and memory, and what a theme change costs. Also separate: the
+  # sample is twenty seconds of the session doing nothing, and a run that was
+  # driving the desktop through it would be measuring the driver.
+  if [[ "${BUNNY_DESKTOP_PERFORMANCE:-0}" == "1" ]]; then
+    a11y_flag+=(--performance)
+  fi
   if python3 build/scripts/desktop-drive.py \
+      --journey "${BUNNY_DESKTOP_JOURNEY:-skip}" \
+      "${a11y_flag[@]}" \
       --qmp "${qmp}" --control "${control}" \
       --width "${width}" --height "${height}" \
       --screens "${work}/screens" \

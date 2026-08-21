@@ -1,0 +1,40 @@
+{
+ "fixtureClass": "TEST_FIXTURE_ONLY",
+ "purpose": "Drives the reproduction dry runs: a REPRODUCED attempt, a NOT_REPRODUCED attempt (the finding and the report remain valid open evidence), and an attempt on a successor artifact that moves nothing without a recorded applicability relationship. Tests fill sourceReport with the scratch intake id.",
+ "reproduced": {
+  "attemptId": "R-001",
+  "sourceReport": "INTAKE-001",
+  "artifactTested": "e906a48793d7",
+  "environment": "constructed fixture: QEMU/KVM 9.1 reference VM",
+  "hypothesis": "constructed fixture: the freeze follows the settings panel grab",
+  "method": "constructed fixture: scripted panel open/close x20 while the character animates",
+  "result": "REPRODUCED",
+  "limitations": "constructed fixture: VM only",
+  "date": "2026-08-18",
+  "operator": "constructed control operator"
+ },
+ "notReproduced": {
+  "attemptId": "R-002",
+  "sourceReport": "INTAKE-001",
+  "artifactTested": "e906a48793d7",
+  "environment": "constructed fixture: QEMU/KVM 9.1 reference VM",
+  "hypothesis": "constructed fixture: flicker reproduces on panel open",
+  "method": "constructed fixture: panel open/close x50, frame capture compared",
+  "result": "NOT_REPRODUCED",
+  "limitations": "constructed fixture: tester hardware GPU not matched; VM uses llvmpipe",
+  "date": "2026-08-18",
+  "operator": "constructed control operator"
+ },
+ "successorAttempt": {
+  "attemptId": "R-003",
+  "sourceReport": "INTAKE-001",
+  "artifactTested": "fixture-successor-alpha",
+  "environment": "constructed fixture: QEMU/KVM 9.1 reference VM",
+  "hypothesis": "constructed fixture: the freeze persists on the successor build",
+  "method": "constructed fixture: same scripted panel exercise",
+  "result": "REPRODUCED",
+  "limitations": "constructed fixture: different artifact",
+  "date": "2026-08-18",
+  "operator": "constructed control operator"
+ }
+}

@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "record": "update-support-policy",
+  "releaseClass": "alpha",
+  "decision": "UNSUPPORTED",
+  "decidedOn": "2026-08-18",
+
+  "approver": {
+    "name": "Raviteja Allamsetti",
+    "role": "Product and Security owner",
+    "accountableFor": "the decision that Bunny OS ships no update capability in the alpha release class, and the risk that carries",
+    "isSoleProjectPrincipal": true,
+    "governanceLimitation": "The approver is also the project's only engineer. This is a single-person decision. It satisfies the requirement that an unsupported-update policy have an accountable owner; it does not satisfy the separate two-person requirements in docs/SIGNING_ROLE_SEPARATION.md, and it is not offered as doing so."
+  },
+
+  "boundTo": {
+    "artifactCommit": "e906a48793d74544b39c14cc3e35e0654f5311e2",
+    "imageReference": "localhost/bunny-os-beta:e906a48793d7",
+    "imageManifestDigest": "sha256:c87a6616008ce34f97840f63814e08fdb33574b52202fbb4841b7f5aa7f8562d",
+    "note": "The policy binds to an artifact, not to a branch or to HEAD. A different artifact needs its own policy record and its own refusal qualification."
+  },
+
+  "questions": {
+    "whereMetadataComesFrom": "Nowhere. The shipped /etc/bunny-os/update.json names https://updates.invalid.bunny-os.example/developer/x86_64/manifest.json, a host in a reserved-for-invalid namespace that cannot resolve. No update metadata is published for this release class and no endpoint is operated.",
+    "howMetadataIsAuthenticated": "The mechanism exists and is unused. A manifest carries keyId and a base64 raw signature; bunny-update-agent canonicalises the manifest with the signature field removed (sorted keys, no whitespace, UTF-8) and verifies it with openssl pkeyutl -verify -pubin -rawin against /usr/share/bunny-os/update-keys/<keyId>.pem. Measured in qualification/phase6/update/evidence/refusal-qualification.json checks B3 and B4: a correctly signed manifest verifies, and one whose payload was altered by a single field is refused with bad_signature.",
+    "whatRootOfTrustIsPresent": "None. /usr/share/bunny-os/update-keys/ contains exactly one file, revoked-keys.json, and zero .pem files. Measured as check A1. Consequently every manifest, however well formed, is refused with unknown_key - measured as check B1. There is no trusted key because there is no production signing key, and there is no production signing key because the ceremony requires a second person who does not exist.",
+    "howRootRotationIsHandled": "Not handled, and this is a design limitation rather than an omission from this policy. The trust store is flat: trust is conferred by the presence of <keyId>.pem inside the image, so adding, rotating or removing a key means shipping a new image. revoked-keys.json can deny a keyId ahead of the key lookup - measured as check B2 - but it too ships inside the image. There is no key-signing key, no online rotation path, and no way to distrust a key without an OS update, which is the mechanism that would itself be unavailable. Any move to decision A must resolve this before a key is ever issued.",
+    "whatHappensWhenVerificationFails": "It fails closed and does nothing. Every failure raises an UpdateError, writes a status record, prints the error to stderr and exits 2; no deployment is staged or switched. Measured across checks A4 to A6 (not_configured as shipped), C2 (download_failed when enabled with no reachable source), B1, B2 and B4 (unknown_key, revoked_key, bad_signature). There is no partial-application path: bootc switch is only reached after the manifest has fully validated.",
+    "whatPreventsDowngradeOrSubstitution": "Four controls, three of them measured. Sequence monotonicity: a manifest whose sequence is below the highest accepted is refused with rollback_attack, and staging additionally refuses an equal sequence - checks D1 and D2. Digest pinning: the manifest names imageDigest and the agent switches to reference@digest, so a substituted tag cannot be deployed. Repository allow-listing: imageReference must lie under a configured prefix or the manifest is refused with untrusted_image. Expiry: a manifest whose expiresAt has passed is refused. For this release class all four are moot, because the first control - a trusted key - is absent.",
+    "howRollbackInteractsWithTrustedUpdates": "They do not interact, and that is the reason rollback still works. Rollback is bootc rollback plus a reboot, a local administrative action that consults no manifest, no key and no network. It is proven for this artifact pair: e501218f2fe0 to e906a48793d7 with all five user-state markers surviving. Two consequences worth stating. The anti-rollback sequence counter lives in /var/lib/bunny-os/update/, which belongs to the stateroot and survives a rollback, so rolling back the OS does not reset the highest accepted update sequence - the desirable direction. And because rollback needs no trust root, declaring updates unsupported removes nothing from the recovery story."
+  },
+
+  "waivedScenarios": [],
+  "waivedScenariosNote": "Deliberately empty. This policy does not relabel a single row of the update matrix. The matrix answers 'has this scenario been executed?' and the honest answer for all thirteen is still no. Converting NOT_RUN into NOT_APPLICABLE would make the matrix complete without anything having been measured, which is the exact move §17 forbids and the exact shape four earlier harnesses in this project took. What the policy changes is what the release is required to demonstrate, not what the matrix records about what was run.",
+
+  "refusalQualification": {
+    "evidence": "qualification/phase6/update/evidence/refusal-qualification.json",
+    "negativeControl": "qualification/phase6/update/evidence/negative-control/refusal-qualification.json",
+    "instrument": "qualification/phase6/update/refusal_probe.py",
+    "instrumentTests": "tests/update/test_phase6_refusal_probe.py",
+    "method": "container run from the subject artifact's own image, --network=none",
+    "methodLimitation": "A container is not a booted system. These checks exercise the shipped agent, the shipped configuration and the shipped trust store from the artifact's own filesystem; they do not exercise systemd unit activation, the timer, or behaviour under a real network stack. A8 reads the enablement symlinks statically rather than asking systemd.",
+    "requiredChecks": 18,
+    "result": "AS_INTENDED",
+    "negativeControlResult": "UNEXPECTED",
+    "negativeControlNote": "Planting a signing key in the trust store and enabling updates flips 7 of the 18 checks to UNEXPECTED. Without that the AS_INTENDED result would be consistent with a probe that cannot fail."
+  },
+
+  "whatThisPolicyDoesNotClaim": [
+    "It does not claim the update mechanism is secure. It claims the mechanism is unreachable, and that its refusal to act was measured rather than assumed.",
+    "It does not close the update matrix. All thirteen scenarios remain NOT_RUN with their recorded reasons.",
+    "It does not substitute for an independent security review of the update design. The reviewer is handed the design observation that _verify_signature is the last call in _validate_manifest, so a manifest's fields are parsed and compared before it is known to be authentic.",
+    "It does not apply to any artifact other than the one named in boundTo."
+  ],
+
+  "reviewCondition": "This policy is void, and the update gate reverts to BLOCKED, on any of: (a) a production signing key being created; (b) any trusted key being shipped in /usr/share/bunny-os/update-keys/; (c) /etc/bunny-os/update.json shipping enabled true; (d) promotion beyond the alpha release class; (e) 2027-02-18, twelve months from the decision, whichever is soonest.",
+  "expires": "2027-02-18",
+
+  "consequencesForUsers": "An alpha installation receives no operating-system updates of any kind, including security updates. The 8 Critical and 80 total advisories inherited from the base image cannot be remediated in the field; remediation requires reinstalling from a newer artifact. This must be stated to every alpha user before installation, and is a required item in the Alpha consent record."
+}

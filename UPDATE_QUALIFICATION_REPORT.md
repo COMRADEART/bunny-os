@@ -1,8 +1,8 @@
 # Update qualification report
 
-Date: 2026-07-29  
+Date: 2026-08-18T16:22:03Z  
 Candidate commit: `79bb99ddb39d8a5dbc279629f43b23346fb0e5e8`  
-Result: **NOT QUALIFIED** — 0 of 13 scenarios resolved, 0 failing, 13 not run.
+Result: **NOT QUALIFIED** — 1 of 13 scenarios resolved, 0 failing, 12 not run.
 
 Thirteen scenarios covering the happy path and twelve failure paths, including interrupted download and staging, insufficient disk, invalid signature, expired metadata, wrong architecture, and failures of service health, graphical session and the Bunny contract.
 
@@ -14,7 +14,6 @@ Thirteen scenarios covering the happy path and twelve failure paths, including i
 | `interrupted-download` | NOT_RUN | source-inspection | — |
 | `interrupted-staging` | NOT_RUN | source-inspection | — |
 | `insufficient-disk` | NOT_RUN | source-inspection | — |
-| `invalid-signature` | NOT_RUN | source-inspection | — |
 | `expired-metadata` | NOT_RUN | source-inspection | — |
 | `wrong-architecture` | NOT_RUN | source-inspection | — |
 | `failed-service-health` | NOT_RUN | source-inspection | — |
@@ -23,6 +22,7 @@ Thirteen scenarios covering the happy path and twelve failure paths, including i
 | `automatic-rollback-recommendation` | NOT_RUN | source-inspection | — |
 | `manual-rollback` | NOT_RUN | source-inspection | — |
 | `recovery-assisted-rollback` | NOT_RUN | source-inspection | — |
+| `invalid-signature` | PASS | virtual-machine | `qualification/installed-system/evidence/collections/update-invalid-signature.json` |
 
 ## Why these scenarios have not run
 
@@ -36,7 +36,6 @@ Each of these is blocking. `NOT_RUN` is not a soft state:
 - `interrupted-download`
 - `interrupted-staging`
 - `insufficient-disk`
-- `invalid-signature`
 - `expired-metadata`
 - `wrong-architecture`
 - `failed-service-health`

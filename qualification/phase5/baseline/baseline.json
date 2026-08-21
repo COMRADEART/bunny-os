@@ -1,0 +1,170 @@
+{
+ "schemaVersion": 1,
+ "record": "phase5-baseline",
+ "writtenBefore": "any Phase 5 change",
+ "note": "A record OF Phase 4. Phase 4 evidence in qualification/phase4/ is never edited by Phase 5. Where a Phase 5 measurement disputes a value here, the Phase 5 measurement is published under qualification/phase5/ and this file stays as written.",
+ "identity": {
+  "phase4OpenedAt": "b0b92482",
+  "phase4FinalTreeCommit": "e4d01389",
+  "artifactCommit": "e906a48793d74544b39c14cc3e35e0654f5311e2",
+  "report": "ALPHA_RELEASE_CANDIDATE_REPORT.md",
+  "artifactRecord": "qualification/phase4/artifact/ARTIFACT.md",
+  "corrections": "qualification/phase4/artifact/CORRECTION.md",
+  "evidenceFileCount": 166,
+  "status": "READY - Alpha Release Candidate only",
+  "commitsBetweenArtifactAndFinalTree": 12,
+  "artifactIsNotTheTree": "8 of the 12 commits touch build/, a COPY root; a rebuild at e4d01389 will not reproduce these digests"
+ },
+ "digests": {
+  "liveIso": {
+   "sha256": "823d50caba35afe72452768affd5f6fa0ac8cfc13c164f0e1bc909fa887ab421",
+   "name": "bunny-os-0.3.0-live.e906a48793d7-x86_64.iso"
+  },
+  "shellTestImage": {
+   "sha256": "83c31d0640e4aef6059004d5ff3f954879bd92a3723f4173dc71e53a39963a99",
+   "name": "bootc-fedora-44-qcow2-x86_64.qcow2"
+  },
+  "betaPayload": {
+   "reference": "localhost/bunny-os-beta:e906a48793d7",
+   "manifest": "sha256:c87a6616008ce34f97840f63814e08fdb33574b52202fbb4841b7f5aa7f8562d",
+   "correctedFrom": "localhost/bunny-os-beta:localhost/bunny-os-beta:e906a48793d7"
+  }
+ },
+ "inputs": {
+  "retainedBaseDigest": "sha256:1f08084a9a8545bd528641d4fda14e18408dfb1298acda243eaf583cd907a844",
+  "retainedLocation": "/var/lib/bunny-retention/base-images/sha256-c466de539ec94fe2ea996785b8cda08b274316cd6bf21d5e13bd4d9a7f7aee5b",
+  "builderDigest": "sha256:bf9f00d81c5d707830676193041862dbb5bccc88c18a000cdb674311917d1f3e",
+  "builderSourceCommit": "9c525bf1ca341dcac1bf701d5363adabb07be267",
+  "packageSnapshotId": "fedora-44-beta-20260810-tts",
+  "packageManifestDigest": "fa89f5e28175abf037acb0e83a5a7fa2868b415db12732c2afff98017fb70ada",
+  "buildTimestamp": "2026-08-17T18:57:00Z",
+  "buildEnvironment": "Fedora Linux 44 under WSL2, 22 cores, 15 GiB",
+  "treeCleanAtBuild": true,
+  "treeCleanCorrectedFrom": "dirty: 1 file(s)"
+ },
+ "tests": {
+  "referenceSuite": {
+   "baselineCommit": "b0b92482",
+   "baselinePassed": 5737,
+   "baselineSkipped": 24,
+   "rcRun": 5762,
+   "rcFailed": 3,
+   "failing": [
+    "tests/companion/test_character_cli_vertical.py (3 tests)"
+   ],
+   "probability": "5/5 alone; 1-in-3 inside tests/companion",
+   "classification": "cross-test interference; recorded, not fixed in Phase 4"
+  },
+  "installerSuite": {
+   "baselinePassed": 172,
+   "rcPassed": 178,
+   "clean": true
+  }
+ },
+ "performance": {
+  "instrument": "probe performance verb; CPU = delta of utime+stime clock ticks from /proc over a fixed idle interval; RSS from VmRSS",
+  "comparatorCommit": "7edd3fd",
+  "comparatorRecord": "qualification/design/performance.json",
+  "notTheComparator": "qualification/voice-release/evidence/final/logs/cpu-idle.json (different instrument, 60s window, voice image)",
+  "gnomeShell": {
+   "processes": 4,
+   "comparatorCpuPercent": 0.80,
+   "comparatorRssMiB": 391.2,
+   "rcCpuPercent20s": 1.80,
+   "rcRssMiB20s": 388.7,
+   "rcCpuPercent30s": 2.07,
+   "rcRssMiB30s": 387.4
+  },
+  "companion": {
+   "processes": 1,
+   "comparatorCpuPercent": 0.35,
+   "comparatorRssMiB": 61.6,
+   "rcCpuPercent20s": 0.50,
+   "rcRssMiB20s": 63.1,
+   "rcCpuPercent30s": 0.47,
+   "rcRssMiB30s": 63.2
+  },
+  "orca": {"comparatorCpuPercent": 0.00, "rc": "not running"},
+  "memoryVerdict": "flat; shell 3.8 MiB lower than comparator",
+  "cpuVerdict": "real regression, ~1.3 percentage points of one core, 2.6x; steady state not settling (second sample higher than first)",
+  "pollerInventory": [
+   {"name": "System overview card", "seconds": 2, "site": "shell/components/gnome-shell-extension/lib/cards/systemOverview.js:35"},
+   {"name": "System monitor card", "seconds": 2, "site": "shell/components/gnome-shell-extension/lib/cards/systemMonitor.js:37"},
+   {"name": "Media widget card", "seconds": 2, "site": "shell/components/gnome-shell-extension/lib/cards/mediaWidget.js:28"},
+   {"name": "Assistant health poll", "seconds": 2, "bounded": 30, "site": "shell/components/gnome-shell-extension/lib/desktopShell.js:411"},
+   {"name": "Voice health poll", "seconds": 2, "bounded": 30, "site": "shell/components/gnome-shell-extension/lib/desktopShell.js:411"},
+   {"name": "Bottom dock", "seconds": 3, "site": "shell/components/gnome-shell-extension/lib/bottomDock.js:65"},
+   {"name": "Top bar indicators", "seconds": 5, "site": "shell/components/gnome-shell-extension/lib/topBar.js:51"},
+   {"name": "Extension status timer", "seconds": 5, "site": "shell/components/gnome-shell-extension/extension.js:202"},
+   {"name": "Housekeeping", "seconds": 30, "site": "shell/components/gnome-shell-extension/lib/desktopShell.js:167"},
+   {"name": "Agenda widget", "seconds": 60, "site": "shell/components/gnome-shell-extension/lib/cards/agendaWidget.js:28"},
+   {"name": "Clock", "seconds": 60, "site": "shell/components/gnome-shell-extension/lib/topBar.js:215"}
+  ],
+  "pollerNote": "The two health polls are bounded and stop on first success, so they are startup cost, not idle cost. Phase 4's report named three timers; the full set is eleven, three of them at 2s."
+ },
+ "voice": {"harness": "voice-phase3-b", "exit": 0, "stages": 19, "identicalToPhase3": true},
+ "trust": {
+  "granted": {
+   "run": "g12", "decision": "granted", "capsuleStarted": true,
+   "produced": ["holiday-resized.png"], "pixels": [100, 50],
+   "finalState": "idle", "inputUnchanged": true, "neighbourUnchanged": true, "findings": 0
+  },
+  "denied": {
+   "run": "g13", "decision": "denied", "capsuleStarted": false,
+   "produced": [], "pixels": null,
+   "finalState": "idle", "inputUnchanged": true, "neighbourUnchanged": true, "findings": 0
+  },
+  "historicalFalsePass": {
+   "run": "g7", "decision": "granted", "capsuleStarted": false,
+   "produced": [], "finalState": "error", "finalSays": "the task failed",
+   "findingsAsRecorded": 0,
+   "note": "Graded PASS by the pre-strengthening grader. Phase 5 keeps it as the regression fixture that must FAIL."
+  }
+ },
+ "installation": {
+  "encryptedInstallFromOwnIso": "PASS",
+  "encryptedBoot": "PASS (two boots)",
+  "firstLoginThroughRealGreeter": "PASS (g1)",
+  "firstRunWizard": "PASS (11 of 11 choices applied)",
+  "secondAndThirdAccount": "PASS (robin reaches the Bunny desktop, g10)",
+  "acpiPowerKey": "PASS (clean shutdown on every boot; 11 boots in qualification/phase4/power-key/)"
+ },
+ "persistence": {
+  "chain": "g2 -> g3 -> g4 across two reboots",
+  "settings": "survive",
+  "companionMode": "compact and minimal both survive two reboots",
+  "machineDiskPersistent": true
+ },
+ "knownLimitations": [
+  {"id": "L1", "text": "Reference suite not reliably green - CLI-vertical x3, 1-in-3 in-package", "phase4": "recorded, not fixed"},
+  {"id": "L2", "text": "Shell idle CPU 2.07% vs 0.80% at 7edd3fd", "phase4": "recorded as a tracked number"},
+  {"id": "L3", "text": "The greeter is stock Fedora, not Bunny", "phase4": "recorded; not fixable without a rebuild"},
+  {"id": "L4", "text": "bunny-nocturne.svg fails to load - Unknown image format: application/xml", "phase4": "recorded; diagnosis given as 'the image has no SVG pixbuf loader'", "phase5": "that diagnosis is wrong; librsvg2 and glycin-loaders both ship - see the Phase 5 report"},
+  {"id": "L5", "text": "The Diagnostic-/s tile - Pango WORD_CHAR inserts a hyphen", "phase4": "recorded, cosmetic"},
+  {"id": "L6", "text": "The qualification harness grades without being graded", "phase4": "named as the highest-value next work"},
+  {"id": "L7", "text": "59 inherited Critical/High findings from fedora-bootc:44, no independent review", "phase4": "outside Phase 4"},
+  {"id": "L8", "text": "No physical machine has ever booted the candidate", "phase4": "outside Phase 4"},
+  {"id": "L9", "text": "No production signing key", "phase4": "outside Phase 4"},
+  {"id": "L10", "text": "Update and rollback matrices NOT_RUN", "phase4": "outside Phase 4"},
+  {"id": "L11", "text": "Host build volume: 11 GB free", "phase4": "standing operator risk"}
+ ],
+ "gates": {
+  "qualificationCandidate": "BLOCKED",
+  "stableRelease": "NO-GO",
+  "matrix": {
+   "installation": "PASS", "encryption": "PASS", "firstBoot": "PASS", "login": "PASS",
+   "voice": "PASS", "trust": "PASS", "persistence": "PASS", "companion": "PASS",
+   "shutdown": "PASS", "referenceSuite": "INTERMITTENT", "securityReview": "NOT_DONE",
+   "physicalHardware": "NOT_RUN", "productionSigning": "NOT_DONE", "update": "NOT_RUN",
+   "rollback": "NOT_RUN", "ownerApprovals": "NOT_DONE"
+  }
+ },
+ "inheritedRules": [
+  "A journey that cannot fail is not a test. Grade the outcome, not the machine's health.",
+  "Before trusting a strengthened grader, replay it over a recorded run that should fail.",
+  "A denial must mean the confined program never ran - read from the journal, with the granted run as the control, so absence is a measurement.",
+  "Cleanup steps must report what they removed.",
+  "Redact secrets before publication; evidence is immutable.",
+  "One passing run is a sample, not a confirmation."
+ ]
+}

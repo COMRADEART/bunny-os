@@ -1,20 +1,73 @@
 [Unit]
-Description=Bunny OS live installer policy backend
+# The privileged half of the installer. The setup surface runs as the live
+# desktop user and cannot write to a block device; everything that can is here.
+# That division is §2 enforced by the kernel rather than by intent.
+Description=Bunny OS live installer backend
 Documentation=file:///usr/share/doc/bunny-os/INSTALLER_ARCHITECTURE.md
 ConditionPathExists=/run/bunny-installer/live-session
-Before=shutdown.target
+# The surface reads the session token this writes, so it must be listening
+# before the graphical session starts autostarting things. The executor is
+# chosen at startup by whether Anaconda's private bus is reachable, so the
+# unit that provides that bus must have written its address first.
+Wants=bunny-anaconda-bus.service
+After=bunny-anaconda-bus.service
+Before=gdm.service graphical.target shutdown.target
+# The live account and its UID are created by this, and the marker file it
+# writes is where the backend learns which UID may connect.
+Requires=bunny-live-session.service
+After=bunny-live-session.service
 Conflicts=shutdown.target
 
 [Service]
-Type=oneshot
+Type=simple
+# The UID comes from /run/bunny-installer/live-session, written by
+# bunny-live-session.service. Hardcoding it here was wrong once already.
 ExecStart=/usr/libexec/bunny-installer-backend
+Restart=no
 User=root
 Group=root
 NoNewPrivileges=yes
-PrivateTmp=yes
-PrivateDevices=no
+# PrivateTmp stood here until run 20. The engine's own logs live in the real
+# /tmp — anaconda's modules write program.log there, and program.log is where
+# the stderr of every helper they ran lands, including the systemctl whose
+# exit code surfaced as "Error enabling service chronyd: 1" with no sentence
+# under it. The socket that originally justified PrivateTmp has lived in /run
+# since run 12, so what the sandbox was protecting no longer exists and what
+# it was hiding turned out to be the diagnosis.
+# PrivateDevices=yes stood here until run 19 ("this process never opens a
+# device") — but on a driven run the backend copies its events, tracebacks
+# included, to the serial console the harness records, because the live
+# journal is tmpfs and dies with the VM. PrivateDevices replaced /dev with a
+# stub, open("/dev/ttyS0") raised, the except swallowed it, and the one
+# traceback that explained run 19b's failure died with the machine.
 ProtectSystem=strict
 ProtectHome=yes
+# ProtectSystem=strict makes everything read-only, /run included, and the socket
+# and the token both live there.
+#
+# RuntimeDirectory rather than ReadWritePaths, for the reason that stopped
+# bunny-live-session.service dead: a path named in ReadWritePaths must already
+# exist when systemd builds the mount namespace, which happens before ExecStart.
+# /run/bunny-installer is created by bunny-live-session.service, which this unit
+# requires and follows — but /run/bunny-setup is created by nobody at all. It
+# would have failed 226/NAMESPACE the moment the session unit started working,
+# which is to say the moment anyone could have noticed.
+#
+# Naming both here is not redundant: systemd adopts a directory that already
+# exists, and declaring what a unit needs is what makes it true rather than
+# incidental to another unit's ordering.
+RuntimeDirectory=bunny-installer bunny-setup
+# The executor connects to Anaconda's private bus socket under /run/anaconda,
+# which bunny-anaconda-bus.service creates Before= this unit. The `-` prefix
+# keeps a boot where that unit did not run at "executor unavailable" instead
+# of 226/NAMESPACE - a unit cannot be built from a directory that is missing.
+ReadWritePaths=-/run/anaconda
+# The failure replay (server.py) re-runs the engine's failed helper against
+# the install target under /mnt, from inside this unit. Without this line
+# ProtectSystem=strict would answer that experiment with the sandbox's own
+# EROFS and the replay would measure the backend instead of the failure.
+ReadWritePaths=-/mnt
+RuntimeDirectoryPreserve=yes
 ProtectKernelTunables=yes
 ProtectKernelModules=yes
 ProtectKernelLogs=yes
@@ -25,5 +78,6 @@ LockPersonality=yes
 MemoryDenyWriteExecute=yes
 SystemCallArchitectures=native
 UMask=0077
-TimeoutStartSec=30
 
+[Install]
+WantedBy=graphical.target

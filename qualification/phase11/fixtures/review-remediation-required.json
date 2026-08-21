@@ -1,0 +1,54 @@
+{
+ "fixtureClass": "TEST_FIXTURE_ONLY",
+ "purpose": "Drives the remediation-path dry run: a confirmed Critical dispositioned FIX_BEFORE_ALPHA. The frozen artifact is never modified; the modelled successor starts REQUALIFICATION_REQUIRED and inherits no PASS.",
+ "record": {
+  "schema": "bunny-os/security-review-submission/1",
+  "reviewer_id": "REVIEWER-003",
+  "reviewer": "REVIEWER-003",
+  "organisation": "TEST_FIXTURE_ONLY dry run",
+  "independence": {
+   "declaration": "constructed fixture: this reviewer had no role in producing artifact e906a48793d7 and no interest in its approval",
+   "relationship_to_project": "none",
+   "is_release_decision_authority": false,
+   "policy_exception": null
+  },
+  "artifact_digest": "sha256:c87a6616008ce34f97840f63814e08fdb33574b52202fbb4841b7f5aa7f8562d",
+  "artifactDigest": "sha256:c87a6616008ce34f97840f63814e08fdb33574b52202fbb4841b7f5aa7f8562d",
+  "independently_computed_digest": "sha256:c87a6616008ce34f97840f63814e08fdb33574b52202fbb4841b7f5aa7f8562d",
+  "digest_basis": "image",
+  "digest_computation": "constructed fixture: skopeo inspect --format {{.Digest}} oci-archive:bunny-alpha.tar",
+  "review_scope_version": "SCOPE-1",
+  "scope": "constructed fixture: independent review of artifact e906a48793d7 under REVIEW_SCOPE.md SCOPE-1",
+  "review_start": "2026-08-17",
+  "review_end": "2026-08-18",
+  "date": "2026-08-18",
+  "findings": [
+   {
+    "reviewer_finding_id": "R3-F1",
+    "title": "constructed fixture finding for GHSA-5cgq-3rg8-m6cv",
+    "severity": "Critical",
+    "affected_component": "golang.org/x/crypto",
+    "applicability": "APPLICABLE",
+    "evidence": "constructed fixture: revocation-check bypass demonstrated against the shipped podman binary; transcript attached",
+    "rationale": "exploitable as shipped",
+    "recommended_disposition": "FIX_BEFORE_ALPHA",
+    "baseline_advisory": "GHSA-5cgq-3rg8-m6cv"
+   }
+  ],
+  "overall_assessment": "BLOCKED",
+  "disposition": "BLOCKED"
+ },
+ "successorEntry": {
+  "artifact_id": "fixture-successor-security",
+  "digest": "sha256:abababababababababababababababababababababababababababababababab",
+  "digests": {
+   "image": "sha256:abababababababababababababababababababababababababababababababab"
+  },
+  "source_commit": "0000000000000000000000000000000000000000",
+  "build_identity": "constructed control",
+  "parent_artifact": "e906a48793d7",
+  "supersedes": null,
+  "relationship": "REMEDIATES",
+  "qualification_state": "REQUALIFICATION_REQUIRED"
+ }
+}

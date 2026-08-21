@@ -1,0 +1,43 @@
+{
+ "note": "AT-SPI-sampled upper bounds; grain ~0.15s",
+ "rows": [
+  {
+   "tag": "ee1",
+   "utteranceEndToThinkingSeconds": 2.18,
+   "thinkingToTalkingSeconds": 14.01,
+   "utteranceEndToSpokenReplySeconds": 16.2,
+   "approved": true,
+   "finalState": "success"
+  },
+  {
+   "tag": "mem",
+   "utteranceEndToThinkingSeconds": 2.19,
+   "thinkingToTalkingSeconds": 2.94,
+   "utteranceEndToSpokenReplySeconds": 5.13,
+   "approved": false,
+   "finalState": "success"
+  },
+  {
+   "tag": "pdfs",
+   "utteranceEndToThinkingSeconds": 2.36,
+   "thinkingToTalkingSeconds": 3.0,
+   "utteranceEndToSpokenReplySeconds": 5.36,
+   "approved": false,
+   "finalState": "success"
+  },
+  {
+   "tag": "postint",
+   "utteranceEndToThinkingSeconds": 4.8,
+   "approved": false,
+   "finalState": "idle"
+  },
+  {
+   "tag": "uistop",
+   "utteranceEndToThinkingSeconds": 2.59,
+   "thinkingToTalkingSeconds": 6.92,
+   "utteranceEndToSpokenReplySeconds": 9.51,
+   "approved": false,
+   "finalState": "idle"
+  }
+ ]
+}

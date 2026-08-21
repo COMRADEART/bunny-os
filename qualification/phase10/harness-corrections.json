@@ -1,0 +1,11 @@
+{
+ "classificationVocabulary": [
+  "PRODUCT_STATUS_UNCHANGED",
+  "EVIDENCE_REINTERPRETED",
+  "PRIOR_FALSE_PASS_FOUND",
+  "PRIOR_FALSE_FAIL_FOUND"
+ ],
+ "corrections": [],
+ "note": "Zero corrections. A harness-only change never creates a product artifact by itself, but it may invalidate an interpretation. A correction record preserves the original verdict and its evidence reference verbatim beside the corrected verdict, the harness change, and the reason - history is never overwritten. Records failing validate_harness_correction() in tools/candidate_ops.py are refused.",
+ "schemaVersion": 1
+}

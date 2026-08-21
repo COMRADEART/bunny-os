@@ -150,13 +150,13 @@ class PromptLineTests(unittest.TestCase):
         self.assertIn("(default)", lines[-1])
         self.assertIn("Don't allow", lines[-1])
 
-    def test_an_unenforced_permission_says_so_in_the_prompt_itself(self) -> None:
-        """The person deciding is the person who most needs to know that denying
-        would not actually stop it."""
+    def test_an_unenforceable_category_never_reaches_a_prompt(self) -> None:
+        """Asking would record a consent the build cannot keep. The refusal
+        happens at policy, mirroring ``not-declared``: no surface ever renders
+        the question."""
         declaration = PermissionDeclaration(
             application_id="org.example.PhotoEditor", optional=frozenset({"clipboard"})
         )
-        from trust.explain import build_prompt
         from trust.policy import resolve
 
         request = trust.PermissionRequest.build(
@@ -165,6 +165,27 @@ class PromptLineTests(unittest.TestCase):
             category="clipboard",
             session_id="session-1",
         )
+        resolution = resolve(request, store=self.world.store, declaration=declaration)
+        self.assertEqual(resolution.verdict, "deny")
+        self.assertEqual(resolution.reason_code, "not-enforceable")
+
+    def test_a_declared_only_network_class_says_what_it_really_opens(self) -> None:
+        """A prompt headlined 'connect to api.example.com' must not let the
+        person believe the grant stops anywhere short of the internet."""
+        declaration = PermissionDeclaration(
+            application_id="org.example.PhotoEditor", optional=frozenset({"network"})
+        )
+        from trust.explain import build_prompt
+        from trust.policy import resolve
+
+        request = trust.PermissionRequest.build(
+            request_id="r-1",
+            application_id="org.example.PhotoEditor",
+            category="network",
+            session_id="session-1",
+            resource=trust.network_resource("allowlisted", allowlist=("api.example.com",)),
+            purpose="use",
+        )
         prompt = build_prompt(
             request,
             resolve(request, store=self.world.store, declaration=declaration),
@@ -172,7 +193,33 @@ class PromptLineTests(unittest.TestCase):
             application_name="Photo Editor",
         )
         self.assertIsNotNone(prompt.enforcement_note)
-        self.assertIn("not enforced", "\n".join(prompt_lines(prompt)))
+        self.assertIn("anything on the internet", prompt.enforcement_note)
+        self.assertIn("anything on the internet", prompt.spoken)
+
+    def test_a_plain_internet_request_carries_no_enforcement_note(self) -> None:
+        """'internet' is enforced by the absence of a boundary; there is nothing
+        to warn about because nothing was promised."""
+        declaration = PermissionDeclaration(
+            application_id="org.example.PhotoEditor", optional=frozenset({"network"})
+        )
+        from trust.explain import build_prompt
+        from trust.policy import resolve
+
+        request = trust.PermissionRequest.build(
+            request_id="r-1",
+            application_id="org.example.PhotoEditor",
+            category="network",
+            session_id="session-1",
+            resource=trust.network_resource("internet"),
+            purpose="use",
+        )
+        prompt = build_prompt(
+            request,
+            resolve(request, store=self.world.store, declaration=declaration),
+            declaration,
+            application_name="Photo Editor",
+        )
+        self.assertIsNone(prompt.enforcement_note)
 
     def test_the_spoken_form_contains_every_fact_the_drawn_form_does(self) -> None:
         prompt = self.prompt("files")

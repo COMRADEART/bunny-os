@@ -1,0 +1,40 @@
+{
+ "appendMechanism": "qualification/phase13/tools/release_authority_ops.py record policy",
+ "dimensions": [
+  "minimumAcceptedTesterReports",
+  "minimumDistinctTesters",
+  "minimumDistinctMachineIdentities",
+  "minimumSuccessfulInstallationReports",
+  "minimumCompletedCoreJourneys",
+  "minimumEvidencePeriodDays",
+  "maximumUnresolvedBlockerFindings",
+  "maximumUnresolvedCriticalFindings",
+  "performanceEvidenceRequired",
+  "accessibilityEvidenceRequired",
+  "minimumDistinctHardwareMachines"
+ ],
+ "immutability": "An activated policy is sealed and never edited. A later threshold is a new SUFFICIENCY-POLICY-NNN record with supersedes naming its predecessor; the old policy, the old evidence, and the old evaluation are preserved, and a threshold change never silently reclassifies historical evidence.",
+ "lifecycle": [
+  "SUFFICIENCY_POLICY_UNDEFINED",
+  "SUFFICIENCY_POLICY_PROPOSED",
+  "SUFFICIENCY_POLICY_ACTIVE"
+ ],
+ "note": "An ACTIVE policy requires every dimension explicitly decided (no nulls), an artifact_digest binding it to exact bytes, and an authority who is an assigned AUTH-ALPHA-PROGRAM identity. The Phase 12 committed policy (qualification/phase12/sufficiency-policy.json, all thresholds null) remains the Phase 12 evaluation authority and is untouched by this registry.",
+ "purpose": "The owner-controlled Alpha sufficiency threshold registry. Zero policies means THRESHOLDS_UNDEFINED: the registry state is SUFFICIENCY_POLICY_UNDEFINED, every evaluation is SUFFICIENCY_UNDETERMINED, and no quantity of evidence becomes SUFFICIENT. No production value is invented here - null is not a threshold and a default is not a decision.",
+ "recordFields": [
+  "policy_id",
+  "artifact_digest",
+  "thresholds",
+  "effective_at",
+  "authority",
+  "status",
+  "supersedes"
+ ],
+ "records": [],
+ "registryState": "SUFFICIENCY_POLICY_UNDEFINED",
+ "schemaVersion": 1,
+ "statusVocabulary": [
+  "PROPOSED",
+  "ACTIVE"
+ ]
+}

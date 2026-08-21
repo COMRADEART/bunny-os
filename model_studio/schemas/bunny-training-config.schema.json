@@ -1,0 +1,139 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bunny-os.comrade.art/schemas/bunny-training-config.schema.json",
+  "title": "Bunny Model Studio training configuration",
+  "description": "One training run, declared. Every section is closed (additionalProperties false) so a misspelled key is a refusal rather than a silently ignored setting - a run that trained at the default learning rate because 'learning_rate' was spelled 'lr' is indistinguishable from one that trained at the requested rate until the results disagree. There is deliberately no network, upload or telemetry section: network access is granted per invocation at the command line and can never be granted by a document that a dataset author could also have written.",
+  "type": "object",
+  "required": ["model", "training", "dataset", "output"],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "description": "Configuration schema version. Absent means 1.",
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1
+    },
+    "model": {
+      "type": "object",
+      "required": ["base"],
+      "additionalProperties": false,
+      "properties": {
+        "base": {
+          "description": "The base model: a Hugging Face repository identifier or a local directory.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "revision": {
+          "description": "The exact revision to use. 'main' is accepted and recorded, but a run whose provenance must be reproducible should name a commit.",
+          "type": "string",
+          "maxLength": 128
+        },
+        "trust_remote_code": {
+          "description": "Always false. Present so that a configuration asking for it is refused with a reason rather than silently ignored: remote code is arbitrary code from a model author, executed with the user's privileges, and Bunny does not run it.",
+          "type": "boolean",
+          "const": false
+        }
+      }
+    },
+    "training": {
+      "type": "object",
+      "required": ["method"],
+      "additionalProperties": false,
+      "properties": {
+        "method": {
+          "description": "lora trains adapters over a full-precision base; qlora trains adapters over a quantized base and requires the quantization section.",
+          "type": "string",
+          "enum": ["lora", "qlora"]
+        },
+        "epochs": {"type": "integer", "minimum": 1, "maximum": 100},
+        "batch_size": {
+          "description": "A positive integer, or 'auto' to size it from measured free VRAM. 'auto' resolves to 1 when memory could not be measured.",
+          "oneOf": [
+            {"type": "integer", "minimum": 1, "maximum": 512},
+            {"type": "string", "const": "auto"}
+          ]
+        },
+        "gradient_accumulation_steps": {"type": "integer", "minimum": 1, "maximum": 512},
+        "learning_rate": {"type": "number", "exclusiveMinimum": 0, "maximum": 1},
+        "max_length": {"type": "integer", "minimum": 8, "maximum": 32768},
+        "gradient_checkpointing": {"type": "boolean"},
+        "precision": {
+          "description": "auto defers to the canonical precision decision. An explicit value that the hardware cannot support blocks the run rather than being downgraded.",
+          "type": "string",
+          "enum": ["auto", "bf16", "fp16", "fp32"]
+        },
+        "seed": {"type": "integer", "minimum": 0, "maximum": 4294967295},
+        "max_steps": {
+          "description": "Stop after this many optimizer steps regardless of epochs. 0 means no limit.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000
+        },
+        "warmup_steps": {"type": "integer", "minimum": 0, "maximum": 100000}
+      }
+    },
+    "quantization": {
+      "type": "object",
+      "required": ["enabled"],
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {"type": "boolean"},
+        "bits": {"type": "integer", "enum": [4, 8]},
+        "compute_dtype": {"type": "string", "enum": ["auto", "bf16", "fp16", "fp32"]},
+        "double_quantization": {"type": "boolean"}
+      }
+    },
+    "lora": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "rank": {"type": "integer", "minimum": 1, "maximum": 256},
+        "alpha": {"type": "integer", "minimum": 1, "maximum": 1024},
+        "dropout": {"type": "number", "minimum": 0, "exclusiveMaximum": 1},
+        "target_modules": {
+          "description": "Module names to adapt. Absent means the backend's default for the base architecture, which is recorded in the plan so the run is still reproducible.",
+          "type": "array",
+          "items": {"type": "string", "minLength": 1, "maxLength": 128},
+          "maxItems": 64
+        },
+        "bias": {"type": "string", "enum": ["none", "all", "lora_only"]}
+      }
+    },
+    "dataset": {
+      "type": "object",
+      "required": ["path"],
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "description": "A local path. Remote dataset identifiers are not accepted: a training corpus is the most private thing in this subsystem and it does not leave the machine to be assembled.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "format": {"type": "string", "enum": ["chat"]},
+        "validation_split": {
+          "description": "Fraction held out for evaluation. 0 means no held-out set, and the evaluation report then says so rather than reporting training loss as if it were validation loss.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 0.9
+        },
+        "max_examples": {"type": "integer", "minimum": 1, "maximum": 10000000},
+        "policy_check": {
+          "description": "Whether the permission-model lint runs. It may be disabled only for a corpus that has been reviewed another way, and the choice is recorded in provenance.",
+          "type": "boolean"
+        }
+      }
+    },
+    "output": {
+      "type": "object",
+      "required": ["directory"],
+      "additionalProperties": false,
+      "properties": {
+        "directory": {"type": "string", "minLength": 1, "maxLength": 4096},
+        "name": {"type": "string", "minLength": 1, "maxLength": 128},
+        "overwrite": {"type": "boolean"}
+      }
+    }
+  }
+}

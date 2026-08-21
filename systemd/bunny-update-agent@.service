@@ -26,7 +26,15 @@ ProtectKernelTunables=yes
 ProtectProc=invisible
 ProcSubset=pid
 ProtectSystem=strict
-ReadWritePaths=/var/lib/bunny-os/update /var/cache/bunny-os/update /var/log/bunny-os/update /run/ostree-booted /sysroot /boot
+# `-` on /run/ostree-booted: ostree-prepare-root creates it before switch-root on
+# an ostree deployment, and on the installation medium — whose root is a squashfs
+# with an overlay, not a deployment — it does not exist at all. Without the
+# prefix systemd refuses to build the namespace and the unit exits 226/NAMESPACE
+# on a path it only wants if the system is ostree-booted in the first place.
+# Found by tests/boot/test_unit_runtime_directories.py, which exists because the
+# same shape stopped bunny-live-session.service dead on the first medium that
+# reached userspace.
+ReadWritePaths=/var/lib/bunny-os/update /var/cache/bunny-os/update /var/log/bunny-os/update -/run/ostree-booted /sysroot /boot
 RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6 AF_NETLINK
 RestrictRealtime=yes
 RestrictSUIDSGID=yes

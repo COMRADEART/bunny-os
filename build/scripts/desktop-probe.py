@@ -41,21 +41,36 @@ MARKER_BEGIN = "BUNNY-DESKTOP-RECORD-BEGIN"
 MARKER_END = "BUNNY-DESKTOP-RECORD-END"
 
 
-def run(argv: list[str], *, user: str | None = None, timeout: int = 30) -> dict:
-    """Run a command and record what happened, including when it did not run."""
+def run(argv: list[str], *, user: str | None = None, timeout: int = 30,
+        limit: int = 4000) -> dict:
+    """Run a command and record what happened, including when it did not run.
+
+    ``stdout`` is clipped at ``limit``, and **the clipping is recorded**. It
+    used not to be, and a process audit read the first 4000 characters of
+    ``ps -e`` — twenty-seven kernel threads — while reporting itself as the
+    process table of a running desktop. A record that is quietly partial is
+    the one failure mode a probe must not have, so ``truncated`` says so and
+    ``stdoutBytes`` says how much there was.
+    """
     if user:
         argv = ["/usr/bin/sudo", "-u", user, "-H", *argv]
     try:
         completed = subprocess.run(argv, capture_output=True, text=True, timeout=timeout)
     except (OSError, subprocess.TimeoutExpired) as exc:
         return {"argv": argv, "ran": False, "error": str(exc)}
-    return {
+    out = completed.stdout.strip()
+    err = completed.stderr.strip()
+    answer = {
         "argv": argv,
         "ran": True,
         "returncode": completed.returncode,
-        "stdout": completed.stdout.strip()[:4000],
-        "stderr": completed.stderr.strip()[:2000],
+        "stdout": out[:limit],
+        "stderr": err[:2000],
     }
+    if len(out) > limit:
+        answer["truncated"] = True
+        answer["stdoutBytes"] = len(out)
+    return answer
 
 
 def session_user() -> str:
@@ -74,10 +89,28 @@ def user_bus_environment(user: str) -> list[str]:
     value = uid.get("stdout", "").strip()
     if not value.isdigit():
         return []
-    return [
+    environment = [
         f"XDG_RUNTIME_DIR=/run/user/{value}",
         f"DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/{value}/bus",
     ]
+    # And the display, when the session has imported one.
+    #
+    # These two are enough to reach the user bus, which is all this started out
+    # needing. They are not enough for anything that asks *whether there is a
+    # compositor*: the shipped readiness probe reads WAYLAND_DISPLAY and, given
+    # an environment without it, reported "compositor not ready" on a desktop
+    # that was visibly drawing. Read from the user manager rather than assumed
+    # to be wayland-0, because gnome-session imports it at a moment nothing here
+    # can predict and a guess is right until it is not.
+    dump = run(
+        ["/usr/bin/env", *environment, "/usr/bin/systemctl", "--user", "show-environment"],
+        user=user,
+    )
+    for line in dump.get("stdout", "").splitlines():
+        key, _, setting = line.partition("=")
+        if key.strip() in ("WAYLAND_DISPLAY", "DISPLAY", "XDG_SESSION_TYPE"):
+            environment.append(f"{key.strip()}={setting.strip()}")
+    return environment
 
 
 def shell_dbus(user: str, environment: list[str], method: str, body: str) -> dict:
@@ -342,33 +375,439 @@ def serve_interaction(user: str, environment: list[str]) -> dict:
         verb = request.get("command")
         label = request.get("label", "")
         answer: dict = {"command": verb, "label": label}
-        if verb == "controls":
-            fresh = desktop_interaction.locate_controls(user, environment)
-            answer["controls"] = fresh
-        elif verb == "state":
-            name = request.get("application")
-            if name in desktop_interaction.APPLICATIONS:
-                answer["state"] = desktop_interaction.application_state(name, user, environment)
+        # The environment is rebuilt per request, not captured once. The probe
+        # starts before gnome-session imports WAYLAND_DISPLAY into the user
+        # manager, and a snapshot from that moment reported "compositor not
+        # ready" on a desktop that was visibly drawing — and made the bridge's
+        # desktop adapter refuse every action ("no graphical session") for the
+        # life of the session. login-1 and login-8 both carried that refusal.
+        refreshed = user_bus_environment(user)
+        if refreshed:
+            environment = refreshed
+        # Every command is answered, including one that raised.
+        #
+        # An exception in here used to kill the probe, and the host then read
+        # `null` for every answer after it — a broken harness that looks exactly
+        # like a broken desktop. The host can tell an error from a silence; it
+        # cannot tell a silence from a dead session.
+        try:
+            if verb == "controls":
+                fresh = desktop_interaction.locate_controls(user, environment)
+                answer["controls"] = fresh
+            elif verb == "state":
+                name = request.get("application")
+                if name in desktop_interaction.APPLICATIONS:
+                    answer["state"] = desktop_interaction.application_state(name, user, environment)
+                else:
+                    answer["error"] = f"unknown application {name!r}"
+            elif verb == "shell":
+                answer["shell"] = desktop_interaction.shell_alive(user, environment)
+            elif verb == "ask":
+                # The backend half of the end-to-end claim, through the exact
+                # program the shell spawns. See desktop_interaction.ask_through_the_bridge.
+                answer["ask"] = desktop_interaction.ask_through_the_bridge(
+                    str(request.get("request", "")), user, environment)
+            elif verb == "ready":
+                answer["ready"] = desktop_interaction.session_ready(
+                    user, environment, float(request.get("wait", 120))
+                )
+            elif verb == "fixture":
+                # The journey's images, written as the user. A file root created in
+                # /var/home would be owned by root and unreadable through the
+                # capsule's grant — a permission failure wearing a security result's
+                # clothes.
+                answer["fixture"] = desktop_interaction.make_image_fixture(
+                    str(request.get("kind", "real")), user, environment
+                )
+            elif verb == "result":
+                answer["result"] = desktop_interaction.journey_result(user, environment)
+            elif verb == "approval-buttons":
+                # The two buttons by name, with an early exit. See
+                # desktop_interaction._APPROVAL_BUTTONS_PROGRAM for why this
+                # exists beside `controls` rather than replacing it.
+                answer["buttons"] = desktop_interaction.approval_buttons(user, environment)
+            elif verb == "activate":
+                # One named control, activated through its own AT-SPI action
+                # — any application, not just the shell. The first-run wizard
+                # walk is driven with this.
+                answer["activate"] = desktop_interaction.activate_control(
+                    str(request.get("name", "")),
+                    str(request.get("within", "")) or None,
+                    user, environment)
+            elif verb == "task-trace":
+                # Which event was written last. "Thinking…" for ever is a
+                # stopped event stream, and the stream is the only thing that
+                # can say where it stopped.
+                answer["trace"] = desktop_interaction.task_trace(user, environment)
+            elif verb == "companion-state":
+                answer["companion"] = desktop_interaction.companion_state(user, environment)
+            elif verb == "a11y-tree":
+                # Names, roles, focusability and actions for every interactive
+                # control. This is the tree a screen reader would read, asked
+                # for as a screen reader would get it.
+                answer["a11y"] = desktop_interaction.accessibility_tree(user, environment)
+            elif verb == "a11y-settings":
+                answer["settings"] = desktop_interaction.read_a11y_settings(user, environment)
+            elif verb == "a11y-set":
+                answer["set"] = desktop_interaction.set_a11y_setting(
+                    str(request.get("schema", "")), str(request.get("key", "")),
+                    str(request.get("value", "")), user, environment)
+            elif verb == "screen-reader":
+                answer["screenReader"] = desktop_interaction.screen_reader(user, environment)
+            elif verb == "orca-start":
+                # Turn the screen reader on and wait for it to be speaking. What
+                # it says is read from its own debug log; see ORCA_DEBUG.
+                answer["orca"] = desktop_interaction.start_screen_reader(
+                    user, environment, wait=float(request.get("wait", 25.0)))
+            elif verb == "orca-speech":
+                answer["speech"] = desktop_interaction.screen_reader_speech(
+                    user, environment, since=int(request.get("since", 0)))
+            elif verb == "performance":
+                answer["performance"] = desktop_interaction.performance_sample(
+                    user, seconds=float(request.get("seconds", 20.0)))
+            elif verb == "character":
+                # What the figure is doing and what the bubble says, both read out
+                # of the accessibility tree. This is how the host watches the state
+                # machine it just started by typing.
+                answer["character"] = desktop_interaction.character_state(user, environment)
+            elif verb == "settings":
+                # The user settings surface, driven through the product's own
+                # CLI as the session user — the same single write path the
+                # window uses, so what this changes is what the next boot
+                # reads. action: "show" (default) or "set" with
+                # section/field/value.
+                argv = ["/usr/bin/bunny-os", "companion", "settings"]
+                if str(request.get("action", "show")) == "set":
+                    argv += ["set", str(request.get("section", "")),
+                             str(request.get("field", "")),
+                             str(request.get("value", ""))]
+                else:
+                    argv += ["show"]
+                answer["settings"] = run(argv, user=user, timeout=60)
+            elif verb == "renderer":
+                # The renderer decision surface, read-only, as the user.
+                view = "explain" if request.get("view") == "explain" else "status"
+                answer["renderer"] = run(
+                    ["/usr/bin/bunny-os", "--json", "companion", "renderer", view],
+                    user=user, timeout=60)
+            elif verb == "character-policy":
+                # The default-character decision. --eligible pins the rung;
+                # without it the CLI assesses the *environment it runs in*
+                # (three_d_environment reads WAYLAND_DISPLAY/DISPLAY), which
+                # is Phase 3's honest capability instrument: the probe's own
+                # environment has no display — a genuinely reduced
+                # environment — and withDisplay=true re-runs the same
+                # assessment with the session's real Wayland socket, claimed
+                # only when that socket actually exists on disk. dryRun
+                # defaults to true so a request that forgot to say changes
+                # nothing.
+                argv = ["/usr/bin/bunny-os", "--json", "companion", "character-policy"]
+                if request.get("dryRun", True):
+                    argv.append("--dry-run")
+                eligible = str(request.get("eligible", ""))
+                if eligible:
+                    argv += ["--eligible", eligible]
+                if request.get("restore"):
+                    argv.append("--restore")
+                if request.get("withDisplay"):
+                    import glob as _glob
+                    import pwd as _pwd
+
+                    uid = _pwd.getpwnam(user).pw_uid
+                    sockets = sorted(
+                        s for s in _glob.glob(f"/run/user/{uid}/wayland-*")
+                        if not s.endswith(".lock"))
+                    if sockets:
+                        name = os.path.basename(sockets[0])
+                        argv = ["/usr/bin/env",
+                                f"XDG_RUNTIME_DIR=/run/user/{uid}",
+                                f"WAYLAND_DISPLAY={name}", *argv]
+                        answer["display"] = {"waylandSocket": sockets[0]}
+                    else:
+                        answer["display"] = {"waylandSocket": None,
+                                             "note": "no wayland socket exists; "
+                                                     "ran without a display"}
+                answer["characterPolicy"] = run(argv, user=user, timeout=60)
+            elif verb == "system":
+                # Phase 3's persistence evidence, read from the RUNNING system:
+                # the hostname and locale as systemd reports them now, the files
+                # they persist in, the §45 handoff document, and what first run
+                # recorded and the session actually holds. Every entry is a raw
+                # command result — nothing here interprets, so a value that
+                # differs from its file is visible as exactly that.
+                import pwd as _pwd
+
+                try:
+                    uid = _pwd.getpwnam(user).pw_uid
+                except KeyError:
+                    uid = 1000
+                as_user_session = [
+                    "/usr/bin/sudo", "-u", user, "-H", "/usr/bin/env",
+                    f"XDG_RUNTIME_DIR=/run/user/{uid}",
+                    f"DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/{uid}/bus",
+                ]
+                answer["system"] = {
+                    "hostnamectl": run(["hostnamectl"], timeout=15),
+                    "localectl": run(["localectl", "status"], timeout=15),
+                    "etcHostname": run(["cat", "/etc/hostname"], timeout=5),
+                    "etcLocaleConf": run(["cat", "/etc/locale.conf"], timeout=5),
+                    "etcVconsole": run(["cat", "/etc/vconsole.conf"], timeout=5),
+                    "choicesOnTarget": run(
+                        ["cat", "/var/lib/bunny-setup/choices.json"], timeout=5),
+                    "sessions": run(["loginctl", "list-sessions"], timeout=15),
+                    # Who is holding shutdown. The Bunny session ignored an
+                    # ACPI power-button press that plain GNOME honoured
+                    # (login-8d/9 vs 1..7); logind defers while a block
+                    # inhibitor on handle-power-key exists, and this names
+                    # the holder rather than leaving it to theory.
+                    "inhibitors": run(["systemd-inhibit", "--list",
+                                       "--no-pager"], timeout=15),
+                    "userUnits": run(
+                        [*as_user_session, "systemctl", "--user", "--no-pager",
+                         "list-units", "bunny-*"], timeout=20),
+                    "appliedState": run(
+                        ["/usr/bin/sudo", "-u", user, "-H", "cat",
+                         f"/var/home/{user}/.local/state/bunny-os/applied.json"],
+                        timeout=5),
+                    # Present only after the wizard's Finish: the unit's own
+                    # ConditionPathExists gate, read as evidence.
+                    "firstRunMarker": run(
+                        ["/usr/bin/sudo", "-u", user, "-H", "ls", "-l",
+                         f"/var/home/{user}/.local/state/bunny-os/first-run-complete"],
+                        timeout=5),
+                    # The companion service's settings root: StateDirectory=
+                    # in bunny-companion.service, i.e. the user's state dir.
+                    "companionSettings": run(
+                        ["/usr/bin/sudo", "-u", user, "-H", "cat",
+                         f"/var/home/{user}/.local/state/bunny-os/companion/settings.json"],
+                        timeout=5),
+                }
+            elif verb == "power-trace":
+                # Phase 4's power-key investigation. Nothing here simulates a
+                # press — the story's own ACPI powerdown at the end is the
+                # press, and this boot's journal is the record. This verb
+                # reads the facts the diagnosis needs (the configured button
+                # action, the virtualisation answer, who holds the
+                # handle-power-key block) and, unless asked not to, restarts
+                # the media-keys handler with its debug voice on, so that a
+                # delivered accelerator and a handler that decided to do
+                # nothing stop looking identical in the journal.
+                import pwd as _pwd
+
+                try:
+                    uid = _pwd.getpwnam(user).pw_uid
+                except KeyError:
+                    uid = 1000
+                as_user = [
+                    "/usr/bin/sudo", "-u", user, "-H", "/usr/bin/env",
+                    f"XDG_RUNTIME_DIR=/run/user/{uid}",
+                    f"DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/{uid}/bus",
+                ]
+                trace: dict = {
+                    "powerButtonAction": run(
+                        [*as_user, "/usr/bin/gsettings", "get",
+                         "org.gnome.settings-daemon.plugins.power",
+                         "power-button-action"], timeout=15),
+                    "virt": run(["systemd-detect-virt"], timeout=10),
+                    "chassis": run(["hostnamectl", "chassis"], timeout=10),
+                    "inhibitors": run(["systemd-inhibit", "--list",
+                                       "--no-pager"], timeout=15),
+                    "mediaKeysBefore": run(
+                        [*as_user, "systemctl", "--user", "show",
+                         "org.gnome.SettingsDaemon.MediaKeys.service",
+                         "-p", "ActiveState,ExecMainPID,ExecMainStartTimestamp"],
+                        timeout=15),
+                }
+                if request.get("debug", True):
+                    # The gsd user units are dependency-only
+                    # (RefuseManualStart) — `systemctl --user restart` was
+                    # refused when this verb first ran. A drop-in plus a
+                    # kill is the route systemd honours: the manager
+                    # respawns the unit under the new environment.
+                    dropin = (f"/var/home/{user}/.config/systemd/user/"
+                              "org.gnome.SettingsDaemon.MediaKeys.service.d")
+                    trace["dropin"] = run(
+                        ["/usr/bin/sudo", "-u", user, "-H", "/usr/bin/bash",
+                         "-c",
+                         f"mkdir -p {dropin} && "
+                         f"printf '[Service]\\nEnvironment=G_MESSAGES_DEBUG=all\\n'"
+                         f" > {dropin}/50-debug.conf"], timeout=15)
+                    trace["daemonReload"] = run(
+                        [*as_user, "systemctl", "--user", "daemon-reload"],
+                        timeout=30)
+                    old_pid = ""
+                    for line in (trace["mediaKeysBefore"].get("stdout") or "").splitlines():
+                        if line.startswith("ExecMainPID="):
+                            old_pid = line.partition("=")[2].strip()
+                    if old_pid and old_pid != "0":
+                        trace["kill"] = run(
+                            ["/usr/bin/sudo", "-u", user, "-H", "/usr/bin/kill",
+                             old_pid], timeout=15)
+                    time.sleep(5.0)
+                    trace["mediaKeysAfter"] = run(
+                        [*as_user, "systemctl", "--user", "show",
+                         "org.gnome.SettingsDaemon.MediaKeys.service",
+                         "-p", "ActiveState,ExecMainPID"], timeout=15)
+                answer["powerTrace"] = trace
+            elif verb == "bunny-extension":
+                # The A/B lever for the power-key diagnosis: turn the Bunny
+                # desktop extension off (or back on) in the running session,
+                # so the same boot can answer "does the press work without
+                # it". Bounded to the one extension — this is not a generic
+                # shell hook.
+                import pwd as _pwd
+
+                try:
+                    uid = _pwd.getpwnam(user).pw_uid
+                except KeyError:
+                    uid = 1000
+                action = ("disable" if request.get("action") == "disable"
+                          else "enable")
+                prefix = [
+                    "/usr/bin/sudo", "-u", user, "-H", "/usr/bin/env",
+                    f"XDG_RUNTIME_DIR=/run/user/{uid}",
+                    f"DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/{uid}/bus",
+                ]
+                answer["extension"] = {
+                    "action": action,
+                    "result": run(
+                        [*prefix, "/usr/bin/gnome-extensions", action,
+                         "bunny-shell@bunny-os.org"], timeout=30),
+                    "state": run(
+                        [*prefix, "/usr/bin/gnome-extensions", "info",
+                         "bunny-shell@bunny-os.org"], timeout=30),
+                }
+            elif verb == "create-user":
+                # The second-user question, asked through the surface the
+                # product's own Users entry uses: AccountsService's D-Bus
+                # CreateUser (gnome-control-center calls exactly this, and
+                # so does gnome-initial-setup on an OEM device). The answer
+                # carries the record on disk — the file GDM reads to choose
+                # a session — and the daemon's own Session property, so a
+                # template that wrote nothing cannot look like one that
+                # worked.
+                name = str(request.get("name", ""))
+                if not re.fullmatch(r"[a-z_][a-z0-9_-]{0,31}", name):
+                    answer["error"] = f"refusing an unsafe user name {name!r}"
+                else:
+                    kind = 1 if request.get("administrator") else 0
+                    created = run(
+                        ["busctl", "call", "org.freedesktop.Accounts",
+                         "/org/freedesktop/Accounts", "org.freedesktop.Accounts",
+                         "CreateUser", "ssi", name,
+                         str(request.get("realName", name)), str(kind)],
+                        timeout=90)
+                    found = run(
+                        ["busctl", "call", "org.freedesktop.Accounts",
+                         "/org/freedesktop/Accounts", "org.freedesktop.Accounts",
+                         "FindUserByName", "s", name], timeout=30)
+                    path = ""
+                    match = re.search(r'"(/org/freedesktop/Accounts/User\d+)"',
+                                      found.get("stdout") or "")
+                    if match:
+                        path = match.group(1)
+                    session = run(
+                        ["busctl", "get-property", "org.freedesktop.Accounts",
+                         path or "/org/freedesktop/Accounts",
+                         "org.freedesktop.Accounts.User", "Session"],
+                        timeout=30) if path else {"stdout": "", "error": "no object path"}
+                    detail = {
+                        "name": name,
+                        "administrator": bool(kind),
+                        "create": created,
+                        "objectPath": path,
+                        "sessionProperty": session,
+                        "record": run(
+                            ["cat", f"/var/lib/AccountsService/users/{name}"],
+                            timeout=10),
+                        "sessionsFile": run(
+                            ["ls", "-l", f"/var/lib/AccountsService/users/{name}"],
+                            timeout=10),
+                    }
+                    # A password, so the account can be logged into at the real
+                    # greeter — which is the only way to find out what session
+                    # the record actually produces. The value is a harness
+                    # fixture on a disposable machine and is not a secret; it
+                    # is hashed here rather than sent to AccountsService's
+                    # SetPassword because that method takes a hash too, and
+                    # this keeps the hashing visible in the record.
+                    secret = str(request.get("password", ""))
+                    if secret:
+                        hashed = run(["openssl", "passwd", "-6", secret], timeout=30)
+                        digest = (hashed.get("stdout") or "").strip()
+                        detail["passwordSet"] = (
+                            run(["usermod", "-p", digest, name], timeout=30)
+                            if digest.startswith("$6$")
+                            else {"error": "no hash was produced"})
+                    answer["createUser"] = detail
+            elif verb == "process-audit":
+                # §7/§8: the process table with unit and session attribution
+                # — pid, parent, owner, system unit, user unit — plus the
+                # session list. The probe captures facts; which processes are
+                # duplicates, greeter leftovers or logout survivors is
+                # decided by the reader against this record, not in here.
+                #
+                # The table is large enough to hit the output clip, so the
+                # answer carries the counts computed here from the *whole*
+                # table, and the rows for the session user and for anything
+                # under a bunny unit in full. A reader that only saw the
+                # clipped head would be reading kernel threads.
+                table = run(
+                    ["ps", "-eo",
+                     "pid,ppid,uid,user:16,unit:32,uunit:40,tty,etimes,args",
+                     "--no-headers", "--sort", "uid,pid"],
+                    timeout=20, limit=400_000)
+                rows = (table.get("stdout") or "").splitlines()
+                mine, bunny = [], []
+                for row in rows:
+                    fields = row.split(None, 8)
+                    if len(fields) < 9:
+                        continue
+                    if fields[3] == user:
+                        mine.append(row)
+                    if "bunny" in fields[4] or "bunny" in fields[5] or "bunny" in fields[8]:
+                        bunny.append(row)
+                answer["audit"] = {
+                    "processTotal": len(rows),
+                    "processTruncated": bool(table.get("truncated")),
+                    "sessionUserProcesses": mine,
+                    "sessionUserCount": len(mine),
+                    "bunnyProcesses": bunny,
+                    "bunnyCount": len(bunny),
+                    "sessions": run(["loginctl", "list-sessions", "--no-pager"],
+                                    timeout=15),
+                    "loginctlUsers": run(["loginctl", "list-users", "--no-pager"],
+                                         timeout=15),
+                }
+            elif verb == "logout":
+                # End the session user's login sessions, the way a logout
+                # does. The hygiene story runs this between two
+                # process-audits: what survives the second audit has, by
+                # definition, outlived the session that owned it.
+                #
+                # `terminate-user`, not a parse of `list-sessions`. The first
+                # version asked for `--output=json`, which this loginctl
+                # ignores — it printed its ordinary table, the parse failed,
+                # nothing was terminated, and the audit that followed
+                # compared a logged-in machine with itself. One call that
+                # names the user cannot fail that way.
+                before = run(["loginctl", "list-sessions", "--no-pager"], timeout=15)
+                terminated = run(["loginctl", "terminate-user", user], timeout=30)
+                time.sleep(float(request.get("settle", 10)))
+                after = run(["loginctl", "list-sessions", "--no-pager"], timeout=15)
+                answer["logout"] = {
+                    "sessionsBefore": before,
+                    "terminate": terminated,
+                    "sessionsAfter": after,
+                }
+            elif verb == "done":
+                transcript.append(answer)
+                channel.send({"reply": answer})
+                break
             else:
-                answer["error"] = f"unknown application {name!r}"
-        elif verb == "shell":
-            answer["shell"] = desktop_interaction.shell_alive(user, environment)
-        elif verb == "ask":
-            # The backend half of the end-to-end claim, through the exact
-            # program the shell spawns. See desktop_interaction.ask_through_the_bridge.
-            answer["ask"] = desktop_interaction.ask_through_the_bridge(
-                str(request.get("request", "")), user, environment)
-        elif verb == "character":
-            # What the figure is doing and what the bubble says, both read out
-            # of the accessibility tree. This is how the host watches the state
-            # machine it just started by typing.
-            answer["character"] = desktop_interaction.character_state(user, environment)
-        elif verb == "done":
-            transcript.append(answer)
-            channel.send({"reply": answer})
-            break
-        else:
-            answer["error"] = f"unknown command {verb!r}"
+                answer["error"] = f"unknown command {verb!r}"
+        except Exception as error:  # noqa: BLE001 - a command that raised is an answer
+            answer["error"] = f"{type(error).__name__}: {error}"
         transcript.append(answer)
         channel.send({"reply": answer})
 

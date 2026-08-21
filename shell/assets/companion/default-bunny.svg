@@ -6,12 +6,26 @@
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
 <!-- SPDX-FileCopyrightText: 2026 ComradeArt -->
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
-<!-- The shipped static companion. Drawn for Bunny OS; no third-party asset, no
-     embedded font, no external reference, no script. Transparent background so
-     it composites onto whatever the shell puts behind it. Its accessible
-     description lives in companion/characters.py and is authoritative: the
-     text-only presentation says the same thing this picture does. -->
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <!--
+    The shipped static companion. Drawn for Bunny OS; no third-party asset, no
+    embedded font, no external reference, no script. Transparent background so
+    it composites onto whatever the shell puts behind it. Its accessible
+    description lives in companion/characters.py and is authoritative: the
+    text-only presentation says the same thing this picture does.
+
+    The prose sits inside the element rather than above it. An image loader
+    handed a stream with no filename sniffs the first bytes, and shared-mime-info
+    matches `image/svg+xml` only on a literal `<svg` within the first 256. This
+    file carried 380 bytes of header comment, which put `<svg` at byte 528 and
+    made it sniff as `application/xml`: the same defect that stopped the desktop
+    wallpaper loading. It was found by sweeping for it rather than by anything
+    failing. This asset is loaded by path, so the name was always available and
+    the sniff never had to answer alone. Fixed anyway, because the next consumer
+    may not pass a name, and `tests/shell/test_svg_assets_are_sniffable.py` now
+    holds the line for every shipped SVG.
+  -->
+
   <title id="title">Bunny</title>
   <desc id="desc">A white bunny with violet ears, drawn as a simple flat illustration.</desc>
   <defs>

@@ -1,0 +1,7 @@
+[
+ {"command": "system", "label": "system-before", "timeout": 240},
+ {"command": "process-audit", "label": "audit-logged-in", "timeout": 120},
+ {"command": "logout", "label": "logout", "timeout": 60, "sleep": 15},
+ {"command": "process-audit", "label": "audit-after-logout", "timeout": 120, "sleep": 40},
+ {"command": "process-audit", "label": "audit-after-close", "timeout": 120}
+]

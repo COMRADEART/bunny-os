@@ -1,0 +1,9 @@
+{
+ "schemaVersion": 1,
+ "decisions": [],
+ "relationshipVocabulary": ["DISTINCT", "POSSIBLE_DUPLICATE", "DUPLICATE_OF", "RELATED"],
+ "decisionRequires": ["findingA", "findingB", "relationship", "rationale", "decidedBy", "date"],
+ "policy": "Every non-DISTINCT relationship between findings is a recorded human decision with rationale, decider, and date. Derivation applies decisions and creates none of its own: similar titles, matching components, or identical error text justify a recorded suspicion, never an automatic merge. Decisions are reversible - a later decision about the same pair supersedes the earlier one and both are preserved - and no report or finding is ever deleted by deduplication; a deduplicated finding still names every source report individually.",
+ "note": "Zero decisions. An empty list means no relationship has been decided, never that all findings are unrelated.",
+ "validationAuthority": "qualification/phase12/tools/alpha_ops.py validate_dedup_decision"
+}

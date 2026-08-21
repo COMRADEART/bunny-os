@@ -1,0 +1,466 @@
+{
+ "schemaVersion": 1,
+ "journey": "a",
+ "harnessOutcome": "done",
+ "driverOutcome": "complete",
+ "stages": [
+  "welcome",
+  "accessibility",
+  "language_region",
+  "keyboard",
+  "network",
+  "storage",
+  "encryption",
+  "account",
+  "privacy",
+  "appearance",
+  "companion",
+  "applications",
+  "review",
+  "confirm_erase",
+  "installing"
+ ],
+ "targetVerified": true,
+ "confirmationPhrase": "ERASE /dev/vda A0EDDF",
+ "errors": [],
+ "events": [
+  {
+   "arguments": "--passphrase=bunny-disk-passphrase",
+   "event": "driver-arguments",
+   "source": "/run/bunny-setup/drive.args"
+  },
+  {
+   "disk_device": "/dev/vda",
+   "disk_gib": 80.0,
+   "disk_model": "QEMU HARDDISK",
+   "display_name": "Alex",
+   "event": "start",
+   "expect_refusal": false,
+   "high_contrast": false,
+   "install_timeout": 2400.0,
+   "reduced_motion": false,
+   "text_scale": 1.0,
+   "timeout": 180.0,
+   "username": "alex"
+  },
+  {
+   "event": "window",
+   "title": "Set up Bunny OS"
+  },
+  {
+   "event": "stage",
+   "name": "welcome"
+  },
+  {
+   "action": "click",
+   "control": "Get started",
+   "event": "activated",
+   "role": "button"
+  },
+  {
+   "event": "page-turned",
+   "presses": 1,
+   "shows": [
+    "frame:Set up Bunny OS",
+    "scroll pane:",
+    "panel:",
+    "grouping:",
+    "grouping:",
+    "paragraph:"
+   ]
+  },
+  {
+   "event": "stage",
+   "name": "accessibility"
+  },
+  {
+   "action": "click",
+   "control": "Continue",
+   "event": "activated",
+   "role": "button"
+  },
+  {
+   "event": "page-turned",
+   "presses": 1,
+   "shows": [
+    "frame:Set up Bunny OS",
+    "scroll pane:",
+    "panel:",
+    "grouping:",
+    "grouping:",
+    "paragraph:"
+   ]
+  },
+  {
+   "event": "stage",
+   "name": "language_region"
+  },
+  {
+   "action": "click",
+   "control": "Continue",
+   "event": "activated",
+   "role": "button"
+  },
+  {
+   "event": "page-turned",
+   "presses": 1,
+   "shows": [
+    "frame:Set up Bunny OS",
+    "scroll pane:",
+    "panel:",
+    "alert:",
+    "alert:",
+    "paragraph:"
+   ]
+  },
+  {
+   "event": "stage",
+   "name": "keyboard"
+  },
+  {
+   "characters": 18,
+   "event": "typed",
+   "field": "Type here to check it. What you type is not saved and is not sent anywhere."
+  },
+  {
+   "action": "click",
+   "control": "Continue",
+   "event": "activated",
+   "role": "button"
+  },
+  {
+   "event": "page-turned",
+   "presses": 1,
+   "shows": [
+    "frame:Set up Bunny OS",
+    "scroll pane:",
+    "panel:",
+    "grouping:",
+    "grouping:",
+    "paragraph:"
+   ]
+  },
+  {
+   "event": "stage",
+   "name": "network"
+  },
+  {
+   "action": "click",
+   "control": "Continue without network",
+   "event": "activated",
+   "role": "button"
+  },
+  {
+   "event": "page-turned",
+   "presses": 1,
+   "shows": [
+    "frame:Set up Bunny OS",
+    "scroll pane:",
+    "panel:",
+    "grouping:",
+    "grouping:",
+    "paragraph:"
+   ]
+  },
+  {
+   "event": "stage",
+   "name": "storage"
+  },
+  {
+   "all": [
+    "Unknown model \u2014 5.4 GiB \u2014 /dev/loop0",
+    "Unknown model \u2014 5.8 GiB \u2014 /dev/zram0",
+    "Unknown model \u2014 80.0 GiB \u2014 /dev/vda",
+    "Back",
+    "Review what happens",
+    "Installation details, technical information about this step",
+    "Close"
+   ],
+   "candidates": [
+    "Unknown model \u2014 80.0 GiB \u2014 /dev/vda"
+   ],
+   "event": "storage-candidates",
+   "media": []
+  },
+  {
+   "detail": "the bus exposes no model string; identity carried by device and size",
+   "event": "model-unreported"
+  },
+  {
+   "disk": "Unknown model \u2014 80.0 GiB \u2014 /dev/vda",
+   "event": "target-verified",
+   "sizeGiB": 80.0
+  },
+  {
+   "action": "click",
+   "control": "Unknown model \u2014 80.0 GiB \u2014 /dev/vda",
+   "event": "activated",
+   "role": "button"
+  },
+  {
+   "disk": "Unknown model \u2014 80.0 GiB \u2014 /dev/vda \u2014 selected",
+   "event": "target-selected"
+  },
+  {
+   "action": "click",
+   "control": "Review what happens",
+   "event": "activated",
+   "role": "button"
+  },
+  {
+   "event": "page-turned",
+   "presses": 1,
+   "shows": [
+    "frame:Set up Bunny OS",
+    "scroll pane:",
+    "panel:",
+    "grouping:",
+    "grouping:",
+    "paragraph:"
+   ]
+  },
+  {
+   "event": "stage",
+   "name": "encryption"
+  },
+  {
+   "action": "toggle",
+   "control": "Encrypt this disk. Protects what is on the disk if the computer is lost or stolen. It does not protect you while you are logged in.",
+   "event": "activated",
+   "role": "switch"
+  },
+  {
+   "control": "Encrypt this disk. Protects what is on the disk if the computer is lost or stolen. It does not protect you while you are logged in.",
+   "event": "encryption-enabled"
+  },
+  {
+   "characters": 21,
+   "event": "typed",
+   "field": "Passphrase. You will type this every time the computer starts."
+  },
+  {
+   "characters": 21,
+   "event": "typed",
+   "field": "Passphrase again."
+  },
+  {
+   "action": "click",
+   "control": "Continue",
+   "event": "activated",
+   "role": "button"
+  },
+  {
+   "event": "page-turned",
+   "presses": 1,
+   "shows": [
+    "frame:Set up Bunny OS",
+    "scroll pane:",
+    "panel:",
+    "grouping:",
+    "grouping:",
+    "paragraph:"
+   ]
+  },
+  {
+   "event": "stage",
+   "name": "account"
+  },
+  {
+   "characters": 4,
+   "event": "typed",
+   "field": "Your name. What Bunny calls you."
+  },
+  {
+   "characters": 4,
+   "event": "typed",
+   "field": "Username. Lower-case letters, digits, dash and underscore."
+  },
+  {
+   "characters": 19,
+   "event": "typed",
+   "field": "Password."
+  },
+  {
+   "characters": 19,
+   "event": "typed",
+   "field": "Password again."
+  },
+  {
+   "action": "click",
+   "control": "Continue",
+   "event": "activated",
+   "role": "button"
+  },
+  {
+   "event": "page-turned",
+   "presses": 1,
+   "shows": [
+    "frame:Set up Bunny OS",
+    "scroll pane:",
+    "panel:",
+    "grouping:",
+    "grouping:",
+    "paragraph:"
+   ]
+  },
+  {
+   "event": "stage",
+   "name": "privacy"
+  },
+  {
+   "action": "click",
+   "control": "Continue",
+   "event": "activated",
+   "role": "button"
+  },
+  {
+   "event": "page-turned",
+   "presses": 1,
+   "shows": [
+    "frame:Set up Bunny OS",
+    "scroll pane:",
+    "panel:",
+    "grouping:",
+    "grouping:",
+    "paragraph:"
+   ]
+  },
+  {
+   "event": "stage",
+   "name": "appearance"
+  },
+  {
+   "action": "click",
+   "control": "Continue",
+   "event": "activated",
+   "role": "button"
+  },
+  {
+   "event": "page-turned",
+   "presses": 1,
+   "shows": [
+    "frame:Set up Bunny OS",
+    "scroll pane:",
+    "panel:",
+    "grouping:",
+    "grouping:",
+    "paragraph:"
+   ]
+  },
+  {
+   "event": "stage",
+   "name": "companion"
+  },
+  {
+   "action": "click",
+   "control": "Continue",
+   "event": "activated",
+   "role": "button"
+  },
+  {
+   "event": "page-turned",
+   "presses": 1,
+   "shows": [
+    "frame:Set up Bunny OS",
+    "scroll pane:",
+    "panel:",
+    "grouping:",
+    "grouping:",
+    "paragraph:"
+   ]
+  },
+  {
+   "event": "stage",
+   "name": "applications"
+  },
+  {
+   "action": "click",
+   "control": "Skip apps",
+   "event": "activated",
+   "role": "button"
+  },
+  {
+   "event": "page-turned",
+   "presses": 1,
+   "shows": [
+    "frame:Set up Bunny OS",
+    "scroll pane:",
+    "panel:",
+    "alert:",
+    "alert:",
+    "paragraph:"
+   ]
+  },
+  {
+   "event": "stage",
+   "name": "review"
+  },
+  {
+   "event": "review-consequence",
+   "text": [
+    "Everything on Unknown model \u2014 80.0 GiB \u2014 /dev/vda will be erased. This cannot be undone."
+   ]
+  },
+  {
+   "action": "click",
+   "control": "Install Bunny OS, erasing Unknown model \u2014 80.0 GiB \u2014 /dev/vda",
+   "event": "activated",
+   "role": "button"
+  },
+  {
+   "event": "page-turned",
+   "presses": 1,
+   "shows": [
+    "frame:Set up Bunny OS",
+    "scroll pane:",
+    "panel:",
+    "alert:",
+    "alert:",
+    "paragraph:"
+   ]
+  },
+  {
+   "event": "stage",
+   "name": "confirm_erase"
+  },
+  {
+   "event": "confirmation-phrase",
+   "phrase": "ERASE /dev/vda A0EDDF"
+  },
+  {
+   "characters": 21,
+   "event": "typed",
+   "field": "Type ERASE /dev/vda A0EDDF to confirm. Typed by hand, so that a mis-click cannot erase a disk."
+  },
+  {
+   "action": "click",
+   "control": "Erase Unknown model \u2014 80.0 GiB \u2014 /dev/vda and install Bunny OS",
+   "event": "activated",
+   "role": "button"
+  },
+  {
+   "event": "page-turned",
+   "presses": 1,
+   "shows": [
+    "frame:Set up Bunny OS",
+    "scroll pane:",
+    "panel:",
+    "grouping:",
+    "grouping:",
+    "paragraph:"
+   ]
+  },
+  {
+   "event": "stage",
+   "name": "installing"
+  },
+  {
+   "event": "progress",
+   "stages": "\u25c6  Getting the disk ready"
+  },
+  {
+   "event": "done",
+   "outcome": "complete"
+  }
+ ]
+}

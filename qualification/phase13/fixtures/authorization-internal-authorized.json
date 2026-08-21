@@ -1,0 +1,32 @@
+{
+ "fixture": true,
+ "fixtureClass": "TEST_FIXTURE_ONLY",
+ "purpose": "Drives the manufactured-authorization control: a well-shaped internal JSON claiming AUTHORIZED for the subject artifact with zero external evidence behind it. Every validation path must refuse it - the floor names each absent source, and the fixture wrapper is refused before that.",
+ "record": {
+  "accepted_risks": [],
+  "alpha_status": "SUFFICIENT",
+  "artifact_digest": "sha256:c87a6616008ce34f97840f63814e08fdb33574b52202fbb4841b7f5aa7f8562d",
+  "artifact_identity": "e906a48793d7",
+  "authority": "Constructed Fixture Release Authority",
+  "authority_role": "RELEASE_AUTHORITY",
+  "authorization_id": "AUTHORIZATION-001",
+  "blocking_conditions": [],
+  "decision": "AUTHORIZED",
+  "decision_timestamp": "2026-08-19",
+  "evidence_cut": {
+   "intakeIds": [],
+   "ledgerEntries": 0,
+   "ledgerSha256": "0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "expires_at": "2026-11-19",
+  "hardware_status": "ACCEPTED",
+  "issued_at": "2026-08-19",
+  "policy_versions": [
+   "SUFFICIENCY-POLICY-001"
+  ],
+  "second_approval_status": "ACCEPTED",
+  "security_status": "SATISFIED",
+  "signing_status": "ACCEPTED"
+ },
+ "test_fixture_only": true
+}

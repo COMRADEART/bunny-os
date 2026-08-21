@@ -1,0 +1,29 @@
+{
+ "acceptanceFields": [
+  "risk",
+  "owner",
+  "affectedArtifact",
+  "rationale",
+  "reviewBy"
+ ],
+ "findings": [],
+ "idPattern": "(SEC|HW|ALPHA)-(P9|EXT)-NNN",
+ "idPolicy": "The identifier assigned at first triage is the identifier for life. Findings triaged in the Phase 9 registry keep their -P9- identifiers; findings first entering through Phase 10 operations take -EXT-. One namespace, no renumbering.",
+ "lifecycleVocabulary": [
+  "RECEIVED",
+  "VALIDATED",
+  "TRIAGED",
+  "REPRODUCTION_PENDING",
+  "CONFIRMED",
+  "NOT_REPRODUCED",
+  "FIX_REQUIRED",
+  "ACCEPTED_RISK",
+  "DEFERRED",
+  "FIXED",
+  "REQUALIFIED",
+  "CLOSED"
+ ],
+ "note": "Zero findings. A finding exists only downstream of an ACCEPTED intake entry and advances only through the transitions declared in tools/candidate_ops.py. A finding is never closed because code changed: closure requires requalification evidence bound to the finding's artifact.",
+ "schemaVersion": 1,
+ "transitionAuthority": "qualification/phase10/tools/candidate_ops.py FINDING_TRANSITIONS"
+}

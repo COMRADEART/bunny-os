@@ -1,0 +1,118 @@
+{
+ "fixtureClass": "TEST_FIXTURE_ONLY",
+ "purpose": "Drives the no-remediation dry run: an approving review establishing every baseline Critical NOT_APPLICABLE with analysis. Nothing is rebuilt; the artifact stays e906a48793d7; the gate may reach SATISFIED only inside the scratch derivation.",
+ "record": {
+  "schema": "bunny-os/security-review-submission/1",
+  "reviewer_id": "REVIEWER-004",
+  "reviewer": "REVIEWER-004",
+  "organisation": "TEST_FIXTURE_ONLY dry run",
+  "independence": {
+   "declaration": "constructed fixture: this reviewer had no role in producing artifact e906a48793d7 and no interest in its approval",
+   "relationship_to_project": "none",
+   "is_release_decision_authority": false,
+   "policy_exception": null
+  },
+  "artifact_digest": "sha256:c87a6616008ce34f97840f63814e08fdb33574b52202fbb4841b7f5aa7f8562d",
+  "artifactDigest": "sha256:c87a6616008ce34f97840f63814e08fdb33574b52202fbb4841b7f5aa7f8562d",
+  "independently_computed_digest": "sha256:c87a6616008ce34f97840f63814e08fdb33574b52202fbb4841b7f5aa7f8562d",
+  "digest_basis": "image",
+  "digest_computation": "constructed fixture: skopeo inspect --format {{.Digest}} oci-archive:bunny-alpha.tar",
+  "review_scope_version": "SCOPE-1",
+  "scope": "constructed fixture: independent review of artifact e906a48793d7 under REVIEW_SCOPE.md SCOPE-1",
+  "review_start": "2026-08-17",
+  "review_end": "2026-08-18",
+  "date": "2026-08-18",
+  "findings": [
+   {
+    "reviewer_finding_id": "R4-F1",
+    "title": "constructed fixture finding for GHSA-5cgq-3rg8-m6cv",
+    "severity": "Critical",
+    "affected_component": "golang.org/x/crypto",
+    "applicability": "NOT_APPLICABLE",
+    "evidence": "constructed fixture: reachability analysis for GHSA-5cgq-3rg8-m6cv shows the vulnerable path is not reachable from any shipped entry point; analysis attached",
+    "rationale": "vulnerable code present but unreachable as shipped",
+    "recommended_disposition": "NOT_APPLICABLE",
+    "baseline_advisory": "GHSA-5cgq-3rg8-m6cv"
+   },
+   {
+    "reviewer_finding_id": "R4-F2",
+    "title": "constructed fixture finding for GHSA-89gr-r52h-f8rx",
+    "severity": "Critical",
+    "affected_component": "golang.org/x/crypto",
+    "applicability": "NOT_APPLICABLE",
+    "evidence": "constructed fixture: reachability analysis for GHSA-89gr-r52h-f8rx shows the vulnerable path is not reachable from any shipped entry point; analysis attached",
+    "rationale": "vulnerable code present but unreachable as shipped",
+    "recommended_disposition": "NOT_APPLICABLE",
+    "baseline_advisory": "GHSA-89gr-r52h-f8rx"
+   },
+   {
+    "reviewer_finding_id": "R4-F3",
+    "title": "constructed fixture finding for GHSA-f5wc-c3c7-36mc",
+    "severity": "Critical",
+    "affected_component": "golang.org/x/crypto",
+    "applicability": "NOT_APPLICABLE",
+    "evidence": "constructed fixture: reachability analysis for GHSA-f5wc-c3c7-36mc shows the vulnerable path is not reachable from any shipped entry point; analysis attached",
+    "rationale": "vulnerable code present but unreachable as shipped",
+    "recommended_disposition": "NOT_APPLICABLE",
+    "baseline_advisory": "GHSA-f5wc-c3c7-36mc"
+   },
+   {
+    "reviewer_finding_id": "R4-F4",
+    "title": "constructed fixture finding for GHSA-jppx-rxg9-jmrx",
+    "severity": "Critical",
+    "affected_component": "golang.org/x/crypto",
+    "applicability": "NOT_APPLICABLE",
+    "evidence": "constructed fixture: reachability analysis for GHSA-jppx-rxg9-jmrx shows the vulnerable path is not reachable from any shipped entry point; analysis attached",
+    "rationale": "vulnerable code present but unreachable as shipped",
+    "recommended_disposition": "NOT_APPLICABLE",
+    "baseline_advisory": "GHSA-jppx-rxg9-jmrx"
+   },
+   {
+    "reviewer_finding_id": "R4-F5",
+    "title": "constructed fixture finding for GHSA-p77j-4mvh-x3m3",
+    "severity": "Critical",
+    "affected_component": "google.golang.org/grpc",
+    "applicability": "NOT_APPLICABLE",
+    "evidence": "constructed fixture: reachability analysis for GHSA-p77j-4mvh-x3m3 shows the vulnerable path is not reachable from any shipped entry point; analysis attached",
+    "rationale": "vulnerable code present but unreachable as shipped",
+    "recommended_disposition": "NOT_APPLICABLE",
+    "baseline_advisory": "GHSA-p77j-4mvh-x3m3"
+   },
+   {
+    "reviewer_finding_id": "R4-F6",
+    "title": "constructed fixture finding for GHSA-rm3j-f69w-wqmq",
+    "severity": "Critical",
+    "affected_component": "golang.org/x/crypto",
+    "applicability": "NOT_APPLICABLE",
+    "evidence": "constructed fixture: reachability analysis for GHSA-rm3j-f69w-wqmq shows the vulnerable path is not reachable from any shipped entry point; analysis attached",
+    "rationale": "vulnerable code present but unreachable as shipped",
+    "recommended_disposition": "NOT_APPLICABLE",
+    "baseline_advisory": "GHSA-rm3j-f69w-wqmq"
+   },
+   {
+    "reviewer_finding_id": "R4-F7",
+    "title": "constructed fixture finding for GHSA-vgwf-h737-ff37",
+    "severity": "Critical",
+    "affected_component": "golang.org/x/crypto",
+    "applicability": "NOT_APPLICABLE",
+    "evidence": "constructed fixture: reachability analysis for GHSA-vgwf-h737-ff37 shows the vulnerable path is not reachable from any shipped entry point; analysis attached",
+    "rationale": "vulnerable code present but unreachable as shipped",
+    "recommended_disposition": "NOT_APPLICABLE",
+    "baseline_advisory": "GHSA-vgwf-h737-ff37"
+   },
+   {
+    "reviewer_finding_id": "R4-F8",
+    "title": "constructed fixture finding for GHSA-x527-x647-q7gg",
+    "severity": "Critical",
+    "affected_component": "golang.org/x/crypto",
+    "applicability": "NOT_APPLICABLE",
+    "evidence": "constructed fixture: reachability analysis for GHSA-x527-x647-q7gg shows the vulnerable path is not reachable from any shipped entry point; analysis attached",
+    "rationale": "vulnerable code present but unreachable as shipped",
+    "recommended_disposition": "NOT_APPLICABLE",
+    "baseline_advisory": "GHSA-x527-x647-q7gg"
+   }
+  ],
+  "overall_assessment": "APPROVED",
+  "disposition": "APPROVED"
+ }
+}

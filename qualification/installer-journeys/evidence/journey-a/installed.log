@@ -1,0 +1,54 @@
+{
+ "schemaVersion": 1,
+ "note": "Read from the installed filesystem. `expected` is used only to know what to look for; every value below came from a file on the target.",
+ "disk": "build/out/install/journey-a/target.qcow2",
+ "expectedFrom": "build/out/install/journey-a/expected.json",
+ "observed": {
+  "filesystems": [
+   "/dev/sda1: vfat",
+   "/dev/sda2: ext4"
+  ],
+  "luksPresent": true,
+  "partitions": {
+   "root": "/dev/mapper/luks0",
+   "boot": "/dev/sda2"
+  },
+  "bootEntries": [
+   "ostree-1.conf"
+  ],
+  "deployment": [
+   "7eea4475891fd2763404a223af8317e58ae1ad7ad91737a9344664a744b0e2ec.0",
+   "7eea4475891fd2763404a223af8317e58ae1ad7ad91737a9344664a744b0e2ec.0.origin"
+  ]
+ },
+ "findings": [
+  "the account 'alex' does not exist on the installed system"
+ ],
+ "checked": {
+  "language": {
+   "read": false,
+   "detail": "__ERROR__ *stdin*:1: libguestfs: error: download: /ostree/deploy/*/deploy/*/etc/locale.conf: No such file or directory"
+  },
+  "keyboard": {
+   "read": false,
+   "detail": "__ERROR__ *stdin*:1: libguestfs: error: download: /ostree/deploy/*/deploy/*/etc/vconsole.conf: No such file or directory"
+  },
+  "hostname": {
+   "read": false,
+   "detail": "__ERROR__ *stdin*:1: libguestfs: error: download: /ostree/deploy/*/deploy/*/etc/hostname: No such file or directory"
+  },
+  "account": {
+   "read": true,
+   "present": false,
+   "username": "alex"
+  },
+  "rootLocked": {
+   "read": true,
+   "locked": true
+  },
+  "choicesOnTarget": {
+   "read": false,
+   "files": []
+  }
+ }
+}

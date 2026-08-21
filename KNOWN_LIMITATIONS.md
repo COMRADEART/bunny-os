@@ -35,6 +35,34 @@ worse than no number; the same rule already applies to CPU-seconds on this host.
 "Unknown image format: application/xml" — the image has no SVG pixbuf loader —
 so GNOME paints the dconf gradient behind the desktop's own contrast scrim.
 
+> **Corrected 2026-08-17 (Phase 5). The clause between the dashes above is
+> wrong, and the original is kept because acting on it would have made things
+> worse.**
+>
+> The image has a loader. `librsvg2-2.62.3-1.fc44` and
+> `glycin-loaders-2.1.5-1.fc44` are both installed in the Alpha Release
+> Candidate — `qualification/phase4/artifact/p4-build.log`, lines 359 and
+> 369 to 371. Adding a package, which is what this sentence points at, would
+> have changed nothing.
+>
+> The loader was never reached. An image loader handed a stream has no filename
+> and identifies the format by sniffing the leading bytes; shared-mime-info
+> matches `image/svg+xml` on a literal `<svg` within the first **256** bytes,
+> and `application/xml` on the `<?xml` at offset 0 whatever follows it. The file
+> carried 1.2 KB of provenance comment between the two, putting `<svg` at byte
+> **1361**.
+>
+> Measured on the Fedora reference target with `Gio.content_type_guess`, on
+> content alone: `bunny-nocturne.svg` → `application/xml`;
+> `bunny-arc-dark.svg`, whose `<svg` is at byte 0 → `image/svg+xml`. The error
+> string names the wrong answer the sniff gave.
+>
+> Fixed in source at `9a34ee81` by moving the prose inside the element (`<svg`
+> now at byte 139), swept across all nine shipped SVGs — which found a second
+> file with the same latent defect that nothing had reported — and covered by
+> `tests/shell/test_svg_assets_are_sniffable.py`. **Not yet qualified on a
+> desktop**: that needs a build, and the artifact is frozen.
+
 **The search results panel is drawn empty.** A 560×13 strip sits under the top
 bar with no rows in it.
 
@@ -105,9 +133,18 @@ Fedora's own %ghost paths in the live profile only, verified against the
 rpm-owned originals with `cmp`.
 
 Measured end to end: `image-builder 76.0.0`, `osbuild 185`, exit 0, a 2.0 GB
-bootable ISO whose `BOOTX64.EFI`, `grubx64.efi` and `mmx64.efi` are
-byte-identical to `shim-x64-16.1-5` and `grub2-efi-x64-cdboot-2.12-60.fc44`.
-Secure Boot is unchanged.
+ISO whose `BOOTX64.EFI`, `grubx64.efi` and `mmx64.efi` are byte-identical to
+`shim-x64-16.1-5` and `grub2-efi-x64-cdboot-2.12-60.fc44`. Secure Boot is
+unchanged.
+
+**Corrected 2026-08-13.** That sentence said "a 2.0 GB **bootable** ISO". Both
+measurements behind it were real — image-builder exited 0 and the signed
+binaries matched their rpm-owned originals — and both are about ISO
+*generation*. The medium was never booted. When it was, it reached GRUB and
+failed in the initramfs, and the reason had been present the whole time: the
+initramfs contained no module able to read any root argument the entries could
+have carried. See `LIVE_BOOT_ROOT_CAUSE.md`. "ISO generated" and "installer boot
+validated" are now distinct states with a build gate between them.
 
 **Still outstanding:** that build used the cached *beta* live image. **No Alpha
 ISO has been produced**, because the Alpha payload is not built on any current
@@ -355,9 +392,27 @@ establishes anything about production signing.
 
 ### Nothing is operated
 
-No update manifest is published, no previous release exists, no sync service runs,
-no fleet is enrolled, no device is manufactured. The update, rollback, migration and
-soak evidence categories depend on operated release evidence that does not exist.
+No update manifest is published, no sync service runs, no fleet is enrolled, no
+device is manufactured. The update, migration and soak evidence categories depend
+on operated release evidence that does not exist.
+
+Two things in that sentence stopped being true on 2026-08-18 and the correction
+belongs here rather than in a report nobody reads twice.
+
+**A previous release does exist.** Phase 5 built a second image, so N and N+1
+are both on the builder, and rollback has been exercised for real: `bootc
+rollback` on a disk with two deployments brings up the previous one — verified
+by three independent readings — and every one of the five user-state files
+written before the switch survives it. See
+`qualification/phase5/update/UPDATE_AND_ROLLBACK.md`.
+
+**The update path refuses by design, not for want of a manifest.**
+`/etc/bunny-os/update.json` ships `enabled: false`, and
+`/usr/share/bunny-os/update-keys/` holds a revocation list and **no trusted
+key**, so the agent answers `not_configured` and would answer `unknown_key` to
+any manifest that got past it. That is the correct posture for an image with no
+production signing key, and it means an Alpha machine will not update itself
+even if a manifest appears.
 
 ### An archive-only build is not a candidate build
 
@@ -578,7 +633,8 @@ what would remove it.
 | Only one builder machine exists | `independent-builder` reproducibility cannot be established | a CI runner, a second machine, or a second administrator |
 | No production signing key of any role | the `Signing` evidence row records `FAIL` | a key ceremony, which needs a second person for four of the seven roles |
 | No live ISO and no signed recovery ISO | installation, encryption and recovery matrices cannot run even in a VM | building them |
-| No published update manifest and no previous release | update, rollback, migration and preservation matrices cannot run | publishing one and keeping the other |
+| No published update manifest, and the image ships no update trust root | the manifest matrix cannot run, and the running system refuses every update by design | a production signing key, which needs a second person |
+| *(2026-08-18)* A second build now exists | rollback **does** run: `bootc rollback` brings up the previous deployment and all user state survives, measured. The `vm-rollback-test.sh` deployment-selection route still does not work and reports NOT_RUN | teaching that harness the `bootc rollback` route |
 | No physical machine, ever | `Hardware` and `Secure Boot` categories block; the OEM pilot blocks | one x86-64 UEFI machine |
 | No independent review of any kind | four evidence positions rest on self-assessment | commissioning them |
 | Accessibility evidence is entirely static | 14 essential workflows unverified; this is the limitation that risks harming a user rather than merely leaving a box unticked | driving them with assistive technology |
@@ -963,3 +1019,112 @@ resolved first, and there is currently no way to do so from the printed masks.
 and VRAM size. An unrecognised driver reports `unknown` rather than guessing.
 The classification affects scoring, never usability — usability is decided by
 driver and runtime readiness, which are measured.
+
+## App Capsules and the Trust layer
+
+Measured in a booted guest, SELinux enforcing, at commit `524107e50b2e`. Each of
+these was recorded by the qualification section that found it, alongside its
+pass, rather than being left out. See `CAPSULE_VM_SECURITY_REPORT.md`.
+
+### A capsule's network allowlist is a declaration, not a boundary
+
+Only the `none` class is enforced, and it is enforced absolutely by
+`--unshare-net`: no external host, no DNS, no loopback. Every other class
+currently means "there is a network". A capsule granted `example.com` connected
+to `example.org` in the guest run.
+
+The consequence is a rule for the product, not just a gap: **no user-facing
+string may imply per-domain enforcement.** The one network state that can be
+described in absolute terms today is Off.
+
+### SELinux denials for capsule operations have never been observed
+
+`kernel.dmesg_restrict=1`, `ausearch` is not installed, and `journalctl`
+returned zero kernel lines. The recorded AVC count of `0` means *nobody looked*,
+not *nothing happened*.
+
+What is established is one-directional and still worth having: every expected
+capsule operation succeeded with the policy loaded and Enforcing, which rules
+out policy blocking the capsule. It says nothing about a capsule doing something
+policy would have denied.
+
+### Six isolation checks are inconclusive rather than passing
+
+`camera`, `gpu`, `clipboard`, `granted_file_read`, `other_capsule_secret_read`
+and `own_data_read`: the unconfined control could not reach the resource either,
+because the suite runs on the console with no `/dev/video*` and no
+`WAYLAND_DISPLAY`. A check whose control finds nothing proves nothing about
+confinement, so these are counted separately from the seventeen that are
+isolated. They become meaningful only when the suite runs inside a graphical
+session.
+
+### The desktop ignores text scaling and high contrast
+
+Measured on a booted desktop: setting `text-scaling-factor` to 1.5 and
+`org.gnome.desktop.a11y.interface high-contrast` to true left the screen
+pixel-identical.
+
+The cause is structural. All 43 `font-size` declarations in the shell
+stylesheet are absolute pixels and none is relative, so there is nothing for a
+scale factor to multiply; and all 151 colour literals are hardcoded with none
+derived from the theme, so a high-contrast theme has nothing to override.
+`lib/assistant/trustPrompt.js` states that "the stylesheet and the high-contrast
+theme decide the values" — the stylesheet does, the theme does not.
+
+This is the largest accessibility gap in the desktop and it is not a small fix:
+it means relative type throughout and theme-derived colour throughout, each
+re-validated against the layout suite at every supported resolution.
+
+### Nothing here is hardware validated
+
+Every capsule measurement is `kvm` on one host. There is no device.
+
+
+## User journey qualification additions � 2026-08-16
+
+The first real logins ever driven (installed machine from a journey-E
+encrypted install, GDM greeter, typed credentials) found and fixed: a
+first-run SIGSEGV (MemoryDenyWriteExecute on a Mesa-rendering GTK unit), the
+whole bunny session-unit family starting inside the GDM greeter, companion
+setup choices written to a GSettings schema that exists nowhere, an autostart
+assertion aimed at the wrong wants directory, and � largest � the Bunny
+session that no installed user had ever received: GDM has no DefaultSession
+key, so the custom.conf default was a fiction and every user landed in stock
+GNOME with the Bunny desktop inert. The installer now writes the created
+user's AccountsService record (Session=bunny). What remains open:
+
+- ~~**The ACPI power key does nothing in a Bunny session.**~~ **FIXED in
+  Phase 4.** Not a power-key defect at all: the desktop was built during
+  gnome-shell's startup and dismissed the login overview before
+  overviewControls' `runStartupAnimation` had its first allocation, leaving
+  `ensureAllocation()` unsettled for ever. `startup-complete` therefore never
+  fired, `Main.actionMode` stayed `NONE`, and windowManager's
+  `_filterKeybinding` dropped **every** keybinding in the session — the power
+  key, the media keys and the desktop's own shortcuts alike. The desktop now
+  waits for `startup-complete` before it is built, and the overview dismissal
+  is guarded. Measured across eleven boots in
+  `qualification/phase4/power-key/`.
+- ~~**Only the installer-created user gets the Bunny session.**~~ **FIXED in
+  Phase 4.** accounts-daemon user templates seed `Session=bunny` for every
+  account the daemon creates — the Users panel's and gnome-initial-setup's
+  `CreateUser`, which is what an OEM device uses. An account made with
+  `useradd` from a shell is still never templated (measured); the greeter
+  still offers Bunny to it.
+- ~~**`compact` and `minimal` companion modes have no persisted
+  representation.**~~ **FIXED in Phase 4.** `character.companionMode`
+  carries the chrome-density axis; `off` remains `character.visible` and
+  `text-only` remains the accessibility preference, with
+  `Settings.presentation_mode()` the one resolver back to the wizard's
+  five-way answer.
+- **The first-run window covers the character.** The desktop character is a
+  full-body figure on a centre-stage dais, and the centred first-run wizard
+  occludes everything but its shoes. Rendering is correct (decided by
+  cropping the photograph); whether the wizard should sit centre-stage over
+  the character is a design question, recorded rather than judged here.
+- **The package snapshot does not yet pin glibc-langpack-en.** The Phase 3
+  image installs it from the network (the retained snapshot predates the
+  dependency); the next snapshot refresh should fold it in.
+- **Anaconda module processes read only /etc/anaconda/anaconda.conf.** The
+  medium's conf.d drop-in is read by the main process alone, which is why the
+  target-path redirection lives where it does; module-side path assumptions
+  would regress silently if that file moved.

@@ -1,0 +1,34 @@
+{
+ "artifacts": [
+  {
+   "artifact_id": "e906a48793d7",
+   "build_identity": "BUNNY-MANIFEST.json and provenance.json in the retained archive; digests recomputed from bytes 2026-08-18 (qualification/phase7/baseline/freeze.log)",
+   "digest": "sha256:c87a6616008ce34f97840f63814e08fdb33574b52202fbb4841b7f5aa7f8562d",
+   "digests": {
+    "image": "sha256:c87a6616008ce34f97840f63814e08fdb33574b52202fbb4841b7f5aa7f8562d",
+    "iso": "823d50caba35afe72452768affd5f6fa0ac8cfc13c164f0e1bc909fa887ab421",
+    "ociTar": "205a77f1b6cdf33915bce3afceb0914d6af25f97b434cf2128aec04d199b43dd",
+    "qcow2": "497add9a77db2db02bf2541e85b04b0e285c1833d2c8220d193d0d413a6ce867",
+    "raw": "a6ee06dcbc0ed3aa22c9ea07c339882eb97c7f16ce906b654c9a1e1119849d46"
+   },
+   "parent_artifact": null,
+   "qualification_state": "EVIDENCE_PENDING",
+   "relationship": "ROOT",
+   "signingStatus": "UNSIGNED",
+   "source_commit": "e906a48793d74544b39c14cc3e35e0654f5311e2",
+   "supersedes": null
+  }
+ ],
+ "note": "Artifact relationships are recorded here explicitly, never inferred from commit history. The Phase 4 candidate e906a48793d7 is ROOT; no successor exists. A dry run may model CANDIDATE-NEXT in a constructed graph inside a test, but a modelled candidate is never recorded here as existing.",
+ "relationshipVocabulary": [
+  "ROOT",
+  "REMEDIATES",
+  "REBUILDS",
+  "EXPERIMENTAL",
+  "PARALLEL",
+  "SUPERSEDES"
+ ],
+ "schemaVersion": 1,
+ "transferDecisions": [],
+ "transferPolicy": "Evidence for one artifact evaluated against another defaults to DOES_NOT_APPLY. A transfer requires a recorded decision (fromArtifact, toArtifact, evidenceScope, result, reasoning, decidedBy, date) riding on an explicit relationship edge in this graph. 'The change looks unrelated' is not a mechanism."
+}

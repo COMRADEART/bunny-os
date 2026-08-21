@@ -1,8 +1,8 @@
 # Accessibility qualification report
 
-Date: 2026-07-29  
+Date: 2026-08-18T16:22:03Z  
 Candidate commit: `79bb99ddb39d8a5dbc279629f43b23346fb0e5e8`  
-Result: **NOT QUALIFIED** — 0 of 14 scenarios resolved, 0 failing, 14 not run.
+Result: **NOT QUALIFIED** — 2 of 14 scenarios resolved, 0 failing, 12 not run.
 
 Fourteen essential workflows, from installer keyboard navigation and screen reader through the encryption prompt, first run, login, the Bunny surfaces, update, rollback, recovery, diagnostics export, and the high-contrast, text-scaling and reduced-motion settings.
 
@@ -21,8 +21,8 @@ Fourteen essential workflows, from installer keyboard navigation and screen read
 | `rollback-ui` | NOT_RUN | source-inspection | — |
 | `recovery-ui` | NOT_RUN | source-inspection | — |
 | `diagnostics-export` | NOT_RUN | source-inspection | — |
-| `high-contrast` | NOT_RUN | source-inspection | — |
-| `text-scaling` | NOT_RUN | source-inspection | — |
+| `high-contrast` | PASS | virtual-machine | `qualification/phase7/accessibility/evidence/a11y-e906a48793d7/accessibility.json` |
+| `text-scaling` | PASS | virtual-machine | `qualification/phase7/accessibility/evidence/a11y-e906a48793d7/accessibility.json` |
 | `reduced-motion` | NOT_RUN | source-inspection | — |
 
 ## Why these scenarios have not run
@@ -44,8 +44,6 @@ Each of these is blocking. `NOT_RUN` is not a soft state:
 - `rollback-ui`
 - `recovery-ui`
 - `diagnostics-export`
-- `high-contrast`
-- `text-scaling`
 - `reduced-motion`
 
 ## Standing note

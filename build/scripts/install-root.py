@@ -46,8 +46,28 @@ from install_routes import (  # noqa: E402 - the path above is what makes this i
 
 
 def copy_file(source: Path, destination: Path, mode: int) -> None:
-    """The one primitive. Everything installed goes through here."""
+    """The one primitive. Everything installed goes through here.
+
+    The destination is **removed** before it is written, and that is not
+    tidiness. ``shutil.copyfile`` opens the destination for truncation, which
+    writes *through* an existing hardlink — so installing over a file an RPM
+    ships as one member of a hardlink group silently rewrites every other
+    member of that group.
+
+    Measured on the release candidate: Fedora's ``accountsservice`` ships
+    ``/usr/share/accountsservice/user-templates/{standard,administrator}`` as
+    hardlinks to each other, and installing Bunny's two templates over them
+    left both paths holding whichever route ran last — 495 bytes of the
+    administrator template under both names, still sharing one inode. The
+    behaviour happened to survive it (the two templates carry the same
+    ``[User]`` block), which is exactly why a check that only asked "did the
+    session come out right" would have missed it.
+
+    Unlinking first gives each destination its own inode, which is what
+    ``install(1)`` does and what every caller here already assumes.
+    """
     destination.parent.mkdir(parents=True, exist_ok=True)
+    destination.unlink(missing_ok=True)
     shutil.copyfile(source, destination)
     os.chmod(destination, mode)
 
@@ -518,7 +538,27 @@ def install_activation(profile: str) -> None:
     elif profile in {"developer", "desktop", "shell", "shell-test", "live", "beta"}:
         subprocess.run(["/usr/bin/systemctl", "enable", "gdm.service"], check=True)
         if profile == "live":
-            subprocess.run(["/usr/bin/systemctl", "enable", "bunny-live-session.service"], check=True)
+            # Both halves of the live installer. `bunny-live-session` creates the
+            # ephemeral account and writes the marker carrying its UID;
+            # `bunny-installer-backend` reads that marker, serves the installer
+            # protocol on a socket only that UID may open, and publishes the
+            # session token the setup surface authenticates with.
+            #
+            # Without the second, the medium boots into a setup surface that
+            # finds no backend, reports "no disks found" on a machine with a
+            # disk, and can install nothing. The unit shipped with
+            # WantedBy=graphical.target and nothing wanted it — the exact shape
+            # of the brlapi failure this function's docstring is about.
+            # Three units, not two: the backend's destructive executor drives
+            # Anaconda's Boss over the private bus, and run 11 of Journey A
+            # proved nothing on the medium ever started that bus — every
+            # confirmed installation ended at "destructive executor is
+            # unavailable" with the wire to it working perfectly.
+            subprocess.run([
+                "/usr/bin/systemctl", "enable",
+                "bunny-live-session.service", "bunny-installer-backend.service",
+                "bunny-anaconda-bus.service",
+            ], check=True)
         subprocess.run(["/usr/bin/systemctl", "set-default", "graphical.target"], check=True)
     else:
         subprocess.run(["/usr/bin/systemctl", "set-default", "multi-user.target"], check=True)
@@ -564,6 +604,19 @@ def install_activation(profile: str) -> None:
             "/etc/systemd/user/graphical-session.target.wants/bunny-first-run.service"
         ),
     }
+
+    # Live-only, and asserted the same way: the symlink is the artifact, the
+    # command is only a claim about a command.
+    if profile == "live":
+        required_activation["bunny-installer-backend.service"] = Path(
+            "/etc/systemd/system/graphical.target.wants/bunny-installer-backend.service"
+        )
+        required_activation["bunny-live-session.service"] = Path(
+            "/etc/systemd/system/graphical.target.wants/bunny-live-session.service"
+        )
+        required_activation["bunny-anaconda-bus.service"] = Path(
+            "/etc/systemd/system/graphical.target.wants/bunny-anaconda-bus.service"
+        )
 
     #: Units that must **not** be activated, and why.
     #:

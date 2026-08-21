@@ -1,0 +1,23 @@
+{
+ "windowSeconds": 60,
+ "processes": {
+  "gnomeShell": {
+   "pid": 1244,
+   "cpuSecondsOver60s": 4.65,
+   "cpuPercent": 7.75,
+   "rssMiB": 322.3
+  },
+  "companion": {
+   "pid": 16842,
+   "cpuSecondsOver60s": 0.16,
+   "cpuPercent": 0.27,
+   "rssMiB": 62.5
+  },
+  "neuralWorker": {
+   "pid": 16902,
+   "cpuSecondsOver60s": 0.0,
+   "cpuPercent": 0.0,
+   "rssMiB": 9.1
+  }
+ }
+}

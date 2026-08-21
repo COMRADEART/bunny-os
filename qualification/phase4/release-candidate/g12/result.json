@@ -1,0 +1,175 @@
+{
+ "findings": [],
+ "harness": "vm-login-story",
+ "interactionStatus": "complete",
+ "journalChecks": {
+  "companionService": true,
+  "gdmStarted": true,
+  "gnomeShell": true,
+  "graphicalTarget": true,
+  "sessionOpened": true
+ },
+ "journeyVerdict": {
+  "capsuleStarted": true,
+  "decision": "granted",
+  "finalSays": "Done. I made Pictures/holiday-resized.png at 100 pixels wide. Your original wasn't changed.",
+  "finalState": "idle",
+  "inputUnchanged": true,
+  "neighbourUnchanged": true,
+  "pixels": [
+   100,
+   50
+  ],
+  "produced": [
+   "holiday-resized.png"
+  ]
+ },
+ "machine": "build/out/phase3/machine.qcow2",
+ "schemaVersion": 1,
+ "systemReport": {
+  "appliedState": {
+   "argv": [
+    "/usr/bin/sudo",
+    "-u",
+    "alex",
+    "-H",
+    "cat",
+    "/var/home/alex/.local/state/bunny-os/applied.json"
+   ],
+   "ran": true,
+   "returncode": 0,
+   "stderr": "",
+   "stdout": "{\n \"applied\": 11,\n \"dryRun\": false,\n \"failures\": [],\n \"results\": [\n  {\n   \"applied\": true,\n   \"detail\": \"org.gnome.desktop.interface color-scheme = default\",\n   \"intent\": \"appearance: system\",\n   \"key\": \"colourScheme\",\n   \"value\": \"default\"\n  },\n  {\n   \"applied\": true,\n   \"detail\": \"org.gnome.desktop.interface gtk-theme = Adwaita\",\n   \"intent\": \"appearance: GTK theme\",\n   \"key\": \"gtkTheme\",\n   \"value\": \"Adwaita\"\n  },\n  {\n   \"applied\": true,\n   \"detail\": \"org.gnome.desktop.interface text-scaling-factor = 1.0\",\n   \"intent\": \"text size 100%\",\n   \"key\": \"textScale\",\n   \"value\": \"1.0\"\n  },\n  {\n   \"applied\": true,\n   \"detail\": \"org.gnome.desktop.a11y.interface high-contrast = false\",\n   \"intent\": \"high contrast\",\n   \"key\": \"highContrast\",\n   \"value\": \"false\"\n  },\n  {\n   \"applied\": true,\n   \"detail\": \"org.gnome.desktop.interface enable-animations = true\",\n   \"intent\": \"reduced motion\",\n   \"key\": \"reducedMotion\",\n   \"value\": \"true\"\n  },\n  {\n   \"applied\": true,\n   \"detail\": \"org.gnome.desktop.a11y.applications screen-reader-enabled = false\",\n   \"intent\": \"screen reader\",\n   \"key\": \"screenReader\",\n   \"value\": \"false\"\n  },\n  {\n   \"applied\": true,\n   \"detail\": \"character.visible = true; accessibility.text_only = false; character.companion_mode = full\",\n   \"intent\": \"Bunny presentation: full\",\n   \"key\": \"companionMode\",\n   \"value\": \"full\"\n  },\n  {\n   \"applied\": true,\n   \"detail\": \"accessibility.captions_always = true\",\n   \"intent\": \"captions\",\n   \"key\": \"companionCaptions\",\n   \"value\": true\n  },\n  {\n   \"applied\": true,\n   \"detail\": \"org.gnome.desktop.privacy report-technical-problems = false\",\n   \"intent\": \"crash reports\",\n   \"key\": \"crashReports\",\n   \"value\": \"false\"\n  },\n  {\n   \"applied\": true,\n   \"detail\": \"org.gnome.system.location enabled = false\",\n   \"intent\": \"location services\",\n   \"key\": \"location\",\n   \"value\": \"false\"\n  },\n  {\n   \"applied\": true,\n   \"detail\": \"symlink present after enable\",\n   \"intent\": \"start Bunny at login\",\n   \"key\": \"companionAtLogin\",\n   \"value\": true\n  }\n ],\n \"schemaVersion\": 1,\n \"total\": 11\n}"
+  },
+  "choicesOnTarget": {
+   "argv": [
+    "cat",
+    "/var/lib/bunny-setup/choices.json"
+   ],
+   "ran": true,
+   "returncode": 0,
+   "stderr": "",
+   "stdout": "{\n \"accessibility\": {\n  \"captions\": false,\n  \"highContrast\": false,\n  \"reducedMotion\": false,\n  \"screenReader\": false,\n  \"textScale\": 1.0\n },\n \"account\": {\n  \"deviceName\": \"warren\",\n  \"displayName\": \"Alex\",\n  \"username\": \"alex\"\n },\n \"appearance\": {\n  \"accent\": \"violet\",\n  \"colourScheme\": \"system\",\n  \"wallpaper\": \"bunny-default\"\n },\n \"applications\": {\n  \"activities\": [],\n  \"selected\": []\n },\n \"companion\": {\n  \"atLogin\": true,\n  \"captions\": true,\n  \"mode\": \"full\",\n  \"voice\": false\n },\n \"encryption\": {\n  \"enabled\": true\n },\n \"locale\": {\n  \"keyboardLayout\": \"gb\",\n  \"language\": \"en-GB\",\n  \"region\": \"GB\",\n  \"timezone\": \"Europe/London\"\n },\n \"privacy\": {\n  \"camera\": false,\n  \"crashReports\": false,\n  \"diagnostics\": false,\n  \"feedback\": false,\n  \"location\": false,\n  \"microphone\": false,\n  \"onlineAI\": false,\n  \"remoteProcessing\": false\n },\n \"schemaVersion\": 1\n}"
+  },
+  "companionSettings": {
+   "argv": [
+    "/usr/bin/sudo",
+    "-u",
+    "alex",
+    "-H",
+    "cat",
+    "/var/home/alex/.local/state/bunny-os/companion/settings.json"
+   ],
+   "ran": true,
+   "returncode": 0,
+   "stderr": "",
+   "stdout": "{\n  \"accessibility\": {\n    \"captionsAlways\": true,\n    \"highContrast\": false,\n    \"noAnimation\": false,\n    \"reducedMotion\": true,\n    \"textOnly\": false,\n    \"uiScale\": 1.0\n  },\n  \"ai\": {\n    \"allowedRemoteAliases\": [],\n    \"costCeilingUnits\": 0,\n    \"preferredModelId\": \"\",\n    \"preferredProviderId\": \"\",\n    \"remoteEnabled\": false\n  },\n  \"character\": {\n    \"animation\": \"full\",\n    \"animationIntensity\": 0.6,\n    \"companionMode\": \"full\",\n    \"contextualReactions\": true,\n    \"dock\": \"top-left\",\n    \"idleAnimation\": true,\n    \"packageId\": \"\",\n    \"performance\": \"automatic\",\n    \"renderMode\": \"prerendered\",\n    \"scale\": 1.4,\n    \"threeD\": \"auto\",\n    \"visible\": true\n  },\n  \"containsCredentials\": false,\n  \"privacy\": {\n    \"clipboardCeiling\": \"internal\",\n    \"desktopActionApproval\": \"always\",\n    \"historyRetentionDays\": 0,\n    \"remoteTransferCeiling\": \"public\"\n  },\n  \"schemaVersion\": 1,\n  \"speechInput\": {\n    \"deviceId\": \"\",\n    \"enabled\": true,\n    \"language\": \"automatic\",\n    \"modelId\": \"\",\n    \"shortcut\": \"<Super><Alt>space\",\n    \"wakeWord\": \"disabled\"\n  },\n  \"voice\": {\n    \"enabled\": true,\n    \"modelId\": \"\",\n    \"performanceMode\": \"automatic\",\n    \"providerId\": \"pocket\",\n    \"responseMode\": \"voice-only\",\n    \"speakingRate\": 1.2,\n    \"voiceId\": \"\",\n    \"volume\": 1.0\n  }\n}"
+  },
+  "etcHostname": {
+   "argv": [
+    "cat",
+    "/etc/hostname"
+   ],
+   "ran": true,
+   "returncode": 0,
+   "stderr": "",
+   "stdout": "warren"
+  },
+  "etcLocaleConf": {
+   "argv": [
+    "cat",
+    "/etc/locale.conf"
+   ],
+   "ran": true,
+   "returncode": 0,
+   "stderr": "",
+   "stdout": "LANG=en_GB.UTF-8"
+  },
+  "etcVconsole": {
+   "argv": [
+    "cat",
+    "/etc/vconsole.conf"
+   ],
+   "ran": true,
+   "returncode": 0,
+   "stderr": "",
+   "stdout": "KEYMAP=\"gb\"\nFONT=\"eurlatgr\""
+  },
+  "firstRunMarker": {
+   "argv": [
+    "/usr/bin/sudo",
+    "-u",
+    "alex",
+    "-H",
+    "ls",
+    "-l",
+    "/var/home/alex/.local/state/bunny-os/first-run-complete"
+   ],
+   "ran": true,
+   "returncode": 0,
+   "stderr": "",
+   "stdout": "-rw-------. 1 alex alex 31 Aug 17 20:20 /var/home/alex/.local/state/bunny-os/first-run-complete"
+  },
+  "hostnamectl": {
+   "argv": [
+    "hostnamectl"
+   ],
+   "ran": true,
+   "returncode": 0,
+   "stderr": "",
+   "stdout": "Static hostname: warren\n           Icon name: computer-vm\n             Chassis: vm \ud83d\uddb4\n          Machine ID: 77fac1b0d72e4608932f657cb6f95b20\n             Boot ID: ccfd33cc844740f18cfb5514baa9570c\n      Virtualization: kvm\n    Operating System: Bunny OS 0.1.0 (development)\n         CPE OS Name: cpe:/o:fedoraproject:fedora:44\n      OS Support End: Wed 2027-05-19\nOS Support Remaining: 9month\n              Kernel: Linux 7.1.5-201.fc44.x86_64\n        Architecture: x86-64\n     Hardware Vendor: QEMU\n      Hardware Model: Standard PC _Q35 + ICH9, 2009_\n    Hardware Version: pc-q35-10.2\n    Firmware Version: edk2-20260508-6.fc44\n       Firmware Date: Fri 2026-05-08\n        Firmware Age: 3month 1w 3d"
+  },
+  "inhibitors": {
+   "argv": [
+    "systemd-inhibit",
+    "--list",
+    "--no-pager"
+   ],
+   "ran": true,
+   "returncode": 0,
+   "stderr": "",
+   "stdout": "WHO            UID  USER PID  COMM           WHAT                                                     WHY                                                         MODE\nNetworkManager 0    root 2329 NetworkManager sleep                                                    NetworkManager needs to turn off networks                   delay\nUPower         0    root 2341 upowerd        sleep                                                    Pause device polling                                        delay\nGNOME Shell    1000 alex 3820 gnome-shell    sleep                                                    GNOME needs to save screen time data                        delay\nalex           1000 alex 3920 gsd-power      handle-lid-switch                                        External monitor attached or configuration changed recently block\nalex           1000 alex 3919 gsd-media-keys handle-power-key:handle-suspend-key:handle-hibernate-key GNOME handling keypresses                                   block\nalex           1000 alex 3919 gsd-media-keys sleep                                                    GNOME handling keypresses                                   delay\nalex           1000 alex 3920 gsd-power      sleep                                                    GNOME needs to lock the screen                              delay\n\n7 inhibitors listed."
+  },
+  "localectl": {
+   "argv": [
+    "localectl",
+    "status"
+   ],
+   "ran": true,
+   "returncode": 0,
+   "stderr": "",
+   "stdout": "System Locale: LANG=en_GB.UTF-8\n    VC Keymap: gb\n   X11 Layout: (unset)"
+  },
+  "sessions": {
+   "argv": [
+    "loginctl",
+    "list-sessions"
+   ],
+   "ran": true,
+   "returncode": 0,
+   "stderr": "",
+   "stdout": "SESSION  UID USER SEAT  LEADER CLASS   TTY  IDLE SINCE\n      2 1000 alex -     3393   manager -    no   -\n      3 1000 alex seat0 3675   user    tty2 no   -\n\n2 sessions listed."
+  },
+  "userUnits": {
+   "argv": [
+    "/usr/bin/sudo",
+    "-u",
+    "alex",
+    "-H",
+    "/usr/bin/env",
+    "XDG_RUNTIME_DIR=/run/user/1000",
+    "DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus",
+    "systemctl",
+    "--user",
+    "--no-pager",
+    "list-units",
+    "bunny-*"
+   ],
+   "ran": true,
+   "returncode": 0,
+   "stderr": "",
+   "stdout": "UNIT                     LOAD   ACTIVE SUB     DESCRIPTION\n  bunny-companion.service  loaded active running Bunny Companion runtime\n  bunny-config-dir.service loaded active exited  Establish and verify the Bunny OS per-user configuration directory\n\nLegend: LOAD   \u2192 Reflects whether the unit definition was properly loaded.\n        ACTIVE \u2192 The high-level unit activation state, i.e. generalization of SUB.\n        SUB    \u2192 The low-level unit activation state, values depend on unit type.\n\n2 loaded units listed. Pass --all to see loaded but inactive units, too.\nTo show all installed unit files use 'systemctl list-unit-files'."
+  }
+ },
+ "user": "alex"
+}

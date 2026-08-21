@@ -1,0 +1,360 @@
++ C:\Users\allam\AppData\Local\Programs\Python\Python314\python.exe -m unittest discover -s tests -t C:\Users\allam\Documents\new\bunny-os
+python.exe : ...........sssss.sss..s.s............ss............ss.....................................................
+.....................................s.................................................................................
+.......................................................................................................................
+.......................................................................................................................
+.......................................................................................................................
+.......................................................................................................................
+.......................................................................................................................
+..........................................................................ssss...............s.........................
+..................................................s....................EEEEEEE.........................................
+............s......s....................................ss.s...............................s...........................
+..........................................................................s............................................
+.........................................s.....s.......................................................................
+............s..............................................s...........................................................
+.......................................................................................................................
+.......................................................................................................s.....s..s.s....
+............s.s.s......................................................................................................
+...................................................................................F...................................
+......................................................................................................s.....s..........
+.......................................................................................................................
+....................................................sssss................s.............................................
+............................................................................s.s........................................
+.......s.....................................................s.........................................................
+..................sssssss.........................................................................................sssss
+s.....................................................................ssssssssssss.............s.......................
+.s...s....................................................................s....................................s.......
+.....................................s.s.....................s..sss...................................s................
+.......................................................................................................................
+.......................................................................................................................
+.......................................................................................................................
+......................................................................................s................................
+.......................................................................................................................
+.......................................................................................................................
+......check-copy-size: \nonexistent\tree is not a directory
+At line:1 char:55
++ ... \bunny-os'; & python scripts/task.py test *> 'C:\Users\allam\AppData\ ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (...........ssss...not a directory:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+..check-copy-size: refusing ΓÇö 3 MB exceeds the 1 MB limit for a source copy.
+  largest directories:
+    assets                                3 MB
+  exclude the generated ones, or raise --limit-mb if this is genuinely source.
+................s....s...............................................................BLOCKED: capture 
+C:\Users\allam\AppData\Local\Temp\tmp_zeriv4b\guest.pcap does not exist. A capture that never started is not evidence 
+of silence.
+.BLOCKED: file is 10 bytes; a pcap global header is 24
+......BLOCKED: C:\Users\allam\AppData\Local\Temp\tmp8q8pmtz6\expected.json entry 0 must be {kind: dns|tcp|udp, 
+pattern: <glob>, reason: <non-empty>}
+.......................................................................................................................
+..................................ssssssssss.......s...................................................................
+.......................................................................................................................
+..........................................sssss........................................................................
+.......................................................................................................................
+............................................................................................s...s....ssssssssss........
+.....................................................sssssss.....s.....................................................
+.......................................................................................................................
+.......................................................................................................................
+.......................................................................................................................
+..................................................................s....................................................
+.......................................................................................................................
+.......................................................................................................................
+.......................................................................................................................
+........................................................................................................ss......s......
+.............................
+======================================================================
+ERROR: test_a_metacharacter_stays_a_character 
+(tests.capsules.test_launcher_section.TheQuoting.test_a_metacharacter_stays_a_character) (value='a b')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\allam\Documents\new\bunny-os\tests\capsules\test_launcher_section.py", line 136, in 
+test_a_metacharacter_stays_a_character
+    self.assertEqual(self._round_trip(value), value)
+                     ~~~~~~~~~~~~~~~~^^^^^^^
+  File "C:\Users\allam\Documents\new\bunny-os\tests\capsules\test_launcher_section.py", line 124, in _round_trip
+    completed = subprocess.run(
+        ["bash", "-c", "printf %s " + _quote(value)],
+        capture_output=True, text=True, check=False,
+    )
+  File "C:\Users\allam\AppData\Local\Programs\Python\Python314\Lib\subprocess.py", line 555, in run
+    with Popen(*popenargs, **kwargs) as process:
+         ~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\allam\AppData\Local\Programs\Python\Python314\Lib\subprocess.py", line 1039, in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                        pass_fds, cwd, env,
+                        ^^^^^^^^^^^^^^^^^^^
+    ...<5 lines>...
+                        gid, gids, uid, umask,
+                        ^^^^^^^^^^^^^^^^^^^^^^
+                        start_new_session, process_group)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\allam\AppData\Local\Programs\Python\Python314\Lib\subprocess.py", line 1553, in _execute_child
+    hp, ht, pid, tid = _winapi.CreateProcess(executable, args,
+                       ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+                             # no special security
+                             ^^^^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+                             cwd,
+                             ^^^^
+                             startupinfo)
+                             ^^^^^^^^^^^^
+FileNotFoundError: [WinError 2] The system cannot find the file specified
+
+======================================================================
+ERROR: test_a_metacharacter_stays_a_character 
+(tests.capsules.test_launcher_section.TheQuoting.test_a_metacharacter_stays_a_character) (value='a;rm -rf /')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\allam\Documents\new\bunny-os\tests\capsules\test_launcher_section.py", line 136, in 
+test_a_metacharacter_stays_a_character
+    self.assertEqual(self._round_trip(value), value)
+                     ~~~~~~~~~~~~~~~~^^^^^^^
+  File "C:\Users\allam\Documents\new\bunny-os\tests\capsules\test_launcher_section.py", line 124, in _round_trip
+    completed = subprocess.run(
+        ["bash", "-c", "printf %s " + _quote(value)],
+        capture_output=True, text=True, check=False,
+    )
+  File "C:\Users\allam\AppData\Local\Programs\Python\Python314\Lib\subprocess.py", line 555, in run
+    with Popen(*popenargs, **kwargs) as process:
+         ~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\allam\AppData\Local\Programs\Python\Python314\Lib\subprocess.py", line 1039, in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                        pass_fds, cwd, env,
+                        ^^^^^^^^^^^^^^^^^^^
+    ...<5 lines>...
+                        gid, gids, uid, umask,
+                        ^^^^^^^^^^^^^^^^^^^^^^
+                        start_new_session, process_group)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\allam\AppData\Local\Programs\Python\Python314\Lib\subprocess.py", line 1553, in _execute_child
+    hp, ht, pid, tid = _winapi.CreateProcess(executable, args,
+                       ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+                             # no special security
+                             ^^^^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+                             cwd,
+                             ^^^^
+                             startupinfo)
+                             ^^^^^^^^^^^^
+FileNotFoundError: [WinError 2] The system cannot find the file specified
+
+======================================================================
+ERROR: test_a_metacharacter_stays_a_character 
+(tests.capsules.test_launcher_section.TheQuoting.test_a_metacharacter_stays_a_character) (value='$(id)')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\allam\Documents\new\bunny-os\tests\capsules\test_launcher_section.py", line 136, in 
+test_a_metacharacter_stays_a_character
+    self.assertEqual(self._round_trip(value), value)
+                     ~~~~~~~~~~~~~~~~^^^^^^^
+  File "C:\Users\allam\Documents\new\bunny-os\tests\capsules\test_launcher_section.py", line 124, in _round_trip
+    completed = subprocess.run(
+        ["bash", "-c", "printf %s " + _quote(value)],
+        capture_output=True, text=True, check=False,
+    )
+  File "C:\Users\allam\AppData\Local\Programs\Python\Python314\Lib\subprocess.py", line 555, in run
+    with Popen(*popenargs, **kwargs) as process:
+         ~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\allam\AppData\Local\Programs\Python\Python314\Lib\subprocess.py", line 1039, in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                        pass_fds, cwd, env,
+                        ^^^^^^^^^^^^^^^^^^^
+    ...<5 lines>...
+                        gid, gids, uid, umask,
+                        ^^^^^^^^^^^^^^^^^^^^^^
+                        start_new_session, process_group)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\allam\AppData\Local\Programs\Python\Python314\Lib\subprocess.py", line 1553, in _execute_child
+    hp, ht, pid, tid = _winapi.CreateProcess(executable, args,
+                       ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+                             # no special security
+                             ^^^^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+                             cwd,
+                             ^^^^
+                             startupinfo)
+                             ^^^^^^^^^^^^
+FileNotFoundError: [WinError 2] The system cannot find the file specified
+
+======================================================================
+ERROR: test_a_metacharacter_stays_a_character 
+(tests.capsules.test_launcher_section.TheQuoting.test_a_metacharacter_stays_a_character) (value='`id`')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\allam\Documents\new\bunny-os\tests\capsules\test_launcher_section.py", line 136, in 
+test_a_metacharacter_stays_a_character
+    self.assertEqual(self._round_trip(value), value)
+                     ~~~~~~~~~~~~~~~~^^^^^^^
+  File "C:\Users\allam\Documents\new\bunny-os\tests\capsules\test_launcher_section.py", line 124, in _round_trip
+    completed = subprocess.run(
+        ["bash", "-c", "printf %s " + _quote(value)],
+        capture_output=True, text=True, check=False,
+    )
+  File "C:\Users\allam\AppData\Local\Programs\Python\Python314\Lib\subprocess.py", line 555, in run
+    with Popen(*popenargs, **kwargs) as process:
+         ~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\allam\AppData\Local\Programs\Python\Python314\Lib\subprocess.py", line 1039, in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                        pass_fds, cwd, env,
+                        ^^^^^^^^^^^^^^^^^^^
+    ...<5 lines>...
+                        gid, gids, uid, umask,
+                        ^^^^^^^^^^^^^^^^^^^^^^
+                        start_new_session, process_group)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\allam\AppData\Local\Programs\Python\Python314\Lib\subprocess.py", line 1553, in _execute_child
+    hp, ht, pid, tid = _winapi.CreateProcess(executable, args,
+                       ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+                             # no special security
+                             ^^^^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+                             cwd,
+                             ^^^^
+                             startupinfo)
+                             ^^^^^^^^^^^^
+FileNotFoundError: [WinError 2] The system cannot find the file specified
+
+======================================================================
+ERROR: test_a_metacharacter_stays_a_character 
+(tests.capsules.test_launcher_section.TheQuoting.test_a_metacharacter_stays_a_character) (value='a\\b')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\allam\Documents\new\bunny-os\tests\capsules\test_launcher_section.py", line 136, in 
+test_a_metacharacter_stays_a_character
+    self.assertEqual(self._round_trip(value), value)
+                     ~~~~~~~~~~~~~~~~^^^^^^^
+  File "C:\Users\allam\Documents\new\bunny-os\tests\capsules\test_launcher_section.py", line 124, in _round_trip
+    completed = subprocess.run(
+        ["bash", "-c", "printf %s " + _quote(value)],
+        capture_output=True, text=True, check=False,
+    )
+  File "C:\Users\allam\AppData\Local\Programs\Python\Python314\Lib\subprocess.py", line 555, in run
+    with Popen(*popenargs, **kwargs) as process:
+         ~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\allam\AppData\Local\Programs\Python\Python314\Lib\subprocess.py", line 1039, in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                        pass_fds, cwd, env,
+                        ^^^^^^^^^^^^^^^^^^^
+    ...<5 lines>...
+                        gid, gids, uid, umask,
+                        ^^^^^^^^^^^^^^^^^^^^^^
+                        start_new_session, process_group)
+Verified explicit non-functional Bunny placeholder
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\allam\AppData\Local\Programs\Python\Python314\Lib\subprocess.py", line 1553, in _execute_child
+    hp, ht, pid, tid = _winapi.CreateProcess(executable, args,
+                       ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+                             # no special security
+                             ^^^^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+                             cwd,
+                             ^^^^
+                             startupinfo)
+                             ^^^^^^^^^^^^
+FileNotFoundError: [WinError 2] The system cannot find the file specified
+
+======================================================================
+ERROR: test_a_metacharacter_stays_a_character 
+(tests.capsules.test_launcher_section.TheQuoting.test_a_metacharacter_stays_a_character) (value='a"b')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\allam\Documents\new\bunny-os\tests\capsules\test_launcher_section.py", line 136, in 
+test_a_metacharacter_stays_a_character
+    self.assertEqual(self._round_trip(value), value)
+                     ~~~~~~~~~~~~~~~~^^^^^^^
+  File "C:\Users\allam\Documents\new\bunny-os\tests\capsules\test_launcher_section.py", line 124, in _round_trip
+    completed = subprocess.run(
+        ["bash", "-c", "printf %s " + _quote(value)],
+        capture_output=True, text=True, check=False,
+    )
+  File "C:\Users\allam\AppData\Local\Programs\Python\Python314\Lib\subprocess.py", line 555, in run
+    with Popen(*popenargs, **kwargs) as process:
+         ~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\allam\AppData\Local\Programs\Python\Python314\Lib\subprocess.py", line 1039, in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                        pass_fds, cwd, env,
+                        ^^^^^^^^^^^^^^^^^^^
+    ...<5 lines>...
+                        gid, gids, uid, umask,
+                        ^^^^^^^^^^^^^^^^^^^^^^
+                        start_new_session, process_group)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\allam\AppData\Local\Programs\Python\Python314\Lib\subprocess.py", line 1553, in _execute_child
+    hp, ht, pid, tid = _winapi.CreateProcess(executable, args,
+                       ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+                             # no special security
+                             ^^^^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+                             cwd,
+                             ^^^^
+                             startupinfo)
+                             ^^^^^^^^^^^^
+FileNotFoundError: [WinError 2] The system cannot find the file specified
+
+======================================================================
+ERROR: test_an_apostrophe_survives (tests.capsules.test_launcher_section.TheQuoting.test_an_apostrophe_survives)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\allam\Documents\new\bunny-os\tests\capsules\test_launcher_section.py", line 131, in 
+test_an_apostrophe_survives
+    self.assertEqual(self._round_trip("/home/bunny/it's/here"), "/home/bunny/it's/here")
+                     ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\allam\Documents\new\bunny-os\tests\capsules\test_launcher_section.py", line 124, in _round_trip
+    completed = subprocess.run(
+        ["bash", "-c", "printf %s " + _quote(value)],
+        capture_output=True, text=True, check=False,
+    )
+  File "C:\Users\allam\AppData\Local\Programs\Python\Python314\Lib\subprocess.py", line 555, in run
+    with Popen(*popenargs, **kwargs) as process:
+         ~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\allam\AppData\Local\Programs\Python\Python314\Lib\subprocess.py", line 1039, in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                        pass_fds, cwd, env,
+                        ^^^^^^^^^^^^^^^^^^^
+    ...<5 lines>...
+                        gid, gids, uid, umask,
+                        ^^^^^^^^^^^^^^^^^^^^^^
+                        start_new_session, process_group)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\allam\AppData\Local\Programs\Python\Python314\Lib\subprocess.py", line 1553, in _execute_child
+    hp, ht, pid, tid = _winapi.CreateProcess(executable, args,
+                       ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+                             # no special security
+                             ^^^^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+                             cwd,
+                             ^^^^
+                             startupinfo)
+                             ^^^^^^^^^^^^
+FileNotFoundError: [WinError 2] The system cannot find the file specified
+
+======================================================================
+FAIL: test_provenance_accounts_for_every_selected_tts_byte 
+(tests.companion.test_neural_tts.BundledAssetTests.test_provenance_accounts_for_every_selected_tts_byte)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\allam\Documents\new\bunny-os\tests\companion\test_neural_tts.py", line 434, in 
+test_provenance_accounts_for_every_selected_tts_byte
+    self.assertEqual(
+    ~~~~~~~~~~~~~~~~^
+        measured,
+        ^^^^^^^^^
+        provenance["textToSpeech"]["selectedAssetAndNoticeSizeBytes"],
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+AssertionError: 436604323 != 436603718
+
+----------------------------------------------------------------------
+Ran 5698 tests in 428.759s
+
+FAILED (failures=1, errors=7, skipped=131)

@@ -1,0 +1,2 @@
+python3: can't open file '/usr/lib/bunny-os/update-agent/bunny_update_agent.py': [Errno 2] No such file or directory
+exit=2

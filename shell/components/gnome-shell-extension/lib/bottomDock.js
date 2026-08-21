@@ -27,7 +27,7 @@ import St from 'gi://St';
 import {box, glass, iconTile} from './widgets.js';
 import {ease} from './animation.js';
 import {interval} from './util.js';
-import {Motion} from './tokens.js';
+import {MOTION} from './design/tokens.js';
 import {Icons} from './icons.js';
 
 /**
@@ -62,7 +62,7 @@ export class BottomDock {
         this.actor.add_child(this._row);
 
         this.rebuild();
-        this._timer = interval(3, () => this._refreshRunning());
+        this._timer = interval(3, () => this._refreshRunning(), {name: 'dock.running-apps'});
     }
 
     /**
@@ -107,7 +107,7 @@ export class BottomDock {
                     translation_y: hovered ? -6 : 0,
                     scale_x: hovered ? 1.08 : 1,
                     scale_y: hovered ? 1.08 : 1,
-                }, {ms: Motion.HOVER_MS, mode: Clutter.AnimationMode.EASE_OUT_BACK});
+                }, {ms: MOTION.fast, mode: Clutter.AnimationMode.EASE_OUT_BACK});
             });
             tile.set_pivot_point(0.5, 1.0);
 

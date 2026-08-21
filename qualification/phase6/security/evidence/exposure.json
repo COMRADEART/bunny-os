@@ -1,0 +1,541 @@
+{
+  "binariesCarryingNamedModules": [
+    {
+      "bytes": 45220848,
+      "modulesPresent": [
+        "golang.org/x/crypto",
+        "golang.org/x/net",
+        "golang.org/x/text",
+        "golang.org/x/mod",
+        "google.golang.org/grpc",
+        "go.opentelemetry.io/otel",
+        "github.com/moby/buildkit",
+        "github.com/docker/docker",
+        "github.com/containers/podman/v5",
+        "github.com/opencontainers/selinux",
+        "github.com/sigstore/fulcio"
+      ],
+      "path": "/usr/bin/podman"
+    },
+    {
+      "bytes": 26035008,
+      "modulesPresent": [
+        "golang.org/x/crypto",
+        "golang.org/x/net",
+        "golang.org/x/text",
+        "google.golang.org/grpc",
+        "go.opentelemetry.io/otel",
+        "github.com/docker/docker",
+        "github.com/opencontainers/selinux",
+        "github.com/sigstore/fulcio"
+      ],
+      "path": "/usr/bin/skopeo"
+    },
+    {
+      "bytes": 2515696,
+      "modulesPresent": [
+        "github.com/containers/podman/v5"
+      ],
+      "path": "/usr/libexec/podman/quadlet"
+    },
+    {
+      "bytes": 3211032,
+      "modulesPresent": [
+        "golang.org/x/net",
+        "github.com/containers/podman/v5"
+      ],
+      "path": "/usr/libexec/podman/rootlessport"
+    },
+    {
+      "bytes": 45220848,
+      "modulesPresent": [
+        "golang.org/x/crypto",
+        "golang.org/x/net",
+        "golang.org/x/text",
+        "golang.org/x/mod",
+        "google.golang.org/grpc",
+        "go.opentelemetry.io/otel",
+        "github.com/moby/buildkit",
+        "github.com/docker/docker",
+        "github.com/containers/podman/v5",
+        "github.com/opencontainers/selinux",
+        "github.com/sigstore/fulcio"
+      ],
+      "path": "/usr/sbin/podman"
+    },
+    {
+      "bytes": 26035008,
+      "modulesPresent": [
+        "golang.org/x/crypto",
+        "golang.org/x/net",
+        "golang.org/x/text",
+        "google.golang.org/grpc",
+        "go.opentelemetry.io/otel",
+        "github.com/docker/docker",
+        "github.com/opencontainers/selinux",
+        "github.com/sigstore/fulcio"
+      ],
+      "path": "/usr/sbin/skopeo"
+    }
+  ],
+  "elfSizeFloorBytes": 2000000,
+  "elfSizeFloorNote": "A search optimisation, not a judgement. Recorded so a reviewer can see what the sweep could not have found.",
+  "goCandidateBinaries": 213,
+  "method": "container from the subject artifact image, fixed-string search of shipped ELF binaries",
+  "pythonDistributions": {
+    "google.protobuf": [
+      "/usr/lib/python3.14/site-packages/google/protobuf"
+    ],
+    "protobuf": [
+      "/usr/lib/python3.14/site-packages/protobuf-3.19.6-py3.14-nspkg.pth",
+      "/usr/lib/python3.14/site-packages/protobuf-3.19.6.dist-info"
+    ]
+  },
+  "qualifiedAdvisories": {
+    "GHSA-5cgq-3rg8-m6cv": {
+      "binariesCarryingImport": [
+        "/usr/bin/podman",
+        "/usr/sbin/podman"
+      ],
+      "binariesExamined": 6,
+      "perBinary": [
+        {
+          "binary": "/usr/bin/podman",
+          "carriesVulnerableImport": true,
+          "importsPresent": [
+            "golang.org/x/crypto/ssh/knownhosts"
+          ]
+        },
+        {
+          "binary": "/usr/bin/skopeo",
+          "carriesVulnerableImport": false,
+          "importsPresent": []
+        },
+        {
+          "binary": "/usr/libexec/podman/quadlet",
+          "carriesVulnerableImport": false,
+          "importsPresent": []
+        },
+        {
+          "binary": "/usr/libexec/podman/rootlessport",
+          "carriesVulnerableImport": false,
+          "importsPresent": []
+        },
+        {
+          "binary": "/usr/sbin/podman",
+          "carriesVulnerableImport": true,
+          "importsPresent": [
+            "golang.org/x/crypto/ssh/knownhosts"
+          ]
+        },
+        {
+          "binary": "/usr/sbin/skopeo",
+          "carriesVulnerableImport": false,
+          "importsPresent": []
+        }
+      ],
+      "vulnerableImports": [
+        "golang.org/x/crypto/ssh/knownhosts"
+      ]
+    },
+    "GHSA-89gr-r52h-f8rx": {
+      "binariesCarryingImport": [
+        "/usr/bin/podman",
+        "/usr/sbin/podman"
+      ],
+      "binariesExamined": 6,
+      "perBinary": [
+        {
+          "binary": "/usr/bin/podman",
+          "carriesVulnerableImport": true,
+          "importsPresent": [
+            "golang.org/x/crypto/ssh"
+          ]
+        },
+        {
+          "binary": "/usr/bin/skopeo",
+          "carriesVulnerableImport": false,
+          "importsPresent": []
+        },
+        {
+          "binary": "/usr/libexec/podman/quadlet",
+          "carriesVulnerableImport": false,
+          "importsPresent": []
+        },
+        {
+          "binary": "/usr/libexec/podman/rootlessport",
+          "carriesVulnerableImport": false,
+          "importsPresent": []
+        },
+        {
+          "binary": "/usr/sbin/podman",
+          "carriesVulnerableImport": true,
+          "importsPresent": [
+            "golang.org/x/crypto/ssh"
+          ]
+        },
+        {
+          "binary": "/usr/sbin/skopeo",
+          "carriesVulnerableImport": false,
+          "importsPresent": []
+        }
+      ],
+      "vulnerableImports": [
+        "golang.org/x/crypto/ssh"
+      ]
+    },
+    "GHSA-f5wc-c3c7-36mc": {
+      "binariesCarryingImport": [
+        "/usr/bin/podman",
+        "/usr/sbin/podman"
+      ],
+      "binariesExamined": 6,
+      "perBinary": [
+        {
+          "binary": "/usr/bin/podman",
+          "carriesVulnerableImport": true,
+          "importsPresent": [
+            "golang.org/x/crypto/ssh/agent"
+          ]
+        },
+        {
+          "binary": "/usr/bin/skopeo",
+          "carriesVulnerableImport": false,
+          "importsPresent": []
+        },
+        {
+          "binary": "/usr/libexec/podman/quadlet",
+          "carriesVulnerableImport": false,
+          "importsPresent": []
+        },
+        {
+          "binary": "/usr/libexec/podman/rootlessport",
+          "carriesVulnerableImport": false,
+          "importsPresent": []
+        },
+        {
+          "binary": "/usr/sbin/podman",
+          "carriesVulnerableImport": true,
+          "importsPresent": [
+            "golang.org/x/crypto/ssh/agent"
+          ]
+        },
+        {
+          "binary": "/usr/sbin/skopeo",
+          "carriesVulnerableImport": false,
+          "importsPresent": []
+        }
+      ],
+      "vulnerableImports": [
+        "golang.org/x/crypto/ssh/agent"
+      ]
+    },
+    "GHSA-jppx-rxg9-jmrx": {
+      "binariesCarryingImport": [
+        "/usr/bin/podman",
+        "/usr/sbin/podman"
+      ],
+      "binariesExamined": 6,
+      "perBinary": [
+        {
+          "binary": "/usr/bin/podman",
+          "carriesVulnerableImport": true,
+          "importsPresent": [
+            "golang.org/x/crypto/ssh/agent"
+          ]
+        },
+        {
+          "binary": "/usr/bin/skopeo",
+          "carriesVulnerableImport": false,
+          "importsPresent": []
+        },
+        {
+          "binary": "/usr/libexec/podman/quadlet",
+          "carriesVulnerableImport": false,
+          "importsPresent": []
+        },
+        {
+          "binary": "/usr/libexec/podman/rootlessport",
+          "carriesVulnerableImport": false,
+          "importsPresent": []
+        },
+        {
+          "binary": "/usr/sbin/podman",
+          "carriesVulnerableImport": true,
+          "importsPresent": [
+            "golang.org/x/crypto/ssh/agent"
+          ]
+        },
+        {
+          "binary": "/usr/sbin/skopeo",
+          "carriesVulnerableImport": false,
+          "importsPresent": []
+        }
+      ],
+      "vulnerableImports": [
+        "golang.org/x/crypto/ssh/agent"
+      ]
+    },
+    "GHSA-p77j-4mvh-x3m3": {
+      "binariesCarryingImport": [
+        "/usr/bin/podman",
+        "/usr/bin/skopeo",
+        "/usr/sbin/podman",
+        "/usr/sbin/skopeo"
+      ],
+      "binariesExamined": 6,
+      "perBinary": [
+        {
+          "binary": "/usr/bin/podman",
+          "carriesVulnerableImport": true,
+          "importsPresent": [
+            "google.golang.org/grpc"
+          ]
+        },
+        {
+          "binary": "/usr/bin/skopeo",
+          "carriesVulnerableImport": true,
+          "importsPresent": [
+            "google.golang.org/grpc"
+          ]
+        },
+        {
+          "binary": "/usr/libexec/podman/quadlet",
+          "carriesVulnerableImport": false,
+          "importsPresent": []
+        },
+        {
+          "binary": "/usr/libexec/podman/rootlessport",
+          "carriesVulnerableImport": false,
+          "importsPresent": []
+        },
+        {
+          "binary": "/usr/sbin/podman",
+          "carriesVulnerableImport": true,
+          "importsPresent": [
+            "google.golang.org/grpc"
+          ]
+        },
+        {
+          "binary": "/usr/sbin/skopeo",
+          "carriesVulnerableImport": true,
+          "importsPresent": [
+            "google.golang.org/grpc"
+          ]
+        }
+      ],
+      "vulnerableImports": [
+        "google.golang.org/grpc"
+      ]
+    },
+    "GHSA-rm3j-f69w-wqmq": {
+      "binariesCarryingImport": [
+        "/usr/bin/podman",
+        "/usr/sbin/podman"
+      ],
+      "binariesExamined": 6,
+      "perBinary": [
+        {
+          "binary": "/usr/bin/podman",
+          "carriesVulnerableImport": true,
+          "importsPresent": [
+            "golang.org/x/crypto/ssh"
+          ]
+        },
+        {
+          "binary": "/usr/bin/skopeo",
+          "carriesVulnerableImport": false,
+          "importsPresent": []
+        },
+        {
+          "binary": "/usr/libexec/podman/quadlet",
+          "carriesVulnerableImport": false,
+          "importsPresent": []
+        },
+        {
+          "binary": "/usr/libexec/podman/rootlessport",
+          "carriesVulnerableImport": false,
+          "importsPresent": []
+        },
+        {
+          "binary": "/usr/sbin/podman",
+          "carriesVulnerableImport": true,
+          "importsPresent": [
+            "golang.org/x/crypto/ssh"
+          ]
+        },
+        {
+          "binary": "/usr/sbin/skopeo",
+          "carriesVulnerableImport": false,
+          "importsPresent": []
+        }
+      ],
+      "vulnerableImports": [
+        "golang.org/x/crypto/ssh"
+      ]
+    },
+    "GHSA-vgwf-h737-ff37": {
+      "binariesCarryingImport": [
+        "/usr/bin/podman",
+        "/usr/sbin/podman"
+      ],
+      "binariesExamined": 6,
+      "perBinary": [
+        {
+          "binary": "/usr/bin/podman",
+          "carriesVulnerableImport": true,
+          "importsPresent": [
+            "golang.org/x/crypto/ssh"
+          ]
+        },
+        {
+          "binary": "/usr/bin/skopeo",
+          "carriesVulnerableImport": false,
+          "importsPresent": []
+        },
+        {
+          "binary": "/usr/libexec/podman/quadlet",
+          "carriesVulnerableImport": false,
+          "importsPresent": []
+        },
+        {
+          "binary": "/usr/libexec/podman/rootlessport",
+          "carriesVulnerableImport": false,
+          "importsPresent": []
+        },
+        {
+          "binary": "/usr/sbin/podman",
+          "carriesVulnerableImport": true,
+          "importsPresent": [
+            "golang.org/x/crypto/ssh"
+          ]
+        },
+        {
+          "binary": "/usr/sbin/skopeo",
+          "carriesVulnerableImport": false,
+          "importsPresent": []
+        }
+      ],
+      "vulnerableImports": [
+        "golang.org/x/crypto/ssh"
+      ]
+    },
+    "GHSA-x527-x647-q7gg": {
+      "binariesCarryingImport": [
+        "/usr/bin/podman",
+        "/usr/sbin/podman"
+      ],
+      "binariesExamined": 6,
+      "perBinary": [
+        {
+          "binary": "/usr/bin/podman",
+          "carriesVulnerableImport": true,
+          "importsPresent": [
+            "golang.org/x/crypto/ssh"
+          ]
+        },
+        {
+          "binary": "/usr/bin/skopeo",
+          "carriesVulnerableImport": false,
+          "importsPresent": []
+        },
+        {
+          "binary": "/usr/libexec/podman/quadlet",
+          "carriesVulnerableImport": false,
+          "importsPresent": []
+        },
+        {
+          "binary": "/usr/libexec/podman/rootlessport",
+          "carriesVulnerableImport": false,
+          "importsPresent": []
+        },
+        {
+          "binary": "/usr/sbin/podman",
+          "carriesVulnerableImport": true,
+          "importsPresent": [
+            "golang.org/x/crypto/ssh"
+          ]
+        },
+        {
+          "binary": "/usr/sbin/skopeo",
+          "carriesVulnerableImport": false,
+          "importsPresent": []
+        }
+      ],
+      "vulnerableImports": [
+        "golang.org/x/crypto/ssh"
+      ]
+    }
+  },
+  "record": "phase6-exposure-measurement",
+  "rpmPackages": {
+    "curl": {
+      "installed": true,
+      "record": "curl|(none)|8.18.0|7.fc44|x86_64"
+    },
+    "fuse-overlayfs": {
+      "installed": true,
+      "record": "fuse-overlayfs|(none)|1.16|2.fc44|x86_64"
+    },
+    "kernel": {
+      "installed": true,
+      "record": "kernel|(none)|7.1.5|201.fc44|x86_64"
+    },
+    "kernel-core": {
+      "installed": true,
+      "record": "kernel-core|(none)|7.1.5|201.fc44|x86_64"
+    },
+    "kernel-modules": {
+      "installed": true,
+      "record": "kernel-modules|(none)|7.1.5|201.fc44|x86_64"
+    },
+    "libcurl": {
+      "installed": true,
+      "record": "libcurl|(none)|8.18.0|7.fc44|x86_64"
+    },
+    "libldb": {
+      "installed": true,
+      "record": "libldb|2|4.24.4|1.fc44|x86_64"
+    },
+    "libsmbclient": {
+      "installed": true,
+      "record": "libsmbclient|2|4.24.4|1.fc44|x86_64"
+    },
+    "libwbclient": {
+      "installed": true,
+      "record": "libwbclient|2|4.24.4|1.fc44|x86_64"
+    },
+    "samba-client-libs": {
+      "installed": true,
+      "record": "samba-client-libs|2|4.24.4|1.fc44|x86_64"
+    },
+    "samba-common": {
+      "installed": true,
+      "record": "samba-common|2|4.24.4|1.fc44|noarch"
+    },
+    "sqlite-libs": {
+      "installed": true,
+      "record": "sqlite-libs|(none)|3.51.2|1.fc44|x86_64"
+    }
+  },
+  "schemaVersion": 1,
+  "searchRoots": [
+    "/usr/bin",
+    "/usr/sbin",
+    "/usr/libexec",
+    "/usr/lib64",
+    "/usr/lib"
+  ],
+  "sshPresence": {
+    "/usr/bin/scp": true,
+    "/usr/bin/sftp": true,
+    "/usr/bin/ssh": true,
+    "/usr/bin/ssh-agent": true,
+    "/usr/sbin/sshd": true
+  },
+  "whatThisDoesNotEstablish": [
+    "Presence of an import shows the package was linked in, not that it is called.",
+    "Absence of an import is strong evidence the code path is not in the binary, and is still not a disposition.",
+    "Nothing here measures reachability from a Bunny-controlled input."
+  ]
+}

@@ -70,3 +70,37 @@ export function formatRate(bytesPerSecond) {
     const formatted = formatBytes(bytesPerSecond, {decimals: 1});
     return formatted === null ? null : `${formatted}/s`;
 }
+
+/**
+ * The name to draw under a tile, which is not always the application's name.
+ *
+ * Photographed on the booted desktop: five of eight labels ellipsised, and four
+ * of those began "Bunny " — so the truncation removed exactly the word that
+ * told them apart. The grid read
+ *
+ *     Files      Terminal    Bunny       Bunny App…
+ *     Bunny Co…  Bunny Dia…  Bunny Lau…  Bunny Sett…
+ *
+ * and "Bunny Co…" is either Bunny Command or Bunny Companion, both of which this
+ * image installs.
+ *
+ * The tile is sized so that four fit across the card (see `tilesPerRow` in
+ * lib/layout.js), so widening it is not available at any text scale — the card
+ * grows with the type, and so does the tile, and the ratio does not move.
+ * Dropping the prefix inside a Bunny OS launcher costs no
+ * space and no information: everything here is Bunny's. The *accessible* name
+ * keeps the application's real name, because a screen reader has no width limit
+ * and "Companion" alone is worse to hear than to read.
+ *
+ * @param {string} name the application's own name
+ * @returns {string} what to draw
+ */
+export function tileLabel(name) {
+    const trimmed = String(name ?? '').trim();
+    //: An application actually called "Bunny" keeps its name; stripping the
+    //: prefix here would leave an empty label.
+    if (!trimmed.startsWith('Bunny ') || trimmed.length <= 'Bunny '.length)
+        return trimmed;
+    const remainder = trimmed.slice('Bunny '.length).trim();
+    return remainder || trimmed;
+}

@@ -1,0 +1,131 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bunny-os.comrade.art/schemas/bunny-model-artifact.schema.json",
+  "title": "Bunny runtime model artifact manifest",
+  "description": "The contract at the trust boundary between Bunny Model Studio, which trains outside the image, and the Bunny OS runtime, which may load what it produced. A manifest describes an adapter and binds it by digest to the base model, dataset, configuration and commit that produced it; it does not confer anything. The 'permissions' array is present and must be empty: a model artifact cannot carry capabilities, and the field exists so that one attempting to is refused loudly instead of being ignored as an unknown key. Every section is closed - an unknown field is a refusal, matching capsules/manifest.py and catalog/entry.py - because a manifest is read across a trust boundary and a reader that ignores what it does not understand is a reader that can be talked past.",
+  "type": "object",
+  "required": ["schemaVersion", "modelId", "adapterType", "adapterFormat", "adapterFile", "adapterSha256", "baseModel", "intendedRuntime", "networkRequired", "permissions"],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": {
+      "description": "The artifact format version. A version this build does not know is refused, never loaded.",
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1
+    },
+    "modelId": {
+      "description": "The identifier the runtime registry uses. A single path segment: no separators, no leading dot, so a model id can never widen into a path.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "pattern": "^[a-z0-9][a-z0-9._-]*$"
+    },
+    "displayName": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "adapterType": {
+      "description": "What kind of adapter this is. Only 'lora' is supported by this build; anything else is refused rather than attempted.",
+      "type": "string",
+      "enum": ["lora"]
+    },
+    "adapterFormat": {
+      "description": "The on-disk encoding. 'gguf' is what a llama.cpp backend can apply; 'peft-safetensors' is what Model Studio produces and no shipped backend can apply, so an artifact declaring it is validated but not activatable here.",
+      "type": "string",
+      "enum": ["gguf", "peft-safetensors"]
+    },
+    "adapterFile": {
+      "description": "The adapter's file name inside the artifact directory. A file name, never a path - the same rule the agent runtime applies to model files.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+    },
+    "adapterSha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "adapterBytes": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "baseModel": {
+      "description": "What this adapter modifies. Compatibility is checked against this object as a whole: an adapter applied to the wrong base is not a degraded model, it is a different one.",
+      "type": "object",
+      "required": ["reference"],
+      "additionalProperties": false,
+      "properties": {
+        "reference": {
+          "description": "The upstream identity, e.g. 'HuggingFaceTB/SmolLM2-135M-Instruct'.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "revision": {
+          "description": "The exact revision the adapter was trained against. When this is absent, or is a moving name rather than a commit, compatibility cannot be established and validation reports UNKNOWN rather than passing.",
+          "type": "string",
+          "maxLength": 128
+        },
+        "file": {
+          "description": "The base weights' file name in a trusted model directory, when the runtime is expected to find them locally. A file name, never a path.",
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+        },
+        "sha256": {
+          "description": "Digest of the local base weights, when known. Absent means base identity can be checked by name only, which is an UNKNOWN, not a PASS.",
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "architecture": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "parameterCount": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "training": {
+      "description": "Provenance carried across the boundary. None of it is trusted as authority; all of it is recorded so a loaded model can be traced to what produced it.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "createdBy": {"type": "string", "maxLength": 128},
+        "createdAt": {"type": "string", "maxLength": 32},
+        "jobId": {"type": "string", "maxLength": 128},
+        "configSha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "configCanonicalSha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "datasetSha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "datasetConversations": {"type": "integer", "minimum": 0},
+        "bunnyCommit": {"type": "string", "maxLength": 128},
+        "method": {"type": "string", "maxLength": 32},
+        "precision": {"type": "string", "maxLength": 16},
+        "steps": {"type": "integer", "minimum": 0},
+        "finalLoss": {"type": ["number", "null"]}
+      }
+    },
+    "intendedRuntime": {
+      "description": "Which Bunny runtime this artifact is for. An artifact intended for something else is refused rather than tried.",
+      "type": "string",
+      "enum": ["companion"]
+    },
+    "networkRequired": {
+      "description": "Always false. An artifact that declares it needs the network is refused: model loading does not introduce network access, and an artifact is not the place that decision gets made.",
+      "type": "boolean",
+      "const": false
+    },
+    "permissions": {
+      "description": "Always empty. A model artifact cannot carry, request or imply an operating-system capability. The field exists so that an artifact attempting to grant one is refused with a named code rather than silently ignored. Authority comes from the trust layer, the capability system and the user - never from a file that shipped with weights.",
+      "type": "array",
+      "maxItems": 0,
+      "items": {"type": "string"}
+    },
+    "notes": {
+      "type": "string",
+      "maxLength": 1024
+    }
+  }
+}

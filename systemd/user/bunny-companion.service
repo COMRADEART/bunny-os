@@ -39,6 +39,13 @@ After=systemd-tmpfiles-setup.service
 StartLimitIntervalSec=60s
 StartLimitBurst=4
 
+# Not in the display manager's session: GDM's greeter reaches
+# graphical-session.target in its own user manager (GNOME 50 runs it as
+# the ephemeral `gdm-greeter` user; older GDM as `gdm`). Measured on the
+# first real login: the greeter started the whole bunny session family.
+ConditionUser=!gdm-greeter
+ConditionUser=!gdm
+
 [Service]
 Type=simple
 ExecStart=/usr/libexec/bunny-companion-service

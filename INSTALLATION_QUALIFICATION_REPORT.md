@@ -1,8 +1,8 @@
 # Installation qualification report
 
-Date: 2026-07-29  
+Date: 2026-08-18T16:22:03Z  
 Candidate commit: `79bb99ddb39d8a5dbc279629f43b23346fb0e5e8`  
-Result: **NOT QUALIFIED** — 0 of 12 scenarios resolved, 0 failing, 12 not run.
+Result: **NOT QUALIFIED** — 5 of 12 scenarios resolved, 0 failing, 7 not run.
 
 Twelve disposable-disk installation scenarios, from an empty UEFI disk through interrupted installation and bootloader failure. Every scenario is destructive by nature and is run against disposable virtual disks.
 
@@ -10,35 +10,30 @@ Twelve disposable-disk installation scenarios, from an empty UEFI disk through i
 
 | Scenario | Outcome | Method | Evidence |
 |---|---|---|---|
-| `empty-uefi-disk` | NOT_RUN | source-inspection | — |
-| `encrypted-uefi-installation` | NOT_RUN | source-inspection | — |
-| `unencrypted-installation` | NOT_RUN | source-inspection | — |
-| `offline-installation` | NOT_RUN | source-inspection | — |
 | `multiple-disks` | NOT_RUN | source-inspection | — |
 | `nvme-like-virtual-disk` | NOT_RUN | source-inspection | — |
 | `sata-like-virtual-disk` | NOT_RUN | source-inspection | — |
-| `existing-linux-replacement` | NOT_RUN | source-inspection | — |
 | `supported-free-space-installation` | NOT_RUN | source-inspection | — |
 | `interrupted-installation` | NOT_RUN | source-inspection | — |
 | `bootloader-failure` | NOT_RUN | source-inspection | — |
 | `recovery-installation` | NOT_RUN | source-inspection | — |
+| `existing-linux-replacement` | PASS | virtual-machine | `qualification/installed-system/evidence/installs/existing-data-protected.json` |
+| `empty-uefi-disk` | PASS | virtual-machine | `qualification/installer-journeys/evidence/journey-a/installed.json` |
+| `unencrypted-installation` | PASS | virtual-machine | `qualification/installer-journeys/evidence/journey-c/installed.json` |
+| `offline-installation` | PASS | virtual-machine | `qualification/installer-journeys/evidence/journey-c-offline/installed.json` |
+| `encrypted-uefi-installation` | PASS | virtual-machine | `qualification/installer-journeys/evidence/journey-a/installed.json` |
 
 ## Why these scenarios have not run
 
-The installation harness (build/scripts/vm-install-smoke.sh) launches an interactive Anaconda session and requires an operator; it cannot be driven headlessly. No live ISO has been built either.
+The unattended journey harness (build/scripts/vm-install-story.sh) now drives the shipped setup surface end to end and five installation scenarios carry virtual-machine evidence (qualification/installer-journeys/evidence). The remaining NOT_RUN scenarios each need a journey definition of their own (a second disk, an NVMe/SATA controller variant, a mid-install interruption, an induced bootloader failure, a recovery medium) and none has run.
 
 ## Unresolved
 
 Each of these is blocking. `NOT_RUN` is not a soft state:
 
-- `empty-uefi-disk`
-- `encrypted-uefi-installation`
-- `unencrypted-installation`
-- `offline-installation`
 - `multiple-disks`
 - `nvme-like-virtual-disk`
 - `sata-like-virtual-disk`
-- `existing-linux-replacement`
 - `supported-free-space-installation`
 - `interrupted-installation`
 - `bootloader-failure`

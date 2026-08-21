@@ -5,4 +5,10 @@ Exec=/usr/libexec/bunny-shell-session --safe
 TryExec=/usr/libexec/bunny-shell-session
 Type=Application
 DesktopNames=Bunny-Safe;GNOME;
-X-GDM-SessionRegisters=true
+# X-GDM-SessionRegisters is deliberately absent. The wrapper execs
+# gnome-session --session=gnome, and that session never registers with
+# GDM: with the flag set, GDM waited for a registration that never came,
+# kept the greeter session alive (and its whole bunny unit family with
+# it) for the life of every login. Measured on the Phase 3 machine:
+# greeter session c1 present at the end of every Bunny-session boot,
+# gone the boot after this flag was removed.

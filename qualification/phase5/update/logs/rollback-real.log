@@ -1,0 +1,37 @@
+== a disposable copy of the staged disk ==
+  deployments: 2
+== injecting the rollback unit into every deployment ==
+
+== boot 1: the machine rolls itself back ==
+  qemu exit=0
+  BUNNY-P5-STATE: boot 2026-08-18T03:32:02+00:00
+  BUNNY-P5-STATE: os-release commit=e501218f2fe0105e5fc92bdf94fd6b3c87d6c470 build=e501218f2fe0.1787016937
+  BUNNY-P5-STATE: cmdline ostree=/ostree/boot.0/default/2d358243c59de6e5a0e6672ca1ae3eec1f2972a8ac33907467cd6d9ffa657404/0
+  BUNNY-P5-STATE: bootc booted=/run/p5update/candidate:e501218f2fe0  staged=None  rollback=localhost/bunny-os-beta:e906a48793d7
+  BUNNY-P5-STATE: PRESENT /var/home/p5-user-data.txt :: user data written before the switch at 2026-08-18T03:15:09+00:00
+  BUNNY-P5-STATE: PRESENT /var/lib/bunny-os/companion/p5-mode.json :: {"mode":"attentive","setBy":"phase5 rollback qualification"}
+  BUNNY-P5-STATE: PRESENT /var/lib/bunny-os/trust/p5-grants.json :: {"grants":[{"capsule":"p5-example","decision":"allow"}]}
+  BUNNY-P5-STATE: PRESENT /var/lib/bunny-os/voice/p5-settings.json :: {"inputDevice":"p5-null-sink","volume":42}
+  BUNNY-P5-STATE: PRESENT /var/lib/bunny-os/p5-settings.txt :: settings written before the switch
+  BUNNY-P5-STATE: end
+  BUNNY-P5-ROLLBACK: before:
+  BUNNY-P5-ROLLBACK: running bootc rollback
+  BUNNY-P5-ROLLBACK: rollback exit=0
+  BUNNY-P5-ROLLBACK: after:
+  BUNNY-P5-ROLLBACK: done
+  BUNNY-P5-ROLLBACK: wrapper exit=0
+
+== boot 2: which deployment came up? ==
+  qemu exit=0
+  BUNNY-P5-STATE: boot 2026-08-18T03:33:12+00:00
+  BUNNY-P5-STATE: os-release commit=e906a48793d74544b39c14cc3e35e0654f5311e2 build=e906a48793d7.1786986334
+  BUNNY-P5-STATE: cmdline ostree=/ostree/boot.1/default/dd33960330844f1ec11b6e93710464634d03be77bbcb9580480b16cfa08c892d/0
+  BUNNY-P5-STATE: bootc booted=localhost/bunny-os-beta:e906a48793d7  staged=None  rollback=/run/p5update/candidate:e501218f2fe0
+  BUNNY-P5-STATE: PRESENT /var/home/p5-user-data.txt :: user data written before the switch at 2026-08-18T03:32:09+00:00
+  BUNNY-P5-STATE: PRESENT /var/lib/bunny-os/companion/p5-mode.json :: {"mode":"attentive","setBy":"phase5 rollback qualification"}
+  BUNNY-P5-STATE: PRESENT /var/lib/bunny-os/trust/p5-grants.json :: {"grants":[{"capsule":"p5-example","decision":"allow"}]}
+  BUNNY-P5-STATE: PRESENT /var/lib/bunny-os/voice/p5-settings.json :: {"inputDevice":"p5-null-sink","volume":42}
+  BUNNY-P5-STATE: PRESENT /var/lib/bunny-os/p5-settings.txt :: settings written before the switch
+  BUNNY-P5-STATE: end
+
+ROLLBACK-REAL-DONE

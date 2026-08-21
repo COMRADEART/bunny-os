@@ -1,0 +1,64 @@
+{
+ "fixtureClass": "TEST_FIXTURE_ONLY",
+ "purpose": "Drives the dedup dry runs: two testers describe the same symptom. Nothing is merged automatically; a recorded DUPLICATE_OF decision relates the derived findings, and a later recorded decision (RELATED) supersedes it - reversible, with both decisions preserved.",
+ "records": [
+  {
+   "schema": "bunny-os/alpha-tester-report/1",
+   "tester_id": "T-006",
+   "testerId": "T-006",
+   "report_type": "BUG",
+   "submitted_at": "2026-08-18",
+   "date": "2026-08-18",
+   "journey": "B",
+   "artifact_claimed_by_tester": "bunny-os-0.3.0-live.e906a48793d7-x86_64.iso (constructed fixture)",
+   "artifact_digest_observed": "823d50caba35afe72452768affd5f6fa0ac8cfc13c164f0e1bc909fa887ab421",
+   "artifact_digest_verified": true,
+   "artifact_identity_status": "VERIFIED",
+   "environment_summary": "constructed fixture: QEMU/KVM 9.1, q35, UEFI, 4 vCPU / 6 GB, llvmpipe",
+   "environment": "constructed fixture: QEMU/KVM 9.1, q35, UEFI, 4 vCPU / 6 GB, llvmpipe",
+   "steps": [],
+   "user_observation": "constructed fixture: the 2D character froze when the settings panel opened",
+   "expected_behavior": "animation continues",
+   "actual_behavior": "frozen character",
+   "additional_context": "TEST_FIXTURE_ONLY dry run material",
+   "artifactDigest": "823d50caba35afe72452768affd5f6fa0ac8cfc13c164f0e1bc909fa887ab421"
+  },
+  {
+   "schema": "bunny-os/alpha-tester-report/1",
+   "tester_id": "T-007",
+   "testerId": "T-007",
+   "report_type": "BUG",
+   "submitted_at": "2026-08-18",
+   "date": "2026-08-18",
+   "journey": "B",
+   "artifact_claimed_by_tester": "bunny-os-0.3.0-live.e906a48793d7-x86_64.iso (constructed fixture)",
+   "artifact_digest_observed": "823d50caba35afe72452768affd5f6fa0ac8cfc13c164f0e1bc909fa887ab421",
+   "artifact_digest_verified": true,
+   "artifact_identity_status": "VERIFIED",
+   "environment_summary": "constructed fixture: QEMU/KVM 9.1, q35, UEFI, 4 vCPU / 6 GB, llvmpipe",
+   "environment": "constructed fixture: QEMU/KVM 9.1, q35, UEFI, 4 vCPU / 6 GB, llvmpipe",
+   "steps": [],
+   "user_observation": "constructed fixture: character stops moving as soon as settings appear",
+   "expected_behavior": "animation continues",
+   "actual_behavior": "character stops",
+   "additional_context": "TEST_FIXTURE_ONLY dry run material",
+   "artifactDigest": "823d50caba35afe72452768affd5f6fa0ac8cfc13c164f0e1bc909fa887ab421"
+  }
+ ],
+ "decisionDuplicate": {
+  "findingA": "AF-INTAKE-001-T",
+  "findingB": "AF-INTAKE-002-T",
+  "relationship": "DUPLICATE_OF",
+  "rationale": "constructed fixture: same freeze, same trigger, same journey, confirmed by side-by-side reading of both reports",
+  "decidedBy": "constructed control triager",
+  "date": "2026-08-18"
+ },
+ "decisionRelatedLater": {
+  "findingA": "AF-INTAKE-001-T",
+  "findingB": "AF-INTAKE-002-T",
+  "relationship": "RELATED",
+  "rationale": "constructed fixture: on re-reading, the second freeze happens without the panel - related, not duplicate",
+  "decidedBy": "constructed control triager",
+  "date": "2026-08-19"
+ }
+}

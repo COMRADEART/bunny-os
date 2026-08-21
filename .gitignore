@@ -38,3 +38,5 @@ qualification/tpm/evidence/*/state/
 # input nor the build output of anything this repository builds. 242 files of
 # it were tracked; they were a cache somebody committed once.
 desktop/src-tauri/target/
+build/payload-oci/*
+!build/payload-oci/.keep

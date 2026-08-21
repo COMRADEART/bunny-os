@@ -1,0 +1,8 @@
+[
+ {"command": "system", "label": "system-baseline", "timeout": 240},
+ {"command": "companion-state", "label": "companion-state"},
+ {"command": "character", "label": "character"},
+ {"command": "settings", "action": "show", "label": "settings-baseline"},
+ {"command": "renderer", "label": "renderer-status"},
+ {"command": "a11y-settings", "label": "gsettings-a11y"}
+]

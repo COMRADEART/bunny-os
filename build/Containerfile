@@ -77,11 +77,35 @@ RUN BUNNY_SNAPSHOT_ROOT="${BUNNY_SNAPSHOT_ROOT}" \
       --source-date-epoch "${SOURCE_DATE_EPOCH}" \
       --release-channel "${BUNNY_RELEASE_CHANNEL}" \
       --base-image "${BASE_IMAGE}" && \
+    /usr/bin/bash /tmp/bunny-os/build/scripts/regenerate-live-initramfs.sh \
+      --profile "${BUNNY_PROFILE}" \
+      --source-date-epoch "${SOURCE_DATE_EPOCH}" \
+      --source-commit "${BUNNY_SOURCE_COMMIT}" && \
     /usr/bin/dnf clean all && \
     /usr/bin/bash /tmp/bunny-os/build/scripts/finalise-image.sh \
       --epoch "${SOURCE_DATE_EPOCH}" \
       --report /usr/share/bunny-os/finalisation.json && \
     rm -rf /var/cache/dnf /tmp/bunny-os
+
+# On the placement of the initramfs regeneration above.
+#
+# It runs immediately after install-root.py, which is the step that installs
+# installer/config/bunny-live-dracut.conf. That ordering is load-bearing in both
+# directions:
+#
+#   * before it, and dracut reads the base's configuration and rebuilds exactly
+#     the initramfs that never booted, while every log line says it rebuilt one;
+#   * after finalise-image.sh, and the rpm queries the step makes for its
+#     provenance record would recreate the sqlite -wal and -shm files that
+#     finalisation had just canonicalised, changing the layer digest and
+#     charging it to the wrong thing.
+#
+# It is in this RUN rather than its own because the checkers it calls live under
+# /tmp/bunny-os/build/scripts, and the last line of this RUN deletes that tree.
+#
+# The step is a no-op on every profile except live: the payload image's
+# initramfs boots an ostree deployment from a disk, which is what the base
+# already builds it for.
 
 # The installation medium's EFI boot files. Live profile only.
 #

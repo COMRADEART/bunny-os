@@ -69,9 +69,28 @@ def classify(
     }
 
 
+#: The smallest display the graphical setup surface is qualified on.
+#:
+#: Declared here because nothing declared it before, and §39 requires setup to
+#: remain usable at 200 % text — which is a question about how many pixels the
+#: screen has, not about the stylesheet. Anaconda's own documented floor is
+#: 800x600; claiming that for Bunny would be dishonest, because at 200 % text a
+#: 600px-tall surface cannot show a destructive warning and its confirmation
+#: control at the same time, and §39 forbids hiding destructive-warning text.
+#:
+#: The story harness measures its overflow findings against this width, so a
+#: change here changes what the harness considers off-screen.
+MINIMUM_SETUP_DISPLAY = {"width": 1024, "height": 768}
+
+
 def minimum_requirements() -> dict[str, object]:
     return {
         "schemaVersion": 1,
+        "setupDisplay": {
+            **MINIMUM_SETUP_DISPLAY,
+            "note": "The graphical setup surface is qualified at this size and above, "
+                    "including at 200% text scaling.",
+        },
         "profiles": {
             "base_desktop": {"ramGiB": {"minimum": 4, "recommended": 8}, "storageGiB": {"minimum": 40, "recommended": 64}, "firmware": "UEFI x86-64"},
             "cloud_models": {"ramGiB": {"minimum": 8, "recommended": 16}, "storageGiB": {"minimum": 64, "recommended": 96}, "network": "required only while using configured providers"},

@@ -101,6 +101,25 @@ def _character_preferences(preferences: AccessibilityPreferences):
     )
 
 
+def _presentation_mode(root: Path | None) -> str:
+    """The resolved five-way companion mode, defaulting to ``full``.
+
+    One call to the settings document's own resolver
+    (:meth:`companion.settings.Settings.presentation_mode`), so the window
+    never invents its own resolution order. Unreadable settings mean the
+    full companion, for the same reason `_companion_settings_arguments`
+    returns defaults: a damaged file costs preferences, not the companion.
+    """
+    if root is None:
+        return "full"
+    try:
+        from .settings import load_settings
+
+        return load_settings(root).presentation_mode()
+    except Exception:
+        return "full"
+
+
 def _character_presenter(root: Path | None):
     """Build a character presenter, or ``None`` if there is no usable package.
 
@@ -113,11 +132,61 @@ def _character_presenter(root: Path | None):
     try:
         from .character.surface import CharacterPresenter
 
-        return CharacterPresenter(root)
+        return CharacterPresenter(root, **_companion_settings_arguments(root))
     except Exception:
         # Every character failure is a presentation failure. The window opens,
         # the task runs, and the surface is text.
         return None
+
+
+def _companion_settings_arguments(root: Path) -> dict:
+    """The user's companion settings, as presenter keyword arguments.
+
+    Named at length to keep it distinct from :func:`_character_preferences`
+    above, which translates *accessibility* preferences and is a different
+    thing entirely. The first version of this was called
+    ``_character_preferences`` too and shadowed it — and because both are
+    called for their return value and this one catches every exception, the
+    accessibility translation would have silently become an empty dict and
+    taken reduced motion and high contrast with it.
+
+    This is where §7's "single authoritative settings source" actually takes
+    effect. Before it, the window constructed the presenter with no arguments at
+    all: the renderer mode, the scale, the placement, the animation intensity
+    and the idle-animation preference were all persisted, all validated, and all
+    ignored — the companion drew its defaults on every login however the
+    settings file read.
+
+    Unreadable settings produce defaults rather than an exception. A person
+    whose settings file is damaged should lose their preferences, not their
+    companion.
+    """
+    try:
+        from .settings import load_settings
+
+        character = load_settings(root).character
+        return {
+            "mode": character.mode(),
+            "scale": character.scale,
+            "placement": character.placement(),
+            "performance": character.performance,
+            "idle_animation": character.idle_animation,
+            "animation_intensity": character.animation_intensity,
+            "contextual_reactions": character.contextual_reactions,
+            # The chrome-density axis (full/compact/minimal). The presenter
+            # only needs the size consequence; off and text-only never reach
+            # it — visible and the accessibility preference decide those
+            # before a presenter exists.
+            "companion_mode": character.companion_mode,
+            # §5. Enabled *here* rather than in the presenter: this function
+            # runs when a person opens a session, which is the only context in
+            # which "first run" means anything. A slice, a demo or a diagnostic
+            # building a presenter over a temporary directory is not a first
+            # boot and must not be greeted.
+            "first_run_greeting": True,
+        }
+    except Exception:
+        return {}
 
 
 @dataclass
@@ -1075,6 +1144,11 @@ class BunnyCompanionApplication:  # pragma: no cover - requires a display
             voice=voice if voice.available else None,
             character=_character_presenter(default_root()),
         )
+        #: The wizard's five-way answer, resolved once at construction. The
+        #: window acts on the chrome-density half (compact/minimal); off and
+        #: text-only keep flowing through the visibility and accessibility
+        #: paths that already carried them.
+        self.presentation_mode = _presentation_mode(default_root())
         self.character = None
         try:
             self.character = load_static_character()
@@ -1156,6 +1230,14 @@ class BunnyCompanionApplication:  # pragma: no cover - requires a display
             return
         self._install_css()
         self.window = self.Gtk.ApplicationWindow(application=app, title="Bunny Companion")
+        # A compact or minimal install opens in the compact window shape —
+        # "a smaller character in the corner" is a promise about the resting
+        # window, not only the figure. The header-bar buttons still resize;
+        # the mode decides where the window *starts*.
+        if self.presentation_mode in ("compact", "minimal"):
+            self.window.set_default_size(330, 320)
+        else:
+            self.window.set_default_size(460, 680)
         self.window.set_default_size(440, 620)
         self.window.add_css_class("bunny-companion-window")
         header = self.Gtk.HeaderBar()
@@ -1280,7 +1362,11 @@ class BunnyCompanionApplication:  # pragma: no cover - requires a display
 
         if self.character is not None and not self.preferences.prefer_text_only:
             self.picture = self.Gtk.Picture.new_for_filename(str(self.character.path))
-            self.picture.set_size_request(200, 200)
+            # The design tokens' companion sizes (lib/design/tokens.js
+            # COMPANION_SIZE): full 220, compact 128, minimal 48. The static
+            # picture used 200 before the mode existed; full keeps that.
+            side = {"compact": 128, "minimal": 48}.get(self.presentation_mode, 200)
+            self.picture.set_size_request(side, side)
             self.picture.set_can_shrink(True)
             self.picture.add_css_class("bunny-character")
             # The picture is decorative *because* the description below carries

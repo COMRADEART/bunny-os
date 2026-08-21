@@ -1,0 +1,15 @@
+{
+ "identities": {
+  "beforeUpdateDeployment": "1804c600590068ff78f9d0e535219c3f091b22035f271b90b04f94c41e33b78a",
+  "bootedBeforeRollback": "18fd8a7d9673e9107658a90afc06714c707ad9f5303675d89318399653ea1df6",
+  "restageBooted": "18fd8a7d9673e9107658a90afc06714c707ad9f5303675d89318399653ea1df6",
+  "updateTargetDeployment": "18fd8a7d9673e9107658a90afc06714c707ad9f5303675d89318399653ea1df6"
+ },
+ "journey": "phase7-rollback",
+ "reasons": [
+  "FAIL: bootc rollback exited None",
+  "FAIL: the post-rollback deployment order was not recorded"
+ ],
+ "state": {},
+ "verdict": "FAIL"
+}

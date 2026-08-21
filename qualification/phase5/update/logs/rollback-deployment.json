@@ -1,0 +1,11 @@
+{
+  "mode": "deployment-rollback",
+  "deploymentEntries": 2,
+  "defaultDeployment": "2d358243c59de6e5a0e6672ca1ae3eec1f2972a8ac33907467cd6d9ffa657404",
+  "rollbackTarget": "dd33960330844f1ec11b6e93710464634d03be77bbcb9580480b16cfa08c892d",
+  "defaultDeploymentBoots": true,
+  "previousDeploymentBoots": false,
+  "liveDeploymentSwitchTested": false,
+  "outcome": "NOT_RUN",
+  "note": "The machine reached a healthy boot target and it was not the rollback target: this harness could not select the previous deployment. Reported as an absent capability rather than a product failure, because the product's own rollback path is separately demonstrated - see qualification/phase5/update/rollback-real.sh, where 'bootc rollback' followed by a reboot does bring up the previous deployment."
+}

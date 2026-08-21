@@ -1,0 +1,47 @@
+{
+ "fixtureClass": "TEST_FIXTURE_ONLY",
+ "fixture": true,
+ "test_fixture_only": true,
+ "warning": [
+  "TEST_FIXTURE_ONLY",
+  "NOT EXTERNAL EVIDENCE",
+  "NOT APPLICABLE TO THE SUBJECT ARTIFACT"
+ ],
+ "purpose": "A review submission introducing a genuine new Critical finding outside the 44-finding baseline (baseline_advisory null). Drives the new-finding scenarios: the finding is preserved as NEW_FINDING, no baseline row is renumbered, no triage identifier is minted by the register, and the new Critical blocks until appropriately resolved.",
+ "record": {
+  "schema": "bunny-os/security-review-submission/1",
+  "reviewer_id": "REVIEWER-EX3",
+  "reviewer": "REVIEWER-EX3",
+  "independence": {
+   "declaration": "constructed fixture: this reviewer had no role in producing artifact e906a48793d7 and no interest in its approval",
+   "relationship_to_project": "none",
+   "is_release_decision_authority": false,
+   "policy_exception": null
+  },
+  "artifact_digest": "sha256:c87a6616008ce34f97840f63814e08fdb33574b52202fbb4841b7f5aa7f8562d",
+  "artifactDigest": "sha256:c87a6616008ce34f97840f63814e08fdb33574b52202fbb4841b7f5aa7f8562d",
+  "independently_computed_digest": "sha256:c87a6616008ce34f97840f63814e08fdb33574b52202fbb4841b7f5aa7f8562d",
+  "digest_basis": "qcow2",
+  "digest_computation": "constructed fixture: sha256sum bunny-alpha.qcow2",
+  "review_scope_version": "SCOPE-1",
+  "scope": "constructed fixture: independent review of artifact e906a48793d7 under REVIEW_SCOPE.md SCOPE-1",
+  "review_start": "2026-08-18",
+  "review_end": "2026-08-19",
+  "date": "2026-08-19",
+  "findings": [
+   {
+    "reviewer_finding_id": "EX3-N1",
+    "title": "constructed fixture: world-readable session credential cache outside the baseline",
+    "severity": "Critical",
+    "affected_component": "bunny-session-helper",
+    "applicability": "APPLICABLE",
+    "evidence": "constructed fixture: file mode observed 0644 on a credential-bearing path in the booted image",
+    "rationale": "constructed fixture: any local process can read another session's material",
+    "recommended_disposition": "FIX_BEFORE_ALPHA",
+    "baseline_advisory": null
+   }
+  ],
+  "overall_assessment": "APPROVED_WITH_CONDITIONS",
+  "disposition": "APPROVED_WITH_CONDITIONS"
+ }
+}

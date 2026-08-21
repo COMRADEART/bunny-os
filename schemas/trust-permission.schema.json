@@ -29,7 +29,7 @@
       "type": "string",
       "enum": [
         "malformed-request", "store-unreadable", "not-declared", "unknown-application",
-        "beyond-ceiling", "user-denied", "granted-previously", "catalog-default",
+        "beyond-ceiling", "not-enforceable", "user-denied", "granted-previously", "catalog-default",
         "needs-user", "user-allowed", "surface-failed", "unanswered", "replayed",
         "answer-mismatch", "expired", "scope-not-offered", "store-unwritable"
       ],

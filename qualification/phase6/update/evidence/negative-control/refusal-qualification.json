@@ -1,0 +1,165 @@
+{
+  "asIntended": 11,
+  "checks": 18,
+  "duplicateChecks": [],
+  "missingChecks": [],
+  "record": "phase6-update-refusal-qualification",
+  "requiredChecks": 18,
+  "result": "UNEXPECTED",
+  "results": [
+    {
+      "detail": "configured:true is derived from CONFIG_PATH.exists() alone. It is true of an image that can never update, because the file it is testing for is the one that says enabled:false. Recorded because a status field that reads as capability and means file-presence is something a reviewer must be told rather than left to discover.",
+      "expected": "exit 0, state idle, configured true -- a field that means only that the file exists",
+      "id": "A0",
+      "observed": "exit 0, body {\"configured\": true, \"schemaVersion\": 1, \"state\": \"idle\", \"updatedAt\": \"2026-08-18T04:47:20.036101Z\"}",
+      "question": "on an untouched system, does status overstate what is configured?",
+      "verdict": "AS_INTENDED"
+    },
+    {
+      "detail": null,
+      "expected": "no .pem files; only revoked-keys.json",
+      "id": "A1",
+      "observed": "1 pem file(s); directory holds ['revoked-keys.json', 'tampered-trust.pem']",
+      "question": "does the shipped trust store contain any trusted signing key?",
+      "verdict": "UNEXPECTED"
+    },
+    {
+      "detail": null,
+      "expected": "enabled false, and a manifestUrl that cannot resolve",
+      "id": "A2",
+      "observed": "{\"channel\": \"developer\", \"enabled\": true, \"imageRepositories\": [\"quay.io/comradeart/bunny-os\"], \"manifestUrl\": \"https://updates.invalid.bunny-os.example/x/m.json\"}",
+      "question": "what does the shipped update configuration say?",
+      "verdict": "UNEXPECTED"
+    },
+    {
+      "detail": null,
+      "expected": "a valid, empty list -- revocation is available but unused",
+      "id": "A3",
+      "observed": "{\"revokedKeyIds\": [], \"schemaVersion\": 1}",
+      "question": "what does the shipped revocation list contain?",
+      "verdict": "AS_INTENDED"
+    },
+    {
+      "detail": null,
+      "expected": "exit 2, error code not_configured",
+      "id": "A4",
+      "observed": "exit 2, code 'download_failed', message 'could not download update manifest'",
+      "question": "does the agent refuse the check action as shipped?",
+      "verdict": "UNEXPECTED"
+    },
+    {
+      "detail": null,
+      "expected": "exit 2, error code not_configured",
+      "id": "A5",
+      "observed": "exit 2, code 'download_failed', message 'could not download update manifest'",
+      "question": "does the agent refuse the stage action as shipped?",
+      "verdict": "UNEXPECTED"
+    },
+    {
+      "detail": null,
+      "expected": "exit 2, error code not_configured",
+      "id": "A6",
+      "observed": "exit 2, code 'not_staged', message 'no verified OS deployment is staged'",
+      "question": "does the agent refuse the install action as shipped?",
+      "verdict": "UNEXPECTED"
+    },
+    {
+      "detail": "status is a record of the last outcome, not a current assessment: it returns the status file when one exists and only computes idle when none does. A0 and A7 are therefore the same command answering two different questions, which is why both are asked and why A0 has to be first.",
+      "expected": "exit 0, state failed, error code not_configured",
+      "id": "A7",
+      "observed": "exit 0, body {\"error\": {\"code\": \"not_staged\", \"message\": \"no verified OS deployment is staged\"}, \"schemaVersion\": 1, \"state\": \"failed\", \"updatedAt\": \"2026-08-18T04:47:20.176128Z\"}",
+      "question": "after a refusal, does status report the refusal rather than idle?",
+      "verdict": "UNEXPECTED"
+    },
+    {
+      "detail": null,
+      "expected": "no enablement symlink -- the timer exists but is wanted by no target",
+      "id": "A8",
+      "observed": "symlinks found: none",
+      "question": "is the update timer enabled in the shipped image?",
+      "verdict": "AS_INTENDED"
+    },
+    {
+      "detail": null,
+      "expected": "refused with unknown_key",
+      "id": "B1",
+      "observed": "refused with 'unknown_key'",
+      "question": "is a manifest naming an untrusted key refused?",
+      "verdict": "AS_INTENDED"
+    },
+    {
+      "detail": null,
+      "expected": "refused with revoked_key, not unknown_key",
+      "id": "B2",
+      "observed": "refused with 'revoked_key'",
+      "question": "is a revoked key refused, and refused before the key lookup?",
+      "verdict": "AS_INTENDED"
+    },
+    {
+      "detail": "This is the check that gives B1 and B2 their meaning. If a manifest signed by an installed key were also refused, the refusals above would be evidence of a broken verifier, not of an empty trust store.",
+      "expected": "accepted; no exception",
+      "id": "B3",
+      "observed": "accepted",
+      "question": "NEGATIVE CONTROL -- is a correctly signed manifest accepted?",
+      "verdict": "AS_INTENDED"
+    },
+    {
+      "detail": null,
+      "expected": "refused with bad_signature",
+      "id": "B4",
+      "observed": "refused with 'bad_signature'",
+      "question": "is a signed manifest whose payload was altered refused?",
+      "verdict": "AS_INTENDED"
+    },
+    {
+      "detail": "The control key from B3 is still in the trust store for this check. If the refusal came only from the empty store, this would now succeed.",
+      "expected": "exit 2, not_configured -- configuration disablement is a separate control",
+      "id": "C1",
+      "observed": "exit 2, code 'download_failed'",
+      "question": "with a VALID key now installed, does the disabled config still refuse?",
+      "verdict": "UNEXPECTED"
+    },
+    {
+      "detail": null,
+      "expected": "exit 2, download_failed -- it stops, it does not proceed",
+      "id": "C2",
+      "observed": "exit 2, code 'download_failed'",
+      "question": "with updates ENABLED and no reachable source, does it fail closed?",
+      "verdict": "AS_INTENDED"
+    },
+    {
+      "detail": null,
+      "expected": "refused with rollback_attack",
+      "id": "D1",
+      "observed": "refused with 'rollback_attack'",
+      "question": "is a manifest with a LOWER sequence than accepted refused?",
+      "verdict": "AS_INTENDED"
+    },
+    {
+      "detail": null,
+      "expected": "refused with rollback_attack",
+      "id": "D2",
+      "observed": "refused with 'rollback_attack'",
+      "question": "is a REPLAY of the accepted sequence refused when staging?",
+      "verdict": "AS_INTENDED"
+    },
+    {
+      "detail": "Recorded because it locates where authentication happens. _verify_signature is the LAST call in _validate_manifest: every field above it was parsed and compared before the manifest was known to be authentic. Unreachable while updates are unsupported, and a design point an independent reviewer should be handed rather than left to find.",
+      "expected": "refused with bad_signature -- the sequence check passes, authenticity does not",
+      "id": "D3",
+      "observed": "refused with 'bad_signature'",
+      "question": "does a higher sequence reach the signature check?",
+      "verdict": "AS_INTENDED"
+    }
+  ],
+  "schemaVersion": 1,
+  "unexpectedChecks": [
+    "A1",
+    "A2",
+    "A4",
+    "A5",
+    "A6",
+    "A7",
+    "C1"
+  ]
+}

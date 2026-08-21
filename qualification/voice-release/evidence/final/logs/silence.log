@@ -1,0 +1,2 @@
+{"event": "warning", "reason": "I didn't catch that. Could you say it again?", "requestId": "speechreq-6d26a033f5454466a26e7cf061b73528"}
+{"event": "finished", "phase": "warning", "requestId": "speechreq-6d26a033f5454466a26e7cf061b73528"}

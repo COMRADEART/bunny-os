@@ -313,6 +313,17 @@ class Parameter:
                 )
             return value
         if self.kind == "identifier":
+            # An optional identifier whose declared default is the empty string
+            # accepts the empty string on the wire, because that is the value
+            # the declaration itself says "not provided" looks like. Refusing
+            # "" while defaulting to "" made the contract unsatisfiable for a
+            # client that sends the field explicitly: bunny-shell-assistant
+            # always sent requestId="" beside a real taskId, so voice_cancel
+            # refused every interruption the desktop ever asked for, and the
+            # audio played to its end while the shell reported idle. A
+            # *required* identifier still refuses "", as it must.
+            if value == "" and not self.required and self.default == "":
+                return ""
             if not isinstance(value, str) or not valid_id(value):
                 raise ProtocolError(f"{self.name} is not a usable identifier")
             return value

@@ -1,0 +1,79 @@
+{
+ "alpha_validation_status": "NOT_RUN",
+ "approval_status": "NOT_RUN",
+ "artifact": "e906a48793d7",
+ "blocking_conditions": [
+  {
+   "basis": "no completed independent review exists; absence blocks, it does not authorize",
+   "condition": 1,
+   "state": "TRUE",
+   "title": "Security review returns BLOCKED (or no completed review exists)"
+  },
+  {
+   "basis": "all 8 Critical findings carry REQUIRES_REVIEW or UNKNOWN (qualification/phase8/security-review/review-package.json)",
+   "condition": 2,
+   "state": "TRUE",
+   "title": "A Critical issue lacks an accepted disposition"
+  },
+  {
+   "basis": "no testing evidence exists either way; undetermined is not cleared",
+   "condition": 3,
+   "state": "UNDETERMINED",
+   "title": "A confirmed data-loss defect exists"
+  },
+  {
+   "basis": "no testing evidence exists either way; undetermined is not cleared",
+   "condition": 4,
+   "state": "UNDETERMINED",
+   "title": "A confirmed privacy breach exists"
+  },
+  {
+   "basis": "no testing evidence exists either way; undetermined is not cleared",
+   "condition": 5,
+   "state": "UNDETERMINED",
+   "title": "A confirmed release-blocking accessibility defect exists"
+  },
+  {
+   "basis": "all five digests recomputed from bytes 2026-08-18 (qualification/phase7/baseline/freeze.log); the artifact is frozen and identified",
+   "condition": 6,
+   "state": "FALSE",
+   "title": "The artifact identity cannot be verified"
+  },
+  {
+   "basis": "the artifact is UNSIGNED, zero signature files exist, and no recorded exception accepts unsigned distribution",
+   "condition": 7,
+   "state": "TRUE",
+   "title": "Required signing policy is unmet"
+  },
+  {
+   "basis": "no record exists in which a second person independently names the artifact digest",
+   "condition": 8,
+   "state": "TRUE",
+   "title": "Required second approval is absent"
+  },
+  {
+   "basis": "the committed scope declares zero physical machines supported and no hardware evidence exists; nothing declared supported has failed",
+   "condition": 9,
+   "state": "UNDETERMINED",
+   "title": "A hardware failure affects the declared supported hardware set"
+  },
+  {
+   "basis": "zero Alpha reports exist; no finding exists to be unresolved",
+   "condition": 10,
+   "state": "UNDETERMINED",
+   "title": "Alpha testing finds an unresolved release blocker"
+  }
+ ],
+ "conditions_source": "qualification/phase8/conditions/ALPHA_RELEASE_BLOCKING_CONDITIONS.md, committed 17a34aa6 before any external evidence; none weakened",
+ "decision_authority": "the release decision authority (the project owner, for the Alpha class). No authorization was exercised: MORE_EVIDENCE_REQUIRED is the measured default state, not a release decision, and the repository cannot authorize itself.",
+ "digest": "sha256:c87a6616008ce34f97840f63814e08fdb33574b52202fbb4841b7f5aa7f8562d",
+ "engineering_status": "PASS",
+ "engineering_status_basis": "Phase 7 closed certification, commit e65e3df0, 2 x 6072 tests zero failures on the reference target; closed gates stay closed",
+ "final_decision": "MORE_EVIDENCE_REQUIRED",
+ "hardware_status": "NOT_RUN",
+ "schemaVersion": 1,
+ "security_status": "NOT_RUN",
+ "signing_status": "NOT_RUN",
+ "status_basis": "qualification/phase9/intake/LEDGER.json holds zero intakes; every external status is NOT_RUN because its owner has not acted, and NOT_RUN authorizes nothing",
+ "timestamp": "2026-08-18"
+}

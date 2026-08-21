@@ -765,6 +765,17 @@ def _wait_for_speech(
                     return "cancelled", str(event.get("detail") or "")
                 if kind in ("speech_failed", "speech_rejected"):
                     return "failed", str(event.get("detail") or "speech output failed")
+                if kind == "speech_degraded" and event.get("disposition"):
+                    # A mid-utterance degradation carries no disposition and the
+                    # utterance carries on — that one is NOT terminal (treating
+                    # it so once froze a mouth for 146 frames). A *settled*
+                    # degradation does carry one: the worker has decided the
+                    # caption is the whole of the output. Waiting past it is
+                    # what made "no provider available" indistinguishable from
+                    # a 60-second hang — measured on the Stage 2 artifact, the
+                    # spoken answer arrived and the desktop then sat silent for
+                    # the rest of this loop's deadline.
+                    return "degraded", str(event.get("detail") or "speech degraded to captions")
         time.sleep(0.1)
     return "failed", "speech output did not finish within its time limit"
 
@@ -820,8 +831,33 @@ def watch(
     results_reported = False
     approvals_reported: set[str] = set()
     last_event_sequence = 0
+    # The deadline does not run while a person is being asked something.
+    #
+    # An approval is not a slow answer; it is a different kind of answer. This
+    # loop used to hold one clock for both, so a task that reached
+    # `waiting_for_approval` and sat there — because the question was on
+    # somebody's screen, which is the system working — was reported as "the
+    # runtime did not finish within the deadline". The desktop then showed a
+    # warning where a question should have been, and the task waited for an
+    # answer nobody had been asked for.
+    #
+    # Measured in a booted guest: on a cold session under llvmpipe the first
+    # task crosses the deadline before the prompt appears, and a later one in
+    # the same session does not — so this failed intermittently, in the
+    # direction that hides a permission request.
+    #
+    # `waiting` is recomputed every pass from the presentation state below. The
+    # clock is *suspended*, not extended: time spent waiting for a person is not
+    # spent by the runtime, and a task that stops waiting resumes the deadline
+    # it had left rather than being granted a fresh one.
+    waiting_since = 0.0
+    waited_for_a_person = 0.0
     while True:
-        if time.monotonic() > deadline:
+        if waiting_since:
+            elapsed_waiting = time.monotonic() - waiting_since
+        else:
+            elapsed_waiting = 0.0
+        if time.monotonic() - (waited_for_a_person + elapsed_waiting) > deadline:
             emit("error", reason="the runtime did not finish within the deadline", taskId=task_id)
             return 5
         try:
@@ -877,6 +913,14 @@ def watch(
             )
 
         approvals = state.get("approvals", []) if isinstance(state, Mapping) else []
+        # Is a question on somebody's screen right now? If so the deadline is
+        # not running; see the comment where it is checked.
+        unanswered = bool(approvals) and phase == "waiting_for_approval"
+        if unanswered and not waiting_since:
+            waiting_since = time.monotonic()
+        elif not unanswered and waiting_since:
+            waited_for_a_person += time.monotonic() - waiting_since
+            waiting_since = 0.0
         if isinstance(approvals, list):
             for approval in approvals:
                 if not isinstance(approval, Mapping):
@@ -897,6 +941,20 @@ def watch(
                     reason=str(approval.get("reason") or state.get("statusText") or "Allow this action?"),
                     destinationDetail=str(approval.get("destinationDetail") or ""),
                     safeDefault=str(approval.get("safeDefault") or "denied"),
+                    # The structured facts the Trust component draws: application
+                    # identity, the resource, the effect, the confinement.
+                    #
+                    # This list is a subset chosen field by field, and that is
+                    # how the structured prompt went missing on its first booted
+                    # run: the runtime carried it all the way to
+                    # ApprovalPresentation.to_json(), every Python test passed,
+                    # and the desktop drew a permission dialog with a heading and
+                    # two buttons because the bridge had never been told to pass
+                    # it on. Passed through as a whole rather than re-listed
+                    # here — it is already an allowlist, bounded and escaped by
+                    # companion.presentation.PROMPT_FIELDS, and re-listing it
+                    # would be a second place for a field to go missing.
+                    prompt=approval.get("prompt") if isinstance(approval.get("prompt"), Mapping) else {},
                 )
 
         summary = str(state.get("resultSummary") or "")
@@ -923,6 +981,11 @@ def watch(
                     # Speech is optional; the task remains a success and the
                     # visible answer remains authoritative.
                     emit("speech_error", reason=detail, taskId=task_id)
+                elif speech_disposition == "degraded":
+                    # The worker settled on captions-only and said why. That is
+                    # a fact the person deserves promptly, not an error: the
+                    # answer on screen is complete.
+                    emit("warning", reason=detail, taskId=task_id)
                 emit("phase", phase="success", statusText="Done", taskId=task_id)
             emit("finished", phase=phase, taskId=task_id)
             return 0

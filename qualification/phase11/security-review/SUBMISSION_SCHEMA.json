@@ -1,0 +1,184 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "bunny-os/security-review-submission/1",
+ "title": "Independent security review submission (record.json)",
+ "description": "The machine-readable contract for one review submission. VERIFY_SUBMISSION.py enforces exactly this file (it reads the required lists, enums, patterns, and x-aliases from here, so the schema and the validator cannot drift), plus four checks a JSON Schema cannot express: the alias pairs must be equal; artifact_digest and independently_computed_digest must each be one of the subject artifact's five digests in ARTIFACT_IDENTITY.json; review_start must not postdate review_end; and independence.is_release_decision_authority true requires independence.policy_exception. A record carrying fixtureClass TEST_FIXTURE_ONLY is never a submission. The five intake-alias fields exist because the submission must also pass the Phase 9 intake validation unchanged (qualification/phase9/tools/intake.py): reviewer, scope, date, disposition, artifactDigest are the spellings that boundary checks, and this contract requires them equal to their canonical counterparts.",
+ "type": "object",
+ "required": [
+  "schema",
+  "reviewer_id",
+  "reviewer",
+  "independence",
+  "artifact_digest",
+  "artifactDigest",
+  "independently_computed_digest",
+  "review_scope_version",
+  "scope",
+  "review_start",
+  "review_end",
+  "date",
+  "findings",
+  "overall_assessment",
+  "disposition"
+ ],
+ "properties": {
+  "schema": {
+   "const": "bunny-os/security-review-submission/1",
+   "description": "names the contract version this record answers"
+  },
+  "reviewer_id": {
+   "type": "string",
+   "minLength": 1,
+   "description": "reviewer identity or approved pseudonymous identifier (e.g. REVIEWER-001). No unnecessary personal information is required; identity handling may occur outside the repository, but the identifier must be stable across this reviewer's submissions."
+  },
+  "reviewer": {
+   "type": "string",
+   "minLength": 1,
+   "description": "intake alias: must equal reviewer_id (checked by VERIFY_SUBMISSION.py)"
+  },
+  "independence": {
+   "type": "object",
+   "required": ["declaration", "is_release_decision_authority"],
+   "properties": {
+    "declaration": {
+     "type": "string",
+     "minLength": 1,
+     "description": "the reviewer's own statement that they had no role in producing the artifact and no interest in its approval"
+    },
+    "relationship_to_project": {
+     "type": "string",
+     "description": "any relationship worth disclosing; 'none' is a fine answer"
+    },
+    "is_release_decision_authority": {
+     "type": "boolean",
+     "description": "whether this reviewer is also the release decision authority. true requires policy_exception naming the recorded policy that explicitly permits the overlap; no such policy currently exists."
+    },
+    "policy_exception": {
+     "type": ["string", "null"],
+     "description": "the recorded policy permitting reviewer/decision-authority overlap, or null"
+    }
+   },
+   "description": "The declaration is verified to exist mechanically; whether it is credible is a human judgment recorded in triage, never manufactured by automation."
+  },
+  "artifact_digest": {
+   "type": "string",
+   "pattern": "^(sha256:)?[0-9a-f]{64}$",
+   "description": "the digest of the artifact this review binds to; must be one of the five digests in ARTIFACT_IDENTITY.json"
+  },
+  "artifactDigest": {
+   "type": "string",
+   "pattern": "^(sha256:)?[0-9a-f]{64}$",
+   "description": "intake alias: must equal artifact_digest"
+  },
+  "independently_computed_digest": {
+   "type": "string",
+   "pattern": "^(sha256:)?[0-9a-f]{64}$",
+   "description": "the digest the reviewer computed themselves from the bytes they reviewed; must be one of the five subject digests. The repository's claim about identity is not to be trusted — this field is the reviewer's own measurement."
+  },
+  "digest_basis": {
+   "enum": ["image", "iso", "qcow2", "ociTar", "raw"],
+   "description": "which artifact form independently_computed_digest was computed over (recommended)"
+  },
+  "digest_computation": {
+   "type": "string",
+   "description": "how the digest was computed (command or method), so the measurement is reproducible (recommended)"
+  },
+  "review_scope_version": {
+   "enum": ["SCOPE-1"],
+   "description": "the frozen scope version this review answers (REVIEW_SCOPE.md)"
+  },
+  "scope": {
+   "type": "string",
+   "minLength": 1,
+   "description": "intake field: free-text scope statement; state the artifact and the scope version"
+  },
+  "review_start": {
+   "type": "string",
+   "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+   "description": "ISO 8601 date the review began"
+  },
+  "review_end": {
+   "type": "string",
+   "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+   "description": "ISO 8601 date the review ended"
+  },
+  "date": {
+   "type": "string",
+   "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+   "description": "intake alias: the record dates its own action; must equal review_end"
+  },
+  "scope_answers": {
+   "type": "object",
+   "description": "recommended: an answer per frozen question, keyed SQ-1..SQ-8"
+  },
+  "findings": {
+   "type": "array",
+   "description": "the reviewer's findings. May be empty — but the register closes nothing without per-finding evidence, so an empty list leaves every baseline finding undispositioned. Reviewers use their own finding identifiers; the project maintains the mapping and never requires its internal IDs.",
+   "items": {
+    "type": "object",
+    "required": [
+     "reviewer_finding_id",
+     "title",
+     "severity",
+     "affected_component",
+     "applicability",
+     "evidence",
+     "rationale",
+     "recommended_disposition"
+    ],
+    "properties": {
+     "reviewer_finding_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "the reviewer's own identifier for this finding, unique within the submission"
+     },
+     "title": {"type": "string", "minLength": 1},
+     "severity": {
+      "enum": ["Critical", "High", "Medium", "Low", "Informational"]
+     },
+     "affected_component": {
+      "type": "string",
+      "minLength": 1,
+      "description": "package, binary, service, or surface affected"
+     },
+     "applicability": {
+      "enum": ["APPLICABLE", "NOT_APPLICABLE", "UNDETERMINED"],
+      "description": "whether the issue applies to the subject artifact as shipped. NOT_APPLICABLE without supporting evidence is held at REQUIRES_FURTHER_ANALYSIS by the register — 'not exploitable' alone is not sufficient."
+     },
+     "evidence": {
+      "type": "string",
+      "minLength": 1,
+      "description": "what establishes the conclusion: commands, attached logs (pin them in attachmentDigests), reachability analysis"
+     },
+     "rationale": {"type": "string", "minLength": 1},
+     "recommended_disposition": {
+      "enum": ["FIX_BEFORE_ALPHA", "FIX_IN_LATER_RELEASE", "ACCEPTED_RISK", "NOT_APPLICABLE", "NO_CHANGE_REQUIRED"],
+      "description": "the reviewer's recommendation. For confirmed Critical findings the project may accept only FIX_BEFORE_ALPHA, ACCEPTED_RISK (with a named authority, rationale, scope impact, and expiry) or NOT_APPLICABLE (with establishing evidence)."
+     },
+     "baseline_advisory": {
+      "type": ["string", "null"],
+      "description": "the public advisory identifier (GHSA-/CVE-) of the FINDINGS_BASELINE.json row this finding addresses, or null for a finding outside the baseline. This is the reconciliation hook; the project's internal SEC-BL-NNN identifiers are never required of the reviewer."
+     }
+    }
+   }
+  },
+  "overall_assessment": {
+   "enum": ["APPROVED", "APPROVED_WITH_CONDITIONS", "BLOCKED", "MORE_EVIDENCE_REQUIRED"],
+   "description": "exactly one overall outcome"
+  },
+  "disposition": {
+   "enum": ["APPROVED", "APPROVED_WITH_CONDITIONS", "BLOCKED", "MORE_EVIDENCE_REQUIRED"],
+   "description": "intake alias: must equal overall_assessment"
+  },
+  "attachmentDigests": {
+   "type": "object",
+   "description": "sha256 per attachment filename; the intake recomputes these from the ingested bytes and refuses a mismatch"
+  }
+ },
+ "x-aliases": [
+  ["reviewer", "reviewer_id"],
+  ["artifactDigest", "artifact_digest"],
+  ["disposition", "overall_assessment"],
+  ["date", "review_end"]
+ ]
+}

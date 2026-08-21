@@ -215,6 +215,26 @@ class DefaultCharacterDecision:
         }
 
 
+def _mode_ceiling(mode: Any) -> Presentation | None:
+    """The rung a render mode permits, or ``None`` when no mode was supplied.
+
+    Accepts the enum, its string value, or ``None``. Tolerant because this is
+    called from the window start-up path with whatever settings held, and a
+    settings file naming a mode this build does not know should cost the user
+    the *bound*, not the character.
+    """
+    if mode is None:
+        return None
+    from .modes import MODE_CEILINGS, RenderMode
+
+    if isinstance(mode, RenderMode):
+        return MODE_CEILINGS[mode]
+    try:
+        return MODE_CEILINGS[RenderMode(str(mode))]
+    except (ValueError, KeyError):
+        return None
+
+
 def _policy_path(registry: Any) -> Path:
     return Path(getattr(registry, "root", Path("."))) / POLICY_FILE_NAME
 
@@ -306,6 +326,7 @@ def default_character_decision(
     registry: Any,
     state: PolicyState | None = None,
     validator: Any = None,
+    mode: Any = None,
 ) -> DefaultCharacterDecision:
     """Decide, without writing anything.
 
@@ -314,6 +335,13 @@ def default_character_decision(
     and the accessibility policy permit. Deliberately not recomputed here: §2 of
     the renderer brief forbids a second reading of capability, and a policy that
     measured the GPU itself would be a third.
+
+    ``mode`` is the user's :class:`companion.character.modes.RenderMode` and
+    lowers the ceiling further. It is taken here rather than applied by each
+    caller because there are four callers and a bound applied in three of them
+    is a machine that boots differently depending on which one ran — which is
+    precisely how the ladder came to top out at ``full-3d`` for every machine
+    that could hold a GL context.
     """
     state = read_policy_state(registry) if state is None else state
     check = validator or _validates
@@ -321,6 +349,12 @@ def default_character_decision(
 
     eligible_rung = _ELIGIBLE_TO_RUNG.get(eligible, Presentation.TEXT_ONLY)
     reasons.append(f"the machine and policy permit {eligible_rung.value}")
+    mode_rung = _mode_ceiling(mode)
+    if mode_rung is not None and _RANK[mode_rung] < _RANK[eligible_rung]:
+        eligible_rung = mode_rung
+        reasons.append(
+            f"the renderer mode in settings caps the default character at {mode_rung.value}"
+        )
 
     try:
         current = registry.selected()
@@ -435,6 +469,7 @@ def apply_default_character_policy(
     eligible: str,
     dry_run: bool = False,
     validator: Any = None,
+    mode: Any = None,
 ) -> DefaultCharacterDecision:
     """Decide and, unless ``dry_run``, act.
 
@@ -445,7 +480,9 @@ def apply_default_character_policy(
     a user's selection on that belief.
     """
     state = read_policy_state(registry)
-    decision = default_character_decision(eligible=eligible, registry=registry, state=state, validator=validator)
+    decision = default_character_decision(
+        eligible=eligible, registry=registry, state=state, validator=validator, mode=mode
+    )
 
     # A dry run writes nothing. This block used to sit above the ``dry_run``
     # return, so asking the policy what it *would* do — which is exactly what

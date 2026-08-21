@@ -1,0 +1,42 @@
+[Unit]
+# Anaconda's DBus module layer, started for the Bunny installer backend.
+#
+# The medium boots Bunny's own setup surface instead of anaconda, and the
+# backend's executor drives Anaconda's Boss over the private bus anaconda
+# would normally start for itself. Run 11 of Journey A found that nothing
+# started it: the executor's preflight read /run/anaconda/bus.address on a
+# medium where no process had ever written it, and every confirmed
+# installation ended at "destructive executor is unavailable".
+#
+# dbus-daemon runs anaconda's own bus configuration, whose servicedir makes
+# the Boss and its modules DBus-activatable on first call — measured inside
+# the live image before this unit existed: starting exactly this daemon and
+# introspecting the Boss passes the executor's preflight.
+Description=Anaconda private DBus for the Bunny installer backend
+ConditionPathExists=/run/bunny-installer/live-session
+Requires=bunny-live-session.service
+After=bunny-live-session.service
+Before=bunny-installer-backend.service shutdown.target
+Conflicts=shutdown.target
+
+[Service]
+Type=simple
+RuntimeDirectory=anaconda
+# The listen address lives under /run, never /tmp, and that is run 12's
+# lesson: anaconda's bus configuration defaults to a /tmp socket, and the
+# backend that must reach it runs under PrivateTmp=yes - the socket existed,
+# the address file named it, and the backend's namespace had no such file.
+# Measured in both directions under the backend's exact sandbox.
+#
+# --print-address writes to stdout and stdout is the address file; the
+# daemon's diagnostics go to stderr, which stays on the journal.
+ExecStart=/usr/bin/dbus-daemon --config-file=/usr/share/anaconda/dbus/anaconda-bus.conf --address=unix:path=/run/anaconda/bus.socket --nofork --print-address
+StandardOutput=file:/run/anaconda/bus.address
+StandardError=journal
+# "Started" must mean "the address is readable": the backend preflights its
+# executor the moment it starts, and ordering alone would race the write.
+ExecStartPost=/usr/libexec/bunny-anaconda-bus-ready
+Restart=no
+
+[Install]
+WantedBy=graphical.target

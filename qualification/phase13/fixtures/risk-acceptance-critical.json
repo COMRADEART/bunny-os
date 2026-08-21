@@ -1,0 +1,20 @@
+{
+ "fixture": true,
+ "fixtureClass": "TEST_FIXTURE_ONLY",
+ "purpose": "Drives the risk-acceptance dry runs: a complete, scoped, expiring acceptance of one Critical baseline finding. Critical requires an assigned AUTH-SECURITY-OWNER identity; expiry must block authorization; application to a successor must refuse; the underlying finding stays open.",
+ "record": {
+  "accepted_at": "2026-08-19",
+  "artifact_digest": "sha256:c87a6616008ce34f97840f63814e08fdb33574b52202fbb4841b7f5aa7f8562d",
+  "authority": "Constructed Fixture Security Owner",
+  "evidence": "constructed fixture: reference to the mitigation analysis",
+  "expires_at": "2026-09-19",
+  "finding_ids": [
+   "SEC-BL-001"
+  ],
+  "reason": "constructed fixture: mitigation exists outside the affected code path for the Alpha scope",
+  "revocation_conditions": "constructed fixture: any confirmed exploitation, or scope widening beyond the Alpha cohort",
+  "risk_id": "RISK-001",
+  "scope": "constructed fixture: Alpha distribution to the controlled cohort only"
+ },
+ "test_fixture_only": true
+}

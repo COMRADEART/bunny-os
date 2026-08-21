@@ -1,143 +1,171 @@
-# Accessibility — the Companion, the Trust prompt and the task workspace
+# Accessibility of the Bunny Desktop and the Trust Prompt
 
-**Date** 2026-08-10 · **Commits** `fc1e58a`, `adce2c5`
-**Status** Design and logic implemented and tested. **No assistive technology has
-been used against any of it.**
+**What this is** An assistive-technology pass against a *booted* Bunny OS
+session: names, keyboard reach, actions, reduced motion, text scaling, high
+contrast and the shipped screen reader. Not a source review.
 
-§25's requirement is that the Companion *enhance* accessibility rather than become
-another barrier. A character that narrates the system is a genuine opportunity for
-a person who cannot read a dense settings page — and a genuine hazard if the
-narration is the only route to something.
+**Image** `b09f523dcd71`, profile `shell`, 1920×1080, llvmpipe
+**Harness** `desktop-drive.py --accessibility` → AT-SPI + gsettings + QMP `screendump`
+**Verdict** Two defects that make the desktop unusable for people who need
+larger text or higher contrast, and one that made a security question
+unannounceable. The third is fixed.
 
----
-
-## 1. The decision that shaped everything else
-
-**The non-graphical surface is the reference implementation, and the graphical one
-is derived from it.**
-
-The usual arrangement is the opposite: build a dialog, then add labels, then add a
-screen-reader path. That produces a text mode with fewer facts than the picture,
-and the gap is discovered by the person who depends on it.
-
-Here, `trust/explain.py` builds one `TrustPrompt` containing every sentence in
-final wording, plus a `spoken` field assembled from those same sentences.
-`companion/trust_surface.py:prompt_lines()` renders it as text; the GTK dialog
-renders the same list; the shell's `trustPrompt.js` orders the same fields and
-uses `spoken` verbatim as its announcement. A test asserts the graphical surface's
-source calls `prompt_lines`, and another asserts the spoken form contains the
-headline, the capability note and every option label.
-
-The consequence: a text-only Companion is not a degraded mode. It is the same
-question.
+> This document is **not** `ACCESSIBILITY_QUALIFICATION_REPORT.md`. That one is
+> generated from `operations/data/qualification-matrices.json` and must not be
+> hand-edited. This is the phase's own runtime pass, and where it resolves a
+> scenario in that matrix it does so by editing the data.
 
 ---
 
-## 2. §25's list, item by item
+## 1. Method, and why each check is shaped this way
 
-| Requirement | Status | Mechanism | Evidence |
-|---|---|---|---|
-| Keyboard-only use | **Implemented, tested** | `focusOrder()` defines Tab order; deny first, then allow options weakest-first, then the disclosure | `test_the_keyboard_starts_on_the_safe_option` |
-| Screen readers | **Implemented, not validated** | One `spoken` string per prompt, one `announcement` per workspace change, both built in the layer that owns the words | `test_the_spoken_form_contains_every_fact_the_drawn_form_does`, `test_the_announcement_is_the_layers_own_spoken_string` |
-| High contrast | **Implemented, tested** | `scrim: solid` at high contrast, not lighter; risk carries a *shape* as well as a colour | `test_the_scrim_gets_heavier_at_high_contrast_not_lighter`, `test_every_risk_level_has_a_token_and_the_dangerous_ones_have_a_marker` |
-| Large text | **Implemented, partly tested** | `largeText` flows through both models; nothing truncates silently — a value longer than expected wraps | `buildPrompt`/`buildWorkspace` accept and propagate it |
-| Reduced motion | **Implemented, tested** | Motion budget pinned to 0 ms; **fidelity unchanged** | `test_reduced_motion_stops_movement_without_lowering_the_picture`, `test_reduced_motion_removes_the_transition_and_not_the_rows` |
-| Captions | **Pre-existing** | `companion/voice/captions.py`, unchanged by this phase | — |
-| Visual alternatives to audio | **Pre-existing** | Notification layer, unchanged | — |
-| Audio alternatives to visual | **Partial** | Every prompt and every workspace change has a spoken form; whether it is *spoken* is the pre-existing voice runtime's business | — |
-| Text-only Companion mode | **Implemented, tested** | `textOnly` wins over everything, including a working graphical session | `test_a_text_only_preference_wins_over_a_graphical_session`, `test_text_only_is_honoured_over_everything` |
+Every preference is **set, read back, and photographed**. The read-back is not
+ceremony: `gsettings set` succeeds against a key the running shell never reads,
+so a report that recorded only the write would say the desktop honours a
+preference it ignores.
 
----
+The tree is walked **at the default first**, and that walk is the negative
+control for the walks after it. Without it, "0 unnamed controls" cannot be told
+from "the walk returned nothing" — a failure this harness has produced before.
 
-## 3. Five decisions worth stating
+The Trust prompt is measured **while it is on screen**, because that is the only
+moment its keyboard reachability exists to be measured. It cannot be asked about
+before the question appears or after it is gone.
 
-**Reduced motion is not a fidelity tier.** A person who asked for less movement
-did not ask for a worse picture. `prefers-reduced-motion` sets the animation budget
-to zero and leaves the character drawn and expressive in pose. Dropping such a user
-to text would read the setting as a complaint about the character.
+## 2. Findings
 
-**Deny holds focus, and reading order is not focus order.** The eye reads the
-options in escalating order — Allow once, Allow while using, Always allow, Don't
-allow — and the keyboard starts on the safe one. A person who presses Return
-without reading has denied something, which is recoverable; the opposite is not.
+### 2.0 How "nothing changed" was measured
 
-**Colour is never the only signal.** High and critical risk carry
-`marker: true`, a shape beside the heading. A permission prompt is the worst
-possible place for a colour-only distinction.
+"The screenshots look identical" is an eyeball claim, so it was replaced with a
+pixel count — and, by luck of the run's own design, with a control.
 
-**Every future step is visible in the workspace.** All seven steps are drawn, the
-unreached ones dim, so the progress is "3 of 7" rather than a spinner — for the
-eye and for the announcement, which are the same string.
+The pass restores every preference at the end and photographs the result. That
+final shot is taken at **the same settings as the baseline**, minutes later, so
+whatever differs between those two is drift from the live CPU and network gauges
+and nothing else. That is the noise floor.
 
-**A disabled Companion still delivers an attention state.** `presence: 'off'`
-draws nothing, and `routeToNotification` is `True` when a question is outstanding.
-A person who turned the character off must still be told the microphone was asked
-for. Tested.
+| Comparison against the baseline | Pixels differing | Share of screen |
+|---|---:|---:|
+| `a11y-05-restored` — **same settings, the control** | 3,118 | 0.15 % |
+| `a11y-02-reduced-motion` | 860 | 0.04 % |
+| `a11y-03-large-text` (`text-scaling-factor` 1.5) | **1,948** | **0.09 %** |
+| `a11y-04-high-contrast` | 3,693 | 0.18 % |
 
-**A screen-reader user is not automatically a text-only user.** Many use one
-alongside a visible desktop. `screenReader: true` forces announcement, not a
-fidelity drop.
+Setting the text scale to 1.5 changed **less of the screen than leaving the
+settings alone did**. High contrast changed about as much as the gauges did on
+their own. At 1920×1080 with 43 distinct type styles on screen, honouring either
+preference would have redrawn essentially every glyph — several percent at
+minimum, not a tenth of one.
 
----
+So the finding is not "it looked the same to me". It is that the change
+attributable to the preference is **smaller than the drift from two clocks
+ticking**.
 
-## 4. What has not been validated, and why that matters
+### 2.1 The desktop ignores `text-scaling-factor` — **P1**
 
-**No assistive technology has been used against any of this.** Specifically:
+Set to `1.5`, read back as `1.5`, and the screen changed by 0.09 % — below the
+0.15 % noise floor established by the control above. No label, no heading and no
+button text is larger anywhere.
 
-* **Orca has not read a Trust prompt.** The `spoken` string is well-formed
-  English; whether Orca announces it at the right moment, whether the modal
-  raises correctly in the AT-SPI tree, and whether the announcement interrupts or
-  queues are all unknown. This project's own record
-  (`desktop-alpha-validation-state`) is that *nothing that had never been pressed
-  worked* — and none of this has been pressed.
-* **No keyboard navigation has been performed.** `focusOrder` is a list. Whether
-  GTK gives focus in that order, whether Escape reaches the handler before the
-  window manager, and whether Tab escapes the modal are unmeasured.
-* **No contrast ratio has been measured for the new tokens.**
-  `tokens.json` states the WCAG 2.2 AA thresholds and `tests/accessibility`
-  measures the *existing* palettes. The new `risk`, `standing` and `companion`
-  tokens are names that resolve to existing palette colours, so they inherit those
-  ratios — but the *combinations* (a warning marker on a modal surface over a
-  solid scrim) have not been measured.
-* **No large-text or 200 % scaling pass.** Whether the prompt body wraps rather
-  than clipping at 200 % is unknown.
-* **The GTK dialog itself is untested.** `GtkConsentSurface.ask` needs a display.
+The cause is structural and exact:
 
-**A specific hazard this phase introduces.** The Trust prompt is the only modal
-Bunny raises unasked, and it appears at a moment when the person is doing
-something else. If it does not raise correctly in the AT-SPI tree, a screen-reader
-user gets a *silent modal* — an application that appears to hang. That is a worse
-failure than any this phase fixes, and it is the first thing to check.
+```
+font-size declarations in shell/components/gnome-shell-extension/stylesheet.css : 43
+    of those in absolute pixels                                                 : 43
+    of those in relative units (em / rem / pt)                                  :  0
+```
 
----
+There is nothing for a scale factor to multiply. A person who needs larger text
+sets the system preference, and the Bunny desktop — the surface they spend all
+their time in — does not change.
 
-## 5. What to do, in order
+### 2.2 The desktop ignores high contrast — **P1**
 
-1. **Boot an image, enable Orca, trigger one permission prompt.** Does it
-   announce? Does it interrupt? Can it be answered from the keyboard alone?
-   Everything else is secondary to this one.
-2. **Keyboard-only pass:** Tab order, Escape, Return, and whether focus can leave
-   the modal.
-3. **Measure the new token combinations** against the 4.5:1 and 3:1 thresholds
-   already in `tokens.json`, and add them to `tests/accessibility`.
-4. **200 % text scaling** on the prompt and the workspace panel.
-5. **Text-only Companion end to end**, with the text consent surface, in a real
-   session rather than over a pipe.
-6. Then fold the results into `ACCESSIBILITY_REPORT.md` and
-   `reviews/accessibility/REQUEST.md`, which remains the route to an independent
-   assessment.
+Set `org.gnome.desktop.a11y.interface high-contrast` to `true`. The screen
+changed by 0.18 %, against a 0.15 % noise floor — indistinguishable from the
+gauges ticking.
 
-Items 1–5 need the existing Fedora builder and a VM. None needs money or hardware.
+```
+colour literals in the stylesheet          : 151
+    derived from the theme (-st-, var(), currentColor) : 0
+```
 
----
+`lib/assistant/trustPrompt.js` line 44 states that the prompt "does not hardcode
+colours, so the stylesheet and the high-contrast theme decide the values". The
+stylesheet decides them. The theme decides nothing, because there is no path by
+which it could. **The module documents a property its own stylesheet defeats** —
+which is worse than not claiming it, because it is the kind of statement a
+reviewer would take at face value.
 
-## 6. Honest summary
+### 2.3 A permission question appeared without taking focus — **P1, fixed**
 
-The design takes accessibility as a starting constraint rather than a later pass,
-and the one structural decision — the text surface is the reference — is the one
-most likely to keep it that way as surfaces are added.
+`showApproval` made both buttons `can_focus = true` and then focused neither. The
+text entry kept the focus it took when the panel opened.
 
-**None of it has been used by anybody, with or without assistive technology.** Every
-row marked *tested* above is a test of a data structure. The accessibility gap
-remains, as `NEXT_PHASE.md` says, the one that risks harm rather than merely
-missing evidence, and this phase has not closed it.
+So a keyboard user had to guess that a question had appeared and then Tab to find
+it, and a screen reader announced nothing at all — because nothing had changed
+focus. For an ordinary control that is an inconvenience. For the surface that
+decides whether an application may read someone's files, it is the difference
+between being asked and being bypassed.
+
+Fixed: the prompt now takes focus when it becomes visible, and lands on the
+button matching the request's own `safeDefault` — **Deny unless it says
+otherwise**. The trust layer's oldest rule is that an unanswered question is a
+denial, so the button under the finger, the one a reflexive Return presses, has
+to agree with it.
+
+### 2.4 The screen reader is installed
+
+`orca-50.2-1.fc44` at `/usr/bin/orca`, with `at-spi2-core 2.60.6` and
+`at-spi2-atk 2.60.6`. `brltty` is **not** installed, so braille is unavailable —
+consistent with `BRLAPI_REQUALIFICATION_REPORT.md`.
+
+What is claimed here is deliberately modest: Orca is present and runs far enough
+to report its own version. Capturing what it *speaks* needs an audio path and a
+speech engine, neither qualified here, and the surfaces expose the names and
+roles it would read. That is not the same as a blind user completing the journey,
+and this report does not say it is.
+
+## 3. What the desktop does right
+
+- **39 accessible names** across 14 modules; the Trust prompt's two buttons carry
+  `Allow this Bunny action` and `Deny this Bunny action`, which is how the
+  graphical driver finds them without a test hook.
+- **The full application name goes to the accessible name** even where the label
+  is shortened to fit a 55px tile — drawn short, spoken in full.
+- **Reduced motion is honoured in code**: `companionPresence.js` pins the motion
+  budget to 0, `taskWorkspace.js` likewise, and `desktopShell.js` tracks
+  `notify::enable-animations`. Motion cannot be judged from stills, so this is
+  reported as implemented and observed-in-source, not as validated.
+
+  There is a second reason it could not have been measured here, found in the
+  guest's own log: *"mutter reports rendering is software"* and then
+  *"animations are disabled; the character is drawn in a resting pose"*. Under
+  llvmpipe the desktop turns animations off on its own, so `reduced-motion`
+  had nothing left to switch off. Measuring it needs frame capture **and**
+  hardware rendering, not another screenshot — which is why the matrix row
+  stays `NOT_RUN` rather than being recorded as a pass from source.
+
+## 4. Evidence level
+
+| Claim | Level |
+|---|---|
+| `text-scaling-factor` has no effect | **VM runtime validated** — set, read back, photographed, and 0.09 % against a 0.15 % control |
+| `high-contrast` has no effect | **VM runtime validated** — 0.18 % against the same control |
+| The stylesheet cannot respond to either | **Tested** — 43/43 absolute, 151/0 hardcoded |
+| The Trust prompt takes focus, safe default | **Tested**; not yet observed on screen |
+| Orca is installed and starts | **VM runtime validated** |
+| Reduced motion is honoured | **Implemented**; stills cannot show it |
+| A screen-reader user can complete the journey | **Not established** |
+| Braille | **Not available** — `brltty` is not installed |
+
+## 5. What this costs to fix
+
+§2.1 and §2.2 are one piece of work and it is not small: relative type
+throughout, theme-derived colour throughout, and every layout re-validated at
+each supported resolution — the layout suite currently asserts pixel positions
+that assume fixed type.
+
+It is the largest accessibility gap in the desktop, and it is recorded in
+`KNOWN_LIMITATIONS.md` rather than being left in a report nobody reads before
+planning the next phase.

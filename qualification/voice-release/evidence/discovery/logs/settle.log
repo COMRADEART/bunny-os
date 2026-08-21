@@ -1,0 +1,41 @@
+shell answering after 5s
+===== extension, as the image ships it =====
+ 'state': <1.0>
+ 'path': <'/usr/share/gnome-shell/extensions/bunny-shell@bunny-os.org'>
+ 'error': <''>
+===== overview =====
+(<false>,)
+===== keep it awake, and expose the tree =====
+===== push-to-talk, on a chord this harness can send =====
+No such schema “org.gnome.shell.extensions.bunny-shell”
+No such schema “org.gnome.shell.extensions.bunny-shell”
+===== files for the spoken search =====
+total 8
+drwxr-xr-x.  2 bunny bunny 4096 Aug 16 04:43 .
+drwx------. 13 bunny bunny 4096 Aug 16 04:41 ..
+-rw-r--r--.  1 bunny bunny    0 Aug 16 04:43 bunny-test-one.pdf
+-rw-r--r--.  1 bunny bunny    0 Aug 16 04:43 bunny-test-two.pdf
+===== desktop journal =====
+bunny-desktop: vscode is not installed (tried code.desktop, com.visualstudio.code.desktop)
+bunny-desktop: spotify is not installed (tried com.spotify.Client.desktop, spotify.desktop)
+bunny-desktop: animations are disabled; the character is drawn in a resting pose
+bunny-desktop: software is not installed (tried org.gnome.Software.desktop)
+bunny-desktop: obs is not installed (tried com.obsproject.Studio.desktop, obs-studio.desktop)
+bunny-desktop: blender is not installed (tried org.blender.Blender.desktop, blender.desktop)
+bunny-desktop: discord is not installed (tried com.discordapp.Discord.desktop, discord.desktop)
+bunny-desktop: the wallpaper is in uiGroup below the desktop content, which is below the windows
+bunny-desktop: desktop content layer is above the wallpaper and below the windows
+bunny-desktop: the session opened the overview at login; dismissing it for the desktop
+bunny-desktop: focus-desktop-search is bound to <Super>s
+bunny-desktop: focus-desktop-sidebar is bound to <Super><Shift>n
+bunny-desktop: focus-desktop-assistant is bound to <Super><Shift>b
+bunny-desktop: push-to-talk is bound to <Super><Alt>space
+bunny-desktop: storage is /var (ext4 on /dev/vda4), chosen as the filesystem the signed-in user's own files are on
+bunny-desktop: no thermal sensor found; temperature reports Unavailable
+bunny-desktop: layout 1920x1080 -> wide, 2 card column(s)
+bunny-desktop: the Bunny desktop is up
+bunny-desktop: the companion runtime is reachable
+bunny-desktop: push-to-talk is available
+bunny-desktop: the shell left its cover pane over the desktop; hidden, so pointer input reaches it
+bunny-desktop: GNOME's panel hidden after the startup deadline
+===== shell JS errors =====

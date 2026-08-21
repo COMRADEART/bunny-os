@@ -99,6 +99,92 @@ export function isLikelySoftwareRendering() {
 // split their problem.
 export * from './format.js';
 
+// -- poller instrumentation ---------------------------------------------------
+//
+// §9 of the Phase 5 directive asks which poller contributes most to idle CPU,
+// and says: do not guess. The desktop's idle CPU rose from 0.80% to 2.07%
+// between 7edd3fd and the Alpha RC, and the recorded hypothesis — the System
+// overview card's 2-second refresh — had never been measured.
+//
+// Half of it has now been measured outside the shell, and that half is cleared:
+// the four /proc and /sys reads the card performs cost 117 microseconds per
+// tick, which is 0.006% of one core against a 1.27-point regression, smaller by
+// a factor of two hundred (qualification/phase5/performance/).
+//
+// What that benchmark cannot see is the redraw. In the qualification guest
+// there is no GPU; Mutter composites through llvmpipe, in software, on the CPU,
+// so a Cairo arc repainted every two seconds is paid for by the processor there
+// in a way it is not on a machine with one. That has to be measured inside a
+// running shell, which is what this is for.
+//
+// Cost when nothing asks for a report: one counter increment and two
+// monotonic-clock reads per tick. GLib.get_monotonic_time is a vDSO call.
+
+const _pollers = new Map();
+let _pollerEpoch = GLib.get_monotonic_time();
+
+/**
+ * Every named poller's accumulated cost since the last reset.
+ *
+ * `wallMicroseconds` is measured directly. CPU time is deliberately *not*
+ * measured per tick: the only in-process source is /proc/self/stat, whose
+ * resolution is a 10 ms clock tick, so almost every individual tick would read
+ * zero — and reading it costs 19 microseconds against a 117-microsecond tick,
+ * which is a 16% instrument overhead on the thing being measured. A caller that
+ * wants CPU should sample the process once around a window and attribute it by
+ * each poller's share of `wallMicroseconds`, which is what the guest probe does
+ * and what its evidence says it did.
+ *
+ * `changes` counts the ticks on which the poller reported that the data it read
+ * had actually changed — the number §10 turns on. A poller whose data changes
+ * on 3 ticks in 1800 is a poller whose cadence is buying nothing, and a poller
+ * whose data changes every tick cannot be made cheaper by change detection
+ * however slow it is.
+ */
+export function pollerMetrics() {
+    const now = GLib.get_monotonic_time();
+    const entries = [];
+    let totalWall = 0;
+    for (const record of _pollers.values())
+        totalWall += record.wallMicroseconds;
+    for (const [name, record] of _pollers) {
+        entries.push({
+            name,
+            intervalSeconds: record.intervalSeconds,
+            ticks: record.ticks,
+            changes: record.changes,
+            errors: record.errors,
+            wallMicroseconds: record.wallMicroseconds,
+            slowestTickMicroseconds: record.slowestTickMicroseconds,
+            meanTickMicroseconds: record.ticks === 0
+                ? null
+                : Math.round(record.wallMicroseconds / record.ticks),
+            // Stated as a share rather than as a CPU figure, because a share is
+            // what this can honestly report. See the note above.
+            wallShare: totalWall === 0 ? null : record.wallMicroseconds / totalWall,
+        });
+    }
+    entries.sort((a, b) => b.wallMicroseconds - a.wallMicroseconds);
+    return {
+        schemaVersion: 1,
+        windowMicroseconds: now - _pollerEpoch,
+        totalWallMicroseconds: totalWall,
+        pollers: entries,
+    };
+}
+
+/** Start a fresh measurement window. Called by the probe before it idles. */
+export function resetPollerMetrics() {
+    for (const record of _pollers.values()) {
+        record.ticks = 0;
+        record.changes = 0;
+        record.errors = 0;
+        record.wallMicroseconds = 0;
+        record.slowestTickMicroseconds = 0;
+    }
+    _pollerEpoch = GLib.get_monotonic_time();
+}
+
 /**
  * A repeating timer that unregisters itself cleanly.
  *
@@ -106,14 +192,53 @@ export * from './format.js';
  * one, and DesktopShell.destroy() stops all of them, because a GLib source that
  * outlives the actor it updates is the classic way an extension keeps a
  * disabled session alive.
+ *
+ * `name` is optional and only affects instrumentation. An unnamed timer is
+ * recorded under `unnamed:<seconds>s`, so an uninstrumented caller still shows
+ * up in the report rather than vanishing from it — a poller that is invisible
+ * to the measurement is the one that will be blamed last.
+ *
+ * A callback may return `true` to say the data it read had changed. Returning
+ * nothing means "not reported", which is counted separately from "did not
+ * change": §10 asks whether an update was necessary, and a poller that has
+ * never been asked to answer must not be recorded as having answered no.
+ *
+ * @param {number} seconds
+ * @param {Function} callback returns true when the data changed, or undefined
+ * @param {{name?: string}} [options]
  */
-export function interval(seconds, callback) {
+export function interval(seconds, callback, options = {}) {
+    const name = options.name ?? `unnamed:${seconds}s`;
+    let record = _pollers.get(name);
+    if (record === undefined) {
+        record = {
+            intervalSeconds: seconds,
+            ticks: 0,
+            changes: 0,
+            errors: 0,
+            wallMicroseconds: 0,
+            slowestTickMicroseconds: 0,
+        };
+        _pollers.set(name, record);
+    }
     let id = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, seconds, () => {
+        const started = GLib.get_monotonic_time();
         try {
-            callback();
+            const changed = callback();
+            if (changed === true)
+                record.changes += 1;
         } catch (error) {
+            record.errors += 1;
             logError_('periodic update failed', error);
         }
+        // Accounted in `finally`-equivalent position rather than inside the
+        // try: a tick that threw still cost the time it took, and a poller
+        // whose cost only appears when it succeeds hides the expensive failure.
+        const elapsed = GLib.get_monotonic_time() - started;
+        record.ticks += 1;
+        record.wallMicroseconds += elapsed;
+        if (elapsed > record.slowestTickMicroseconds)
+            record.slowestTickMicroseconds = elapsed;
         return GLib.SOURCE_CONTINUE;
     });
     return {

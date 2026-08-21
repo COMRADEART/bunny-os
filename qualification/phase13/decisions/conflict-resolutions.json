@@ -1,0 +1,22 @@
+{
+ "appendMechanism": "qualification/phase13/tools/release_authority_ops.py record conflict-resolution",
+ "domainAuthorities": {
+  "alpha": "AUTH-ALPHA-PROGRAM",
+  "hardware": "AUTH-HARDWARE",
+  "release": "AUTH-RELEASE",
+  "security": "AUTH-SECURITY-OWNER"
+ },
+ "note": "Evidence is never averaged, and the favorable interpretation is never chosen automatically.",
+ "purpose": "Sealed conflict resolutions. Conflicting external evidence defaults to CONFLICT -> REQUIRES_HUMAN_DECISION with the unfavorable assessment effective; a resolution here is the only way that changes, and it names the deciding authority, which must be assigned to the conflict's domain.",
+ "recordFields": [
+  "resolutionId",
+  "domain",
+  "evidenceReferences",
+  "resolvedAssessment",
+  "reason",
+  "authority",
+  "date"
+ ],
+ "records": [],
+ "schemaVersion": 1
+}

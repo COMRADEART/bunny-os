@@ -1,0 +1,8 @@
+=== Phase 7 baseline freeze - started 2026-08-18T15:53:23Z ===
+MATCH  a6ee06dcbc0ed3aa22c9ea07c339882eb97c7f16ce906b654c9a1e1119849d46  /root/bunny-build-archive/beta-phase4-rc-e906a48793d7-20260818T014208Z/bootc-fedora-44-raw-x86_64/bootc-fedora-44-raw-x86_64.raw
+MATCH  205a77f1b6cdf33915bce3afceb0914d6af25f97b434cf2128aec04d199b43dd  /root/bunny-build-archive/beta-phase4-rc-e906a48793d7-20260818T014208Z/bunny-os.oci.tar
+MATCH  497add9a77db2db02bf2541e85b04b0e285c1833d2c8220d193d0d413a6ce867  /root/bunny-build-archive/beta-phase4-rc-e906a48793d7-20260818T014208Z/bootc-fedora-44-qcow2-x86_64/bootc-fedora-44-qcow2-x86_64.qcow2
+MATCH  b4dd95f3cb3f7d4b4419c120e04e4375f4a176f0fd0a0ee5f2c91ba5de99dcef  /root/bunny-os/build/out/beta/bootc-fedora-44-qcow2-x86_64/bunny-os-0.1.0-alpha-e501218f2fe0.1787016937-x86_64.qcow2
+=== finished 2026-08-18T15:53:43Z status=0 ===
+MATCH  823d50caba35afe72452768affd5f6fa0ac8cfc13c164f0e1bc909fa887ab421  /root/bunny-os/build/out/live/bootc-fedora-44-bootc-generic-iso-x86_64/bunny-os-0.3.0-live.e906a48793d7-x86_64.iso
+=== ISO appended 2026-08-18T15:54:26Z ===

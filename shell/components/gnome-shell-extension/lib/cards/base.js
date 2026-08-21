@@ -15,7 +15,7 @@ import St from 'gi://St';
 import {box, glass, cardHeader} from '../widgets.js';
 import {ease, enter} from '../animation.js';
 import {interval, makeActivatable, setAccessibleRole} from '../util.js';
-import {Motion} from '../tokens.js';
+import {MOTION} from '../design/tokens.js';
 
 export class Card {
     /**
@@ -44,7 +44,7 @@ export class Card {
         }
 
         this.actor.connect('notify::hover', () => {
-            ease(this.actor, {translation_y: this.actor.hover ? -3 : 0}, {ms: Motion.HOVER_MS});
+            ease(this.actor, {translation_y: this.actor.hover ? -3 : 0}, {ms: MOTION.fast});
         });
     }
 
@@ -80,7 +80,8 @@ export class Card {
         this.resize(rect.width);
         this.refresh();
         if (this._refreshSeconds > 0 && this._timer === null)
-            this._timer = interval(this._refreshSeconds, () => this.refresh());
+            this._timer = interval(this._refreshSeconds, () => this.refresh(),
+                {name: `card.${this.title}`});
         if (!wasLive)
             enter(this.actor, {index});
     }

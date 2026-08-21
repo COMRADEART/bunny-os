@@ -1,0 +1,25 @@
+{
+ "schemaVersion": 1,
+ "purpose": "The identity the reviewer must independently verify. Do not trust this file: it tells you which digests the project claims, and how to recompute them from the bytes in your hands. Your submission records the digest YOU computed.",
+ "subjectArtifact": {
+  "identifier": "e906a48793d7",
+  "imageDigest": "sha256:c87a6616008ce34f97840f63814e08fdb33574b52202fbb4841b7f5aa7f8562d",
+  "isoSha256": "823d50caba35afe72452768affd5f6fa0ac8cfc13c164f0e1bc909fa887ab421",
+  "qcow2Sha256": "497add9a77db2db02bf2541e85b04b0e285c1833d2c8220d193d0d413a6ce867",
+  "ociTarSha256": "205a77f1b6cdf33915bce3afceb0914d6af25f97b434cf2128aec04d199b43dd",
+  "rawSha256": "a6ee06dcbc0ed3aa22c9ea07c339882eb97c7f16ce906b654c9a1e1119849d46",
+  "sourceCommit": "e906a48793d74544b39c14cc3e35e0654f5311e2",
+  "signingStatus": "UNSIGNED",
+  "frozen": true
+ },
+ "independentVerification": {
+  "iso": "sha256sum <the .iso you were given> and compare against isoSha256",
+  "qcow2": "sha256sum <the .qcow2 you were given> and compare against qcow2Sha256",
+  "ociTar": "sha256sum <the OCI archive .tar you were given> and compare against ociTarSha256",
+  "raw": "sha256sum <the .raw disk you were given> and compare against rawSha256",
+  "image": "skopeo inspect --format '{{.Digest}}' oci-archive:<the OCI archive> (or podman inspect after a digest-pinned load) and compare against imageDigest",
+  "onMismatch": "STOP. Record the digest you computed, submit MORE_EVIDENCE_REQUIRED or refuse, and say which bytes you were given. A review of other bytes satisfies nothing for this artifact (blocking condition 6)."
+ },
+ "consistency": "This file must agree with qualification/phase9/intake/LEDGER.json subjectArtifact; tests/release/test_phase11_security_review.py asserts it, so a drift between the commissioning package and the intake boundary fails the suite.",
+ "signingNote": "UNSIGNED is a fact about the artifact, not a waiver: blocking condition 7 stays true independently of this review."
+}

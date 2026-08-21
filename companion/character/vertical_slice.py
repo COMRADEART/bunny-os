@@ -59,11 +59,57 @@ _DISPLAY = Display("slice-display", PixelRect(0, 0, 1920, 1080), primary=True)
 #: slice needs the *renderer* exercised; whether this particular machine has a
 #: monitor is not the property under test, and pretending it does anywhere else
 #: would be dishonest — so the override is explicit, named, and confined here.
+#:
+#: The last five entries are the isolation fix, and they matter more than they
+#: look.
+#:
+#: :class:`CharacterPresenter` builds ``base_signals`` from
+#: ``assess_current_machine()`` — the *real* host — and every field this dict
+#: does not name survives into every evaluation. ``memory_pressure`` is read
+#: from Linux PSI as ``/proc/pressure/memory`` ``some avg10 >= 0.1``
+#: (:func:`companion.character.diagnostics.signals_from_assessment`), a
+#: ten-second rolling average of memory stall. A suite that has just run
+#: several thousand tests in one process crosses it, intermittently, for
+#: reasons that have nothing to do with this slice.
+#:
+#: When it was crossed, the selector degraded to ``static-image`` citing
+#: "memory pressure disabled animation", and the run failed as::
+#:
+#:     ['step 17 (trigger controlled presentation pressure)',
+#:      'step 21 (recover only after hysteresis)']
+#:
+#: with 18, 19 and 20 passing, no renderer fault, and the presenter healthy.
+#: That pair flipped in and out for four phases and was attributed in turn to a
+#: transient renderer fault, to host contention, and to cross-test
+#: interference. It was the host's own memory pressure arriving through a
+#: signal nobody had pinned. Measured: 0/20 for the class alone, 0/40 for the
+#: module alone, 0/60 after each earlier neighbour, ~2/28 for the whole
+#: package — because it is the package that makes the host stall, not any test
+#: in it.
+#:
+#: The second-order problem is worse than the failure. Step 18 *declares*
+#: ``memory_pressure: True`` to prove the selector degrades. On a machine
+#: already under ambient pressure, step 18 passed without testing anything —
+#: the rung was static before it asked. So pinning these is not silencing a
+#: flake; it is what makes steps 17 to 21 measure the selector at all.
+#:
+#: Pinned here rather than in the presenter, because the presenter reading the
+#: real machine is correct: on a real machine under real pressure the companion
+#: *should* stop animating. It is the slice that must declare its conditions.
+#:
+#: ``tests/companion/test_slice_host_invariance.py`` parses ``adaptation.py``
+#: and requires every signal the ladder consults to be pinned here or declared
+#: exempt with a reason, so a signal added there cannot reopen this quietly.
 _VISUAL = {
     "display_available": True,
     "graphics_ready": True,
     "available_memory_bytes": 8 * 1024 ** 3,
     "gpu_available": True,
+    "memory_pressure": False,
+    "thermal_pressure": False,
+    "cpu_pressure": False,
+    "on_battery": False,
+    "battery_percent": None,
 }
 
 #: The allowance a machine with a display would receive.
@@ -121,7 +167,11 @@ class CharacterSliceReport:
             "network": "none",
             "provider": "none",
             "credentials": "none",
-            "threeDimensionalRenderer": "not implemented, not claimed",
+            "threeDimensionalRenderer": {
+                "shipped": True,
+                "exercisedInThisSlice": False,
+                "validatedBy": "companion/character/three_d_slice.py",
+            },
             "gtkWidgetsExercised": False,
         }
 
@@ -233,6 +283,87 @@ def _answer_approvals(model: CompanionViewModel, presenter: CharacterPresenter,
         else:
             break
     return answered, anchored
+
+
+def _pressure_sequence(presenter: CharacterPresenter, state: PresentationState,
+                       clock: "_SliceClock") -> tuple[list[dict[str, Any]], bool]:
+    """Steps 17-21 as records, and whether the renderer stayed healthy.
+
+    The records are returned rather than written so the caller can run the
+    sequence again after an incidental renderer fault — see the comment at
+    the call site for why one fault earns one clearly-recorded retry.
+    """
+    rows: list[dict[str, Any]] = []
+    healthy = True
+
+    animated = presenter.update(_visual_state(state), now=clock.advance(),
+                                signal_overrides=_VISUAL)
+    healthy &= animated.renderer_healthy
+    rows.append(dict(
+        number=17, name="trigger controlled presentation pressure",
+        ok=animated.effective_presentation == "animated-2d",
+        before=animated.effective_presentation,
+        presentation=animated.effective_presentation,
+        # Why the selector landed where it did. Without this the failure is a
+        # step number: this pair has read
+        # `['step 17 ...', 'step 21 ...']` on and off for four phases, and the
+        # selector has been recording its own reasons the whole time. A
+        # degradation that cannot say which rule fired is a degradation nobody
+        # can act on.
+        reasons=list(animated.snapshot.presentation.reasons),
+        heldByHysteresis=animated.snapshot.presentation.held_by_hysteresis,
+        rendererHealthy=animated.renderer_healthy,
+    ))
+    to_static = presenter.update(
+        _visual_state(state), now=clock.advance(),
+        signal_overrides={**_VISUAL, "memory_pressure": True},
+    )
+    healthy &= to_static.renderer_healthy
+    rows.append(dict(
+        number=18, name="degrade animated 2D to static",
+        ok=to_static.effective_presentation == "static-image",
+        presentation=to_static.effective_presentation,
+        events=[item.get("eventType") if isinstance(item, dict) else str(item)
+                for item in to_static.events],
+    ))
+    to_text = presenter.update(
+        _visual_state(state), now=clock.advance(),
+        signal_overrides={**_VISUAL, "display_available": False},
+    )
+    healthy &= to_text.renderer_healthy
+    rows.append(dict(
+        number=19, name="degrade static to text-only",
+        ok=to_text.effective_presentation == "text-only",
+        presentation=to_text.effective_presentation,
+        description=to_text.description,
+        captionStillPresent=bool(to_text.bubble.text),
+    ))
+
+    held = presenter.update(_visual_state(state), now=clock.advance(),
+                            signal_overrides=_VISUAL)
+    healthy &= held.renderer_healthy
+    rows.append(dict(
+        number=20, name="remove the pressure",
+        ok=held.effective_presentation != "animated-2d",
+        immediatelyAfterRemoval=held.effective_presentation,
+        presentation=held.effective_presentation,
+        note="recovery must not be immediate; degradation was",
+    ))
+    recovered = held
+    for index in range(1, 6):
+        recovered = presenter.update(
+            _visual_state(state), now=clock.advance(1.5), signal_overrides=_VISUAL
+        )
+        healthy &= recovered.renderer_healthy
+        if recovered.effective_presentation == "animated-2d":
+            break
+    rows.append(dict(
+        number=21, name="recover only after hysteresis",
+        ok=recovered.effective_presentation == "animated-2d" and index >= 2,
+        samplesBeforeRecovery=index,
+        presentation=recovered.effective_presentation,
+    ))
+    return rows, healthy
 
 
 def run_character_slice(root: Path) -> CharacterSliceReport:
@@ -401,53 +532,53 @@ def run_character_slice(root: Path) -> CharacterSliceReport:
             "resultSummary": state.result_summary,
         }
 
-        # 17-19. Pressure, and the two degradations.
-        animated = presenter.update(_visual_state(state), now=clock.advance(), signal_overrides=_VISUAL)
-        report.record(
-            17, "trigger controlled presentation pressure",
-            animated.effective_presentation == "animated-2d",
-            before=animated.effective_presentation,
-        )
-        to_static = presenter.update(
-            _visual_state(state), now=clock.advance(),
-            signal_overrides={**_VISUAL, "memory_pressure": True},
-        )
-        report.record(
-            18, "degrade animated 2D to static", to_static.effective_presentation == "static-image",
-            presentation=to_static.effective_presentation,
-            events=[item.get("eventType") for item in to_static.events],
-        )
-        to_text = presenter.update(
-            _visual_state(state), now=clock.advance(),
-            signal_overrides={**_VISUAL, "display_available": False},
-        )
-        report.record(
-            19, "degrade static to text-only", to_text.effective_presentation == "text-only",
-            presentation=to_text.effective_presentation,
-            description=to_text.description,
-            captionStillPresent=bool(to_text.bubble.text),
-        )
-
-        # 20-21. Remove the pressure; recovery waits for hysteresis.
-        held = presenter.update(_visual_state(state), now=clock.advance(), signal_overrides=_VISUAL)
-        report.record(
-            20, "remove the pressure", held.effective_presentation != "animated-2d",
-            immediatelyAfterRemoval=held.effective_presentation,
-            note="recovery must not be immediate; degradation was",
-        )
-        recovered = held
-        for index in range(1, 6):
-            recovered = presenter.update(
-                _visual_state(state), now=clock.advance(1.5), signal_overrides=_VISUAL
-            )
-            if recovered.effective_presentation == "animated-2d":
-                break
-        report.record(
-            21, "recover only after hysteresis",
-            recovered.effective_presentation == "animated-2d" and index >= 2,
-            samplesBeforeRecovery=index,
-            presentation=recovered.effective_presentation,
-        )
+        # 17-21. Pressure, the two degradations, and hysteretic recovery —
+        # the *capability selector's* behaviour, asked of a healthy renderer.
+        #
+        # A transient renderer fault anywhere in the run parks the presenter
+        # unhealthy for 15 *renderer* seconds, and this slice advances about
+        # eleven synthetic seconds for its whole remainder — so a single
+        # incidental fault used to reach these steps disguised as a selector
+        # defect: exactly steps 17 and 21 failed, 18-20 kept passing, and
+        # nothing in the report named the fault. That is the pair that
+        # flipped ~2-in-12 on a loaded host across three phases, and it
+        # reproduces deterministically from one injected fault. So the
+        # sequence now checks renderer health as it goes; a faulted attempt
+        # is recorded by name, the health recovery the design actually has
+        # is exercised (15 seconds pass, the selector's own hysteresis
+        # follows), and the questions are asked once more of the healthy
+        # renderer they were always about. A second faulted attempt stands,
+        # with both faults in evidence — visible, not tolerated.
+        sequence, clean = _pressure_sequence(presenter, state, clock)
+        incidental: dict[str, Any] = {}
+        if not clean:
+            incidental = {
+                "incidentalRendererFault": True,
+                # Codes AND explanations: the explanation carries the actual
+                # exception text, which is the sentence the next person
+                # diagnosing a loaded-host fault needs. Three phases lacked it.
+                "rendererEvents": [
+                    {key: item.get(key) for key in ("eventType", "code", "explanation")
+                     if item.get(key)}
+                    if isinstance(item, dict) else str(item)
+                    for item in list(presenter.controller.events)[-8:]
+                ],
+            }
+            # The design's own recovery: the health window passes, then the
+            # selector's hysteresis (three healthy samples past its delay).
+            presenter.update(_visual_state(state), now=clock.advance(15.0),
+                             signal_overrides=_VISUAL)
+            for _ in range(3):
+                presenter.update(_visual_state(state), now=clock.advance(1.5),
+                                 signal_overrides=_VISUAL)
+            sequence, clean = _pressure_sequence(presenter, state, clock)
+            incidental["retryCleanOfFaults"] = clean
+        recovered_presentation = sequence[-1]["presentation"]
+        for row in sequence:
+            row = dict(row)
+            number, name, ok = row.pop("number"), row.pop("name"), row.pop("ok")
+            extra = incidental if number == 17 else {}
+            report.record(number, name, ok, **row, **extra)
 
         # 22-23. Restart the renderer and restore everything.
         restarted = presenter.restart(now=clock.advance(), now_ms=clock.ms)
@@ -459,7 +590,7 @@ def run_character_slice(root: Path) -> CharacterSliceReport:
             23, "restore package, current state and presentation",
             restarted is not None
             and restarted.snapshot.mapped_state is not None
-            and restarted.effective_presentation == recovered.effective_presentation
+            and restarted.effective_presentation == recovered_presentation
             and presenter.package.package_digest == package.package_digest,
             restoredPackage=presenter.package.manifest.package_id,
             restoredState=(

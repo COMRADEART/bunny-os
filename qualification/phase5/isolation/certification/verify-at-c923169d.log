@@ -1,0 +1,13 @@
+suite at: c923169d qualification(phase5): the repaired shellcheck gate caught its author
+worktree modifications: 0
+
+=== shellcheck and the rest of tests/portability ===
+portability rc=0 Ran 205 tests
+
+=== the whole reference suite, x3 ===
+suite run 1: rc=0 failures=0 tests=5988+178 -> clean
+suite run 2: rc=0 failures=0 tests=5988+178 -> clean
+suite run 3: rc=0 failures=0 tests=5988+178 -> clean
+
+clean runs: 3/3 at c923169dab734ecc99d524d47ccc3bd28da27797
+VERIFY-FINAL-DONE clean=3 of 3

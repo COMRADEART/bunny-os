@@ -1,0 +1,39 @@
+{
+ "fixtureClass": "TEST_FIXTURE_ONLY",
+ "purpose": "Drives the bound-success dry run: one verified successful run on one machine. The register records success evidence and a HARDWARE_OBSERVED row; the hardware matrix and its PASS vocabulary are untouched. The wrapper is refused everywhere evidence is consumed; tests register only the inner record into constructed ledgers, never the real one.",
+ "record": {
+  "schema": "bunny-os/alpha-tester-report/1",
+  "tester_id": "T-001",
+  "testerId": "T-001",
+  "report_type": "SUCCESS",
+  "submitted_at": "2026-08-18",
+  "date": "2026-08-18",
+  "journey": "A",
+  "artifact_claimed_by_tester": "bunny-os-0.3.0-live.e906a48793d7-x86_64.iso (constructed fixture)",
+  "artifact_digest_observed": "823d50caba35afe72452768affd5f6fa0ac8cfc13c164f0e1bc909fa887ab421",
+  "artifact_digest_verified": true,
+  "artifact_identity_status": "VERIFIED",
+  "environment_summary": "constructed fixture: QEMU/KVM 9.1, q35, UEFI, 4 vCPU / 6 GB, llvmpipe",
+  "environment": "constructed fixture: QEMU/KVM 9.1, q35, UEFI, 4 vCPU / 6 GB, llvmpipe",
+  "steps": [
+   {
+    "name": "boot installer",
+    "status": "COMPLETED"
+   },
+   {
+    "name": "install to disk",
+    "status": "COMPLETED"
+   },
+   {
+    "name": "first boot to login",
+    "status": "COMPLETED"
+   }
+  ],
+  "user_observation": "constructed fixture: installation completed and the desktop appeared after one reboot",
+  "expected_behavior": "install and reach the desktop",
+  "actual_behavior": "installed and reached the desktop",
+  "additional_context": "TEST_FIXTURE_ONLY dry run material",
+  "artifactDigest": "823d50caba35afe72452768affd5f6fa0ac8cfc13c164f0e1bc909fa887ab421",
+  "machine_label": "machine-1"
+ }
+}

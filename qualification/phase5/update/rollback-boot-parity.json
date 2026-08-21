@@ -1,0 +1,8 @@
+{
+  "mode": "boot-parity",
+  "previousBoots": true,
+  "candidateBoots": true,
+  "candidateDeploymentEntries": 1,
+  "liveDeploymentSwitchTested": false,
+  "note": "Both images reach a healthy boot target, which is the prerequisite for rollback. A live bootc deployment switch was not exercised; use BUNNY_ROLLBACK_MODE=deployment-rollback against a disk with a staged update for that."
+}

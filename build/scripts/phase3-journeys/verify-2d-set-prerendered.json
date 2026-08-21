@@ -1,0 +1,8 @@
+[
+ {"command": "system", "label": "system-after-reboot", "timeout": 240},
+ {"command": "settings", "action": "show", "label": "settings-expect-2d"},
+ {"command": "renderer", "label": "renderer-expect-2d"},
+ {"command": "settings", "action": "set", "section": "character",
+  "field": "render_mode", "value": "prerendered", "label": "select-prerendered"},
+ {"command": "settings", "action": "show", "label": "settings-now-prerendered"}
+]

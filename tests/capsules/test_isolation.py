@@ -291,12 +291,17 @@ class BackendHonestyTests(unittest.TestCase):
         world = World.build(probe=unconfined_probe())
         self.addCleanup(world.close)
         capsule = world.install(manifest_for(optional=("gpu", "clipboard", "network")))
-        world.answer(("gpu", "allow", "always"), ("clipboard", "allow", "session"))
+        world.answer(("gpu", "allow", "always"))
         world.request(capsule, category="gpu")
-        world.request(capsule, category="clipboard")
+        # A clipboard request no longer produces a grant at all: the category is
+        # unenforceable and policy refuses it before a prompt exists, so the
+        # backend has nothing to disclose about it.
+        clipboard = world.request(capsule, category="clipboard")
+        self.assertFalse(clipboard.allowed)
+        self.assertEqual(clipboard.reason_code, "not-enforceable")
         plan = world.runtime.build_plan(world.runtime.open("org.example.PhotoEditor"), allow_unconfined=True)
         self.assertIn("gpu", plan.unenforced)
-        self.assertIn("clipboard", plan.unenforced)
+        self.assertNotIn("clipboard", plan.unenforced)
 
     def test_every_declared_backend_names_what_it_enforces(self) -> None:
         for name, entry in BACKENDS.items():

@@ -143,6 +143,21 @@ class StateMapperInput:
     listening: bool = False
     transcribing: bool = False
     repositioning: bool = False
+    #: The session has been quiet long enough that the companion should visibly
+    #: sleep. Not a task fact — the projection has no notion of "long enough" —
+    #: which is exactly why it arrives here as a client flag alongside the
+    #: microphone and the window drag.
+    #:
+    #: Before this, :attr:`CharacterState.SLEEPING` was in the enum, in the
+    #: priority order, in every fallback chain and in the package contract, and
+    #: nothing anywhere could produce it. §2 of the polished-alpha brief lists
+    #: sleeping as one of the states the companion must be able to show.
+    dormant: bool = False
+    #: The companion is performing its first-run greeting. Set by the first-boot
+    #: sequence and cleared when it ends; §9's "companion appears → greeting
+    #: animation" is this flag's whole purpose, and like ``dormant`` it had a
+    #: state, a chain and an animation slot but no way in.
+    greeting: bool = False
     reviewer_warning: bool = False
     error_summary: str = ""
     effective_presentation: str = "animated-2d"
@@ -318,6 +333,19 @@ def _select_state(value: StateMapperInput) -> tuple[CharacterState, str]:
             return CharacterState.WAITING_FOR_APPROVAL, "an approval is outstanding"
     if value.reviewer_warning and priority_rank(CharacterState.WARNING) < priority_rank(base):
         return CharacterState.WARNING, "a reviewer recorded a material disagreement"
+    # An open microphone is shown in *every* phase, not only the refinable ones.
+    #
+    # This used to sit below with the decorative refinements, gated behind
+    # ``_REFINABLE_PHASES``. The consequence was that a client whose runtime had
+    # gone away rendered as ``disconnected`` while its microphone was still
+    # open — a person being recorded with nothing on screen saying so. Whether
+    # the phase is refinable is a question about *decoration*; a live capture
+    # device is not decoration, and it is ranked below approvals and errors so
+    # promoting it here can still never take the surface from a question.
+    if value.transcribing and priority_rank(CharacterState.TRANSCRIBING) < priority_rank(base):
+        return CharacterState.TRANSCRIBING, "the client is transcribing speech"
+    if value.listening and priority_rank(CharacterState.LISTENING) < priority_rank(base):
+        return CharacterState.LISTENING, "the microphone is on"
     if not value.renderer_healthy and priority_rank(CharacterState.DEGRADED) < priority_rank(base):
         return CharacterState.DEGRADED, "the renderer is degraded; the task is unaffected"
 
@@ -343,6 +371,13 @@ def _select_state(value: StateMapperInput) -> tuple[CharacterState, str]:
         candidates.append(
             (CharacterState.REPOSITIONING, "the user is repositioning the character")
         )
+    if value.greeting:
+        candidates.append((CharacterState.GREETING, "the companion is giving its first-run greeting"))
+    if value.dormant:
+        # Ranked just above idle, so it wins against idle and loses to
+        # everything else. A companion that slept through an approval because
+        # the machine had been quiet is the failure this ordering prevents.
+        candidates.append((CharacterState.SLEEPING, "the session has been quiet long enough to sleep"))
     # The one refinement drawn from the task itself, and it is a *narrowing*:
     # `working` becomes a more specific kind of working, never something else.
     if base is CharacterState.WORKING:

@@ -1,0 +1,134 @@
+{
+ "accessibilityObservations": [],
+ "counts": {
+  "acceptedReports": 0,
+  "alphaIntakes": 0,
+  "boundReports": 0,
+  "dedupDecisions": 0,
+  "findings": 0,
+  "quarantined": 0,
+  "rejected": 0,
+  "reproductionAttempts": 0,
+  "successReports": 0,
+  "unboundReports": 0
+ },
+ "derivedFrom": {
+  "artifactGraph": "qualification/phase10/artifacts/artifact-graph.json",
+  "dedupDecisions": "qualification/phase12/dedup-decisions.json",
+  "intakeLedger": "qualification/phase9/intake/LEDGER.json (read-only)",
+  "note": "derived, not primary evidence: recomputable from these inputs on every run; tested by tests/release/test_phase12_alpha_operations.py",
+  "reproductions": "qualification/phase12/reproductions.json",
+  "sufficiencyPolicy": "qualification/phase12/sufficiency-policy.json",
+  "triageRegistry": "qualification/phase9/triage/findings.json"
+ },
+ "findings": [],
+ "hardwareObservations": [],
+ "note": "Zero tester reports derive an empty register and READY_FOR_TESTERS \u2014 never SUCCESS, COMPATIBILITY PASS, ALPHA READY, or USER APPROVED. Silence is not evidence.",
+ "performance": {
+  "projectMeasured": [],
+  "subjective": [],
+  "testerMeasurements": []
+ },
+ "program": {
+  "basis": "the canonical package is committed and zero tester reports exist; zero is recorded as zero, and silence advances nothing",
+  "state": "READY_FOR_TESTERS"
+ },
+ "reports": [],
+ "schemaVersion": 1,
+ "securityObservations": [],
+ "subjectArtifact": "e906a48793d7",
+ "successEvidence": [],
+ "sufficiency": {
+  "basis": "owner-undefined threshold(s): minimumBoundReports, minimumDistinctEnvironments, minimumDistinctTesters, minimumJourneysCovered, minimumPhysicalMachineReports, minimumRenderModesObserved \u2014 nothing is guessed in their place",
+  "determination": "SUFFICIENCY_UNDETERMINED",
+  "evidenceLevel": "NO_EVIDENCE",
+  "openBlockers": []
+ },
+ "unboundEvidence": [],
+ "vocabularies": {
+  "dedupRelationships": [
+   "DISTINCT",
+   "POSSIBLE_DUPLICATE",
+   "DUPLICATE_OF",
+   "RELATED"
+  ],
+  "derivedSeverities": [
+   "CRITICAL",
+   "HIGH",
+   "MEDIUM",
+   "LOW",
+   "INFORMATIONAL"
+  ],
+  "evidenceClasses": [
+   "USER_REPORTED",
+   "MEASURED",
+   "REPRODUCED",
+   "DERIVED"
+  ],
+  "hardwareClasses": [
+   "HARDWARE_OBSERVED",
+   "HARDWARE_MEASURED",
+   "HARDWARE_QUALIFIED"
+  ],
+  "identityStates": [
+   "VERIFIED",
+   "OBSERVED_UNVERIFIED",
+   "MISSING",
+   "MISMATCH"
+  ],
+  "intakeClassifications": [
+   "ACCEPTED",
+   "INCOMPLETE",
+   "USER_EVIDENCE_UNBOUND",
+   "REJECTED",
+   "QUARANTINED",
+   "ARTIFACT_MISMATCH",
+   "UNVERIFIABLE",
+   "SUPERSEDED"
+  ],
+  "lifecycleAuthority": "qualification/phase10/tools/candidate_ops.py FINDING_TRANSITIONS",
+  "programStates": [
+   "NOT_STARTED",
+   "READY_FOR_TESTERS",
+   "EVIDENCE_RECEIVED",
+   "TRIAGE_IN_PROGRESS",
+   "REMEDIATION_REQUIRED",
+   "REQUALIFICATION_REQUIRED",
+   "ALPHA_EVIDENCE_SUFFICIENT",
+   "BLOCKED"
+  ],
+  "renderModes": [
+   "companion-prerendered",
+   "companion-2d",
+   "companion-3d-native",
+   "companion-3d-fallback"
+  ],
+  "reportTypes": [
+   "SUCCESS",
+   "FAILURE",
+   "BUG",
+   "PERFORMANCE",
+   "COMPATIBILITY",
+   "USABILITY",
+   "ACCESSIBILITY",
+   "SECURITY_OBSERVATION",
+   "GENERAL_FEEDBACK"
+  ],
+  "reproductionStates": [
+   "NOT_ATTEMPTED",
+   "REPRODUCTION_QUEUED",
+   "REPRODUCED",
+   "NOT_REPRODUCED",
+   "INSUFFICIENT_INFORMATION",
+   "ENVIRONMENT_DEPENDENT"
+  ],
+  "userImpacts": [
+   "BLOCKS_USE",
+   "MAJOR_DEGRADATION",
+   "MINOR_DEGRADATION",
+   "CONFUSING",
+   "COSMETIC",
+   "UNKNOWN"
+  ]
+ }
+}

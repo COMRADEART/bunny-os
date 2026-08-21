@@ -1,0 +1,293 @@
+{
+ "ready": {
+  "controlCount": 319
+ },
+ "schemaVersion": 1,
+ "script": "build/scripts/phase3-journeys/baseline.json",
+ "status": "complete",
+ "steps": [
+  {
+   "answer": {
+    "command": "system",
+    "label": "system-baseline",
+    "system": {
+     "appliedState": {
+      "argv": [
+       "/usr/bin/sudo",
+       "-u",
+       "alex",
+       "-H",
+       "cat",
+       "/var/home/alex/.local/state/bunny-os/applied.json"
+      ],
+      "ran": true,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "{\n \"applied\": 8,\n \"dryRun\": false,\n \"failures\": [\n  {\n   \"applied\": false,\n   \"detail\": \"No such schema \\u201cart.comrade.BunnyShell\\u201d\",\n   \"intent\": \"Bunny presentation: full\",\n   \"key\": \"companionMode\",\n   \"value\": \"full\"\n  },\n  {\n   \"applied\": false,\n   \"detail\": \"No such schema \\u201cart.comrade.BunnyShell\\u201d\",\n   \"intent\": \"captions\",\n   \"key\": \"companionCaptions\",\n   \"value\": \"true\"\n  },\n  {\n   \"applied\": false,\n   \"detail\": \"symlink absent after enable\",\n   \"intent\": \"start Bunny at login\",\n   \"key\": \"companionAtLogin\",\n   \"value\": true\n  }\n ],\n \"results\": [\n  {\n   \"applied\": true,\n   \"detail\": \"org.gnome.desktop.interface color-scheme = default\",\n   \"intent\": \"appearance: system\",\n   \"key\": \"colourScheme\",\n   \"value\": \"default\"\n  },\n  {\n   \"applied\": true,\n   \"detail\": \"org.gnome.desktop.interface gtk-theme = Adwaita\",\n   \"intent\": \"appearance: GTK theme\",\n   \"key\": \"gtkTheme\",\n   \"value\": \"Adwaita\"\n  },\n  {\n   \"applied\": true,\n   \"detail\": \"org.gnome.desktop.interface text-scaling-factor = 1.0\",\n   \"intent\": \"text size 100%\",\n   \"key\": \"textScale\",\n   \"value\": \"1.0\"\n  },\n  {\n   \"applied\": true,\n   \"detail\": \"org.gnome.desktop.a11y.interface high-contrast = false\",\n   \"intent\": \"high contrast\",\n   \"key\": \"highContrast\",\n   \"value\": \"false\"\n  },\n  {\n   \"applied\": true,\n   \"detail\": \"org.gnome.desktop.interface enable-animations = true\",\n   \"intent\": \"reduced motion\",\n   \"key\": \"reducedMotion\",\n   \"value\": \"true\"\n  },\n  {\n   \"applied\": true,\n   \"detail\": \"org.gnome.desktop.a11y.applications screen-reader-enabled = false\",\n   \"intent\": \"screen reader\",\n   \"key\": \"screenReader\",\n   \"value\": \"false\"\n  },\n  {\n   \"applied\": false,\n   \"detail\": \"No such schema \\u201cart.comrade.BunnyShell\\u201d\",\n   \"intent\": \"Bunny presentation: full\",\n   \"key\": \"companionMode\",\n   \"value\": \"full\"\n  },\n  {\n   \"applied\": false,\n   \"detail\": \"No such schema \\u201cart.comrade.BunnyShell\\u201d\",\n   \"intent\": \"captions\",\n   \"key\": \"companionCaptions\",\n   \"value\": \"true\"\n  },\n  {\n   \"applied\": true,\n   \"detail\": \"org.gnome.desktop.privacy report-technical-problems = false\",\n   \"intent\": \"crash reports\",\n   \"key\": \"crashReports\",\n   \"value\": \"false\"\n  },\n  {\n   \"applied\": true,\n   \"detail\": \"org.gnome.system.location enabled = false\",\n   \"intent\": \"location services\",\n   \"key\": \"location\",\n   \"value\": \"false\"\n  },\n  {\n   \"applied\": false,\n   \"detail\": \"symlink absent after enable\",\n   \"intent\": \"start Bunny at login\",\n   \"key\": \"companionAtLogin\",\n   \"value\": true\n  }\n ],\n \"schemaVersion\": 1,\n \"total\": 11\n}"
+     },
+     "choicesOnTarget": {
+      "argv": [
+       "cat",
+       "/var/lib/bunny-setup/choices.json"
+      ],
+      "ran": true,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "{\n \"accessibility\": {\n  \"captions\": false,\n  \"highContrast\": false,\n  \"reducedMotion\": false,\n  \"screenReader\": false,\n  \"textScale\": 1.0\n },\n \"account\": {\n  \"deviceName\": \"warren\",\n  \"displayName\": \"Alex\",\n  \"username\": \"alex\"\n },\n \"appearance\": {\n  \"accent\": \"violet\",\n  \"colourScheme\": \"system\",\n  \"wallpaper\": \"bunny-default\"\n },\n \"applications\": {\n  \"activities\": [],\n  \"selected\": []\n },\n \"companion\": {\n  \"atLogin\": true,\n  \"captions\": true,\n  \"mode\": \"full\",\n  \"voice\": false\n },\n \"encryption\": {\n  \"enabled\": true\n },\n \"locale\": {\n  \"keyboardLayout\": \"gb\",\n  \"language\": \"en-GB\",\n  \"region\": \"GB\",\n  \"timezone\": \"Europe/London\"\n },\n \"privacy\": {\n  \"camera\": false,\n  \"crashReports\": false,\n  \"diagnostics\": false,\n  \"feedback\": false,\n  \"location\": false,\n  \"microphone\": false,\n  \"onlineAI\": false,\n  \"remoteProcessing\": false\n },\n \"schemaVersion\": 1\n}"
+     },
+     "companionSettings": {
+      "argv": [
+       "/usr/bin/sudo",
+       "-u",
+       "alex",
+       "-H",
+       "cat",
+       "/var/home/alex/.local/state/bunny-os/companion/settings.json"
+      ],
+      "ran": true,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "{\n  \"accessibility\": {\n    \"captionsAlways\": true,\n    \"highContrast\": false,\n    \"noAnimation\": false,\n    \"reducedMotion\": true,\n    \"textOnly\": false,\n    \"uiScale\": 1.0\n  },\n  \"ai\": {\n    \"allowedRemoteAliases\": [],\n    \"costCeilingUnits\": 0,\n    \"preferredModelId\": \"\",\n    \"preferredProviderId\": \"\",\n    \"remoteEnabled\": false\n  },\n  \"character\": {\n    \"animation\": \"full\",\n    \"animationIntensity\": 0.6,\n    \"contextualReactions\": true,\n    \"dock\": \"top-left\",\n    \"idleAnimation\": true,\n    \"packageId\": \"\",\n    \"performance\": \"automatic\",\n    \"renderMode\": \"prerendered\",\n    \"scale\": 1.4,\n    \"threeD\": \"auto\",\n    \"visible\": true\n  },\n  \"containsCredentials\": false,\n  \"privacy\": {\n    \"clipboardCeiling\": \"internal\",\n    \"desktopActionApproval\": \"always\",\n    \"historyRetentionDays\": 0,\n    \"remoteTransferCeiling\": \"public\"\n  },\n  \"schemaVersion\": 1,\n  \"speechInput\": {\n    \"deviceId\": \"\",\n    \"enabled\": true,\n    \"language\": \"automatic\",\n    \"modelId\": \"\",\n    \"shortcut\": \"<Super><Alt>space\",\n    \"wakeWord\": \"disabled\"\n  },\n  \"voice\": {\n    \"enabled\": true,\n    \"modelId\": \"\",\n    \"performanceMode\": \"automatic\",\n    \"providerId\": \"pocket\",\n    \"responseMode\": \"voice-only\",\n    \"speakingRate\": 1.2,\n    \"voiceId\": \"\",\n    \"volume\": 1.0\n  }\n}"
+     },
+     "etcHostname": {
+      "argv": [
+       "cat",
+       "/etc/hostname"
+      ],
+      "ran": true,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "warren"
+     },
+     "etcLocaleConf": {
+      "argv": [
+       "cat",
+       "/etc/locale.conf"
+      ],
+      "ran": true,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "LANG=en_GB.UTF-8"
+     },
+     "etcVconsole": {
+      "argv": [
+       "cat",
+       "/etc/vconsole.conf"
+      ],
+      "ran": true,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "KEYMAP=\"gb\"\nFONT=\"eurlatgr\""
+     },
+     "firstRunMarker": {
+      "argv": [
+       "/usr/bin/sudo",
+       "-u",
+       "alex",
+       "-H",
+       "ls",
+       "-l",
+       "/var/home/alex/.local/state/bunny-os/first-run-complete"
+      ],
+      "ran": true,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "-rw-------. 1 alex alex 31 Aug 16 22:50 /var/home/alex/.local/state/bunny-os/first-run-complete"
+     },
+     "hostnamectl": {
+      "argv": [
+       "hostnamectl"
+      ],
+      "ran": true,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "Static hostname: warren\n           Icon name: computer-vm\n             Chassis: vm \ud83d\uddb4\n          Machine ID: 42af842c0e00408d95c71893c6e00038\n             Boot ID: e2612cc1508a483b9ee33c7a611cb065\n      Virtualization: kvm\n    Operating System: Bunny OS 0.1.0 (development)\n         CPE OS Name: cpe:/o:fedoraproject:fedora:44\n      OS Support End: Wed 2027-05-19\nOS Support Remaining: 9month 1d\n              Kernel: Linux 7.1.5-201.fc44.x86_64\n        Architecture: x86-64\n     Hardware Vendor: QEMU\n      Hardware Model: Standard PC _Q35 + ICH9, 2009_\n    Hardware Version: pc-q35-10.2\n    Firmware Version: edk2-20260508-6.fc44\n       Firmware Date: Fri 2026-05-08\n        Firmware Age: 3month 1w 2d"
+     },
+     "inhibitors": {
+      "argv": [
+       "systemd-inhibit",
+       "--list",
+       "--no-pager"
+      ],
+      "ran": true,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "WHO            UID  USER PID  COMM           WHAT                                                     WHY                                                         MODE\nNetworkManager 0    root 2209 NetworkManager sleep                                                    NetworkManager needs to turn off networks                   delay\nUPower         0    root 2220 upowerd        sleep                                                    Pause device polling                                        delay\nGNOME Shell    1000 alex 3880 gnome-shell    sleep                                                    GNOME needs to save screen time data                        delay\nalex           1000 alex 3990 gsd-power      handle-lid-switch                                        External monitor attached or configuration changed recently block\nalex           1000 alex 3986 gsd-media-keys handle-power-key:handle-suspend-key:handle-hibernate-key GNOME handling keypresses                                   block\nalex           1000 alex 3986 gsd-media-keys sleep                                                    GNOME handling keypresses                                   delay\nalex           1000 alex 3990 gsd-power      sleep                                                    GNOME needs to lock the screen                              delay\n\n7 inhibitors listed."
+     },
+     "localectl": {
+      "argv": [
+       "localectl",
+       "status"
+      ],
+      "ran": true,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "System Locale: LANG=en_GB.UTF-8\n    VC Keymap: gb\n   X11 Layout: (unset)"
+     },
+     "sessions": {
+      "argv": [
+       "loginctl",
+       "list-sessions"
+      ],
+      "ran": true,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "SESSION  UID USER SEAT  LEADER CLASS   TTY  IDLE SINCE\n      2 1000 alex -     3468   manager -    no   -\n      3 1000 alex seat0 3750   user    tty2 no   -\n\n2 sessions listed."
+     },
+     "userUnits": {
+      "argv": [
+       "/usr/bin/sudo",
+       "-u",
+       "alex",
+       "-H",
+       "/usr/bin/env",
+       "XDG_RUNTIME_DIR=/run/user/1000",
+       "DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus",
+       "systemctl",
+       "--user",
+       "--no-pager",
+       "list-units",
+       "bunny-*"
+      ],
+      "ran": true,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "UNIT                     LOAD   ACTIVE SUB     DESCRIPTION\n  bunny-companion.service  loaded active running Bunny Companion runtime\n  bunny-config-dir.service loaded active exited  Establish and verify the Bunny OS per-user configuration directory\n\nLegend: LOAD   \u2192 Reflects whether the unit definition was properly loaded.\n        ACTIVE \u2192 The high-level unit activation state, i.e. generalization of SUB.\n        SUB    \u2192 The low-level unit activation state, values depend on unit type.\n\n2 loaded units listed. Pass --all to see loaded but inactive units, too.\nTo show all installed unit files use 'systemctl list-unit-files'."
+     }
+    }
+   },
+   "request": {
+    "command": "system",
+    "label": "system-baseline",
+    "timeout": 240
+   }
+  },
+  {
+   "answer": {
+    "command": "companion-state",
+    "companion": {
+     "bridgeHealth": {
+      "err": "",
+      "out": "{\"event\": \"health\", \"available\": true, \"endpoint\": \"/run/user/1000/bunny-companion/runtime.sock\", \"schemaVersion\": null, \"runtime\": \"unknown\"}\n",
+      "rc": 0
+     },
+     "capsuleUnits": {
+      "err": "",
+      "out": "",
+      "rc": 0
+     },
+     "journal": {
+      "err": "",
+      "out": "e - Bunny Companion runtime.\nbunny-companion-service: listening on /run/user/1000/bunny-companion/runtime.sock (unix-socket)\nStopping bunny-companion.service - Bunny Companion runtime...\nStopped bunny-companion.service - Bunny Companion runtime.\nbunny-companion.service: Consumed 1.121s CPU time over 22.025s wall clock time, 47.1M memory peak.\nStarted bunny-companion.service - Bunny Companion runtime.\nbunny-companion-service: listening on /run/user/1000/bunny-companion/runtime.sock (unix-socket)\nStopping bunny-companion.service - Bunny Companion runtime...\nStopped bunny-companion.service - Bunny Companion runtime.\nbunny-companion.service: Consumed 1.116s CPU time over 24.370s wall clock time, 47.2M memory peak.\nStarted bunny-companion.service - Bunny Companion runtime.\nbunny-companion-service: listening on /run/user/1000/bunny-companion/runtime.sock (unix-socket)\nStopping bunny-companion.service - Bunny Companion runtime...\nStopped bunny-companion.service - Bunny Companion runtime.\nbunny-companion.service: Consumed 1.132s CPU time over 23.339s wall clock time, 47M memory peak.\nStarted bunny-companion.service - Bunny Companion runtime.\nbunny-companion-service: listening on /run/user/1000/bunny-companion/runtime.sock (unix-socket)\nStopping bunny-companion.service - Bunny Companion runtime...\nStopped bunny-companion.service - Bunny Companion runtime.\nbunny-companion.service: Consumed 1.142s CPU time over 22.003s wall clock time, 47.6M memory peak.\nStarted bunny-companion.service - Bunny Companion runtime.\nbunny-companion-service: listening on /run/user/1000/bunny-companion/runtime.sock (unix-socket)\nStopping bunny-companion.service - Bunny Companion runtime...\nStopped bunny-companion.service - Bunny Companion runtime.\nbunny-companion.service: Consumed 1.132s CPU time over 21.973s wall clock time, 47.5M memory peak.\nStarted bunny-companion.service - Bunny Companion runtime.\nbunny-companion-service: listening on /run/user/1000/bunny-companion/runtime.sock (unix-socket)\nStopping bunny-companion.service - Bunny Companion runtime...\nStopped bunny-companion.service - Bunny Companion runtime.\nbunny-companion.service: Consumed 18.532s CPU time over 11min 9.013s wall clock time, 46.9M memory peak.\nStarted bunny-companion.service - Bunny Companion runtime.\nbunny-companion-service: listening on /run/user/1000/bunny-companion/runtime.sock (unix-socket)\nStopping bunny-companion.service - Bunny Companion runtime...\nStopped bunny-companion.service - Bunny Companion runtime.\nbunny-companion.service: Consumed 19.359s CPU time over 8min 39.628s wall clock time, 47.4M memory peak.\nStarted bunny-companion.service - Bunny Companion runtime.\nbunny-companion-service: listening on /run/user/1000/bunny-companion/runtime.sock (unix-socket)\nStarted bunny-companion.service - Bunny Companion runtime.\nbunny-companion-service: listening on /run/user/1000/bunny-companion/runtime.sock (unix-socket)\nStarted bunny-companion.service - Bunny Companion runtime.\nbunny-companion-service: listening on /run/user/1000/bunny-companion/runtime.sock (unix-socket)\nStarted bunny-companion.service - Bunny Companion runtime.\nbunny-companion-service: listening on /run/user/1000/bunny-companion/runtime.sock (unix-socket)\nStarted bunny-companion.service - Bunny Companion runtime.\nbunny-companion-service: listening on /run/user/1000/bunny-companion/runtime.sock (unix-socket)\nStarted bunny-companion.service - Bunny Companion runtime.\nbunny-companion-service: listening on /run/user/1000/bunny-companion/runtime.sock (unix-socket)\nStarted bunny-companion.service - Bunny Companion runtime.\nbunny-companion-service: listening on /run/user/1000/bunny-companion/runtime.sock (unix-socket)\nStarted bunny-companion.service - Bunny Companion runtime.\nbunny-companion-service: listening on /run/user/1000/bunny-companion/runtime.sock (unix-socket)\nStarted bunny-companion.service - Bunny Companion runtime.\nbunny-companion-service: listening on /run/user/1000/bunny-companion/runtime.sock (unix-socket)\n",
+      "rc": 0
+     },
+     "ok": true,
+     "shellLog": {
+      "err": "",
+      "out": ",\n        Alloc(\n            \"image/webp\",\n        ): ImageEditorConfig {\n            exec: \"/usr/libexec/glycin-loaders/2+/glycin-image-rs\",\n            expose_base_dir: false,\n            fontconfig: false,\n            operations: [],\n            creator: true,\n            creator_color_icc_profile: false,\n            creator_encoding_quality: false,\n            creator_encoding_compression: false,\n            creator_metadata_key_value: false,\n        },\n        Alloc(\n            \"image/x-exr\",\n        ): ImageEditorConfig {\n            exec: \"/usr/libexec/glycin-loaders/2+/glycin-image-rs\",\n            expose_base_dir: false,\n            fontconfig: false,\n            operations: [],\n            creator: true,\n            creator_color_icc_profile: false,\n            creator_encoding_quality: false,\n            creator_encoding_compression: false,\n            creator_metadata_key_value: false,\n        },\n        Alloc(\n            \"image/x-tga\",\n        ): ImageEditorConfig {\n            exec: \"/usr/libexec/glycin-loaders/2+/glycin-image-rs\",\n            expose_base_dir: false,\n            fontconfig: false,\n            operations: [],\n            creator: true,\n            creator_color_icc_profile: false,\n            creator_encoding_quality: false,\n            creator_encoding_compression: false,\n            creator_metadata_key_value: false,\n        },\n    },\n}\nStarted bunny-companion.service - Bunny Companion runtime.\nbunny-first-boot.service - Bunny OS per-user first-boot preferences skipped, unmet condition check ConditionPathExists=!/home/alex/.config/bunny-os/first-boot-complete.json\nbunny-first-run.service - Bunny OS first-run experience skipped, unmet condition check ConditionPathExists=!/home/alex/.local/state/bunny-os/first-run-complete\nbunny-desktop: mutter reports rendering is software\nbunny-desktop: panel blur disabled\nbunny-theme: theme dark at 1x, reduced motion\nbunny-desktop: no battery in /sys/class/power_supply; reporting AC Power\nbunny-desktop: vscode is not installed (tried code.desktop, com.visualstudio.code.desktop)\nbunny-desktop: spotify is not installed (tried com.spotify.Client.desktop, spotify.desktop)\nbunny-desktop: animations are disabled; the character is drawn in a resting pose\nbunny-desktop: obs is not installed (tried com.obsproject.Studio.desktop, obs-studio.desktop)\nbunny-desktop: blender is not installed (tried org.blender.Blender.desktop, blender.desktop)\nbunny-desktop: discord is not installed (tried com.discordapp.Discord.desktop, discord.desktop)\nbunny-desktop: the wallpaper is in uiGroup below the desktop content, which is below the windows\nbunny-desktop: desktop content layer is above the wallpaper and below the windows\nbunny-desktop: the session opened the overview at login; dismissing it for the desktop\nbunny-desktop: focus-desktop-search is bound to <Super>s\nbunny-desktop: focus-desktop-sidebar is bound to <Super><Shift>n\nbunny-desktop: focus-desktop-assistant is bound to <Super><Shift>b\nbunny-desktop: push-to-talk is bound to <Super><Alt>space\nbunny-desktop: storage is /var (ext4 on /dev/mapper/luks-7e67b822-e228-4590-9d34-adb2d7e3dafb), chosen as the writable home filesystem; skipped /home/alex \u2014 overlay is a composed image, not a disk\nbunny-desktop: no thermal sensor found; temperature reports Unavailable\nbunny-desktop: layout 1920x1080 -> wide, 2 card column(s)\nbunny-desktop: the Bunny desktop is up\nbunny-desktop: assistant unavailable: the companion runtime is unreachable: [Errno 2] No such file or directory \u2014 systemctl --user start bunny-companion.service\nbunny-desktop: voice input unavailable: the companion runtime is unreachable: [Errno 2] No such file or directory\nbunny-companion-service: listening on /run/user/1000/bunny-companion/runtime.sock (unix-socket)\nbunny-desktop: the companion runtime is reachable\nbunny-desktop: the shell left its cover pane over the desktop; hidden, so pointer input reaches it\nbunny-desktop: GNOME's panel hidden after the startup deadline\n",
+      "rc": 0
+     },
+     "unit": {
+      "err": "",
+      "out": "ActiveState=active\nSubState=running\nMainPID=4127\nNRestarts=0\nExecMainStatus=0\n",
+      "rc": 0
+     }
+    },
+    "label": "companion-state"
+   },
+   "request": {
+    "command": "companion-state",
+    "label": "companion-state"
+   }
+  },
+  {
+   "answer": {
+    "character": {
+     "controlCount": 319,
+     "reason": "returned from a transient state",
+     "says": "Good evening!\n\nNothing is scheduled today.\n\nShall we get started?",
+     "state": "idle"
+    },
+    "command": "character",
+    "label": "character"
+   },
+   "request": {
+    "command": "character",
+    "label": "character"
+   }
+  },
+  {
+   "answer": {
+    "command": "settings",
+    "label": "settings-baseline",
+    "settings": {
+     "argv": [
+      "/usr/bin/sudo",
+      "-u",
+      "alex",
+      "-H",
+      "/usr/bin/bunny-os",
+      "companion",
+      "settings",
+      "show"
+     ],
+     "ran": true,
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "effect: READ the user settings. A setting is never a credential\nsettings: {\"accessibility\": {\"captionsAlways\": true, \"highContrast\": false, \"noAnimation\": false, \"reducedMotion\": true, \"textOnly\": false, \"uiScale\": 1.0}, \"ai\": {\"allowedRemoteAliases\": [], \"costCeilingUnits\": 0, \"preferredModelId\": \"\", \"preferredProviderId\": \"\", \"remoteEnabled\": false}, \"character\": {\"animation\": \"full\", \"animationIntensity\": 0.6, \"contextualReactions\": true, \"dock\": \"top-left\", \"idleAnimation\": true, \"packageId\": \"\", \"performance\": \"automatic\", \"renderMode\": \"prerendered\", \"scale\": 1.4, \"threeD\": \"auto\", \"visible\": true}, \"containsCredentials\": false, \"privacy\": {\"clipboardCeiling\": \"internal\", \"desktopActionApproval\": \"always\", \"historyRetentionDays\": 0, \"remoteTransferCeiling\": \"public\"}, \"schemaVersion\": 1, \"speechInput\": {\"deviceId\": \"\", \"enabled\": true, \"language\": \"automatic\", \"modelId\": \"\", \"shortcut\": \"<Super><Alt>space\", \"wakeWord\": \"disabled\"}, \"voice\": {\"enabled\": true, \"modelId\": \"\", \"performanceMode\": \"automatic\", \"providerId\": \"pocket\", \"responseMode\": \"voice-only\", \"speakingRate\": 1.2, \"voiceId\": \"\", \"volume\": 1.0}}"
+    }
+   },
+   "request": {
+    "action": "show",
+    "command": "settings",
+    "label": "settings-baseline"
+   }
+  },
+  {
+   "answer": {
+    "command": "renderer",
+    "label": "renderer-status",
+    "renderer": {
+     "argv": [
+      "/usr/bin/sudo",
+      "-u",
+      "alex",
+      "-H",
+      "/usr/bin/bunny-os",
+      "--json",
+      "companion",
+      "renderer",
+      "status"
+     ],
+     "ran": true,
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "{\n  \"bubble\": null,\n  \"capabilityPlan\": {\n    \"action\": \"start\",\n    \"ceiling\": \"full-3d\",\n    \"implementationId\": \"full-3d\",\n    \"planId\": \"plan-b970d31a68845555\",\n    \"reasons\": []\n  },\n  \"effect\": \"read-only\",\n  \"events\": [],\n  \"frame\": {\n    \"accessibilityDescription\": \"Bunny is idle and ready.\",\n    \"animation\": \"idle\",\n    \"assetId\": \"idle-1\",\n    \"assetPath\": \"/usr/share/bunny-os/companion/characters/default-bunny/assets/idle-1.png\",\n    \"frameIndex\": 0,\n    \"height\": 96,\n    \"mouthShape\": \"neutral\",\n    \"opacity\": 1.0,\n    \"scale\": 1.0,\n    \"state\": \"idle\",\n    \"width\": 96\n  },\n  \"lipSync\": null,\n  \"mappedState\": {\n    \"accessibilityDescription\": \"Bunny is idle and ready.\",\n    \"animation\": \"idle\",\n    \"bubbleAnchor\": {\n      \"preferredSide\": \"auto\",\n      \"x\": 0.76,\n      \"y\": 0.16\n    },\n    \"bubbleVisible\": false,\n    \"characterState\": \"idle\",\n    \"degradationExplanation\": \"\",\n    \"expression\": \"neutral\",\n    \"fallbackChain\": [\n      \"idle\"\n    ],\n    \"frameRateCap\": 60,\n    \"loop\": true,\n    \"playbackPolicy\": \"loop\",\n    \"priorityReason\": \"canonical presentation phase idle\",\n    \"resolvedPackageState\": \"idle\",\n    \"transitionType\": \"interruptible\"\n  },\n  \"missingStates\": [],\n  \"mode\": \"prerendered\",\n  \"observedResourceUse\": {\n    \"decodedMemoryBytes\": 479232,\n    \"droppedFrames\": 0,\n    \"lastFrameMs\": 0.0\n  },\n  \"packageFallback\": null,\n  \"position\": null,\n  \"presentation\": {\n    \"effectivePresentation\": \"animated-2d\",\n    \"frameRateCap\": 8,\n    \"heldByHysteresis\": false,\n    \"planId\": \"plan-b970d31a68845555\",\n    \"reasons\": [\n      \"capability plan plan-b970d31a68845555 permits at most full-3d\",\n      \"the selected character package carries no validated 3D model\"\n    ],\n    \"requestedPresentation\": \"animated-2d\"\n  },\n  \"quiescence\": null,\n  \"rendererErrors\": [],\n  \"rendererStatus\": {\n    \"droppedFrames\": 0,\n    \"failure\": null,\n    \"frameRateCap\": 8,\n    \"lastFrameMs\": 0.0,\n    \"loadedPackageDigest\": \"5494218e66c9d5cf022105213727614d9793eb2ec403e593e56ae76628a23986\",\n    \"loadedPackageId\": \"org.bunny-os.default-bunny\",\n    \"observedMemoryBytes\": 479232,\n    \"paused\": false,\n    \"reducedMotion\": false,\n    \"renderer\": \"animated-2d\",\n    \"running\": true,\n    \"visible\": true\n  },\n  \"resourceDeclaration\": {\n    \"assetCount\": 14,\n    \"frameRate\": 8.0,\n    \"height\": 96,\n    \"memoryEstimateBytes\": 479232,\n    \"width\": 96\n  },\n  \"selectedPackage\": {\n    \"characterName\": \"Bunny\",\n    \"creatorTrusted\": true,\n    \"integrityVerified\": true,\n    \"packageDigest\": \"5494218e66c9d5cf022105213727614d9793eb2ec403e593e56ae76628a23986\",\n    \"packageId\": \"org.bunny-os.default-bunny\",\n    \"packageVersion\": \"1.0.0\",\n    \"path\": \"/usr/share/bunny-os/companion/characters/default-bunny\",\n    \"presentationType\": \"animated-2d\",\n    \"trustState\": \"built-in\"\n  },\n  \"signals\": {\n    \"availableMemoryBytes\": 5153751040,\n    \"batteryPercent\": null,\n    \"displayAvailable\": true,\n    \"gpuAvailable\": true,\n    \"graphicsReady\": true,\n    \"memoryPressure\": false,\n    \"onBattery\": false,\n    \"thermalPressure\": false\n  }\n}"
+    }
+   },
+   "request": {
+    "command": "renderer",
+    "label": "renderer-status"
+   }
+  },
+  {
+   "answer": {
+    "command": "a11y-settings",
+    "label": "gsettings-a11y",
+    "settings": {
+     "org.gnome.desktop.a11y.applications.screen-reader-enabled": "false",
+     "org.gnome.desktop.a11y.interface.high-contrast": "false",
+     "org.gnome.desktop.a11y.interface.reduced-motion": "'no-preference'",
+     "org.gnome.desktop.a11y.interface.show-status-shapes": "false",
+     "org.gnome.desktop.interface.enable-animations": "true",
+     "org.gnome.desktop.interface.text-scaling-factor": "1.0",
+     "org.gnome.desktop.interface.toolkit-accessibility": "true"
+    }
+   },
+   "request": {
+    "command": "a11y-settings",
+    "label": "gsettings-a11y"
+   }
+  }
+ ]
+}

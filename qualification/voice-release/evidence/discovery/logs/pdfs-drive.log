@@ -1,0 +1,71 @@
+  watcher-started: {"samples": 1}
+  microphone-button: {"found": true, "at": {"x": 1830, "y": 663, "width": 24, "height": 24}}
+  clicked-microphone: {"at": {"x": 1842, "y": 675}}
+  state: listening (+0.7s)
+  listening: {"microphoneIndicator": true}
+  allowed: {"detail": "none"}
+  spoke: {"utterance": "/tmp/utt-pdfs.raw"}
+  allowed: {"detail": "none"}
+  state: thinking (+8.0s)
+  allowed: {"detail": "none"}
+  allowed: {"detail": "none"}
+  allowed: {"detail": "none"}
+  state: talking (+11.0s)
+  talking: {"says": "Bunny says: I found 2 matching files: bunny-test-one.pdf, bunny-test-two.pdf."}
+  allowed: {"detail": "none"}
+  state: success (+18.5s)
+  allowed: {"detail": "none"}
+/root/bunny-ops/e2e/runs/s2/screens/ee1-00-idle.png (1920x1080)
+/root/bunny-ops/e2e/runs/s2/screens/ee1-01-listening.png (1920x1080)
+/root/bunny-ops/e2e/runs/s2/screens/ee1-02-talking.png (1920x1080)
+/root/bunny-ops/e2e/runs/s2/screens/ee1-03-approval.png (1920x1080)
+/root/bunny-ops/e2e/runs/s2/screens/ee1-04-after.png (1920x1080)
+/root/bunny-ops/e2e/runs/s2/screens/mem-00-idle.png (1920x1080)
+/root/bunny-ops/e2e/runs/s2/screens/mem-01-listening.png (1920x1080)
+/root/bunny-ops/e2e/runs/s2/screens/mem-02-talking.png (1920x1080)
+/root/bunny-ops/e2e/runs/s2/screens/mem-03-approval.png (1920x1080)
+/root/bunny-ops/e2e/runs/s2/screens/mem-04-after.png (1920x1080)
+/root/bunny-ops/e2e/runs/s2/screens/pdfs-00-idle.png (1920x1080)
+/root/bunny-ops/e2e/runs/s2/screens/pdfs-01-listening.png (1920x1080)
+/root/bunny-ops/e2e/runs/s2/screens/pdfs-02-talking.png (1920x1080)
+/root/bunny-ops/e2e/runs/s2/screens/pdfs-03-approval.png (1920x1080)
+/root/bunny-ops/e2e/runs/s2/screens/pdfs-04-after.png (1920x1080)
+/root/bunny-ops/e2e/runs/s2/screens/s2-00-desktop.png (1920x1080)
+{
+  "tag": "pdfs",
+  "utterance": "/tmp/utt-pdfs.raw",
+  "transitions": [
+    {
+      "state": "listening",
+      "at": 1786855719.524,
+      "sinceClick": 0.66
+    },
+    {
+      "state": "thinking",
+      "at": 1786855726.865,
+      "sinceClick": 8.0
+    },
+    {
+      "state": "talking",
+      "at": 1786855729.867,
+      "sinceClick": 11.0
+    },
+    {
+      "state": "success",
+      "at": 1786855737.35,
+      "sinceClick": 18.48
+    }
+  ],
+  "screens": {
+    "00-idle": "/root/bunny-ops/e2e/runs/s2/screens/pdfs-00-idle.ppm",
+    "01-listening": "/root/bunny-ops/e2e/runs/s2/screens/pdfs-01-listening.ppm",
+    "03-approval": "/root/bunny-ops/e2e/runs/s2/screens/pdfs-03-approval.ppm",
+    "02-talking": "/root/bunny-ops/e2e/runs/s2/screens/pdfs-02-talking.ppm",
+    "04-after": "/root/bunny-ops/e2e/runs/s2/screens/pdfs-04-after.ppm"
+  },
+  "listeningSeen": true,
+  "talkingSeen": true,
+  "approved": false,
+  "finalState": "success",
+  "says": "Bunny says: I found 2 matching files: bunny-test-one.pdf, bunny-test-two.pdf."
+}

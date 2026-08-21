@@ -1,0 +1,743 @@
+{
+ "counts": {
+  "asExpected": 72,
+  "scenarios": 72,
+  "tracks": 9
+ },
+ "executedAgainst": {
+  "alphaRegisterSha256": "e21cbcd43f4f9a9d40f12ead9ea1d8493e0d0ce11769f74d9d77ca9c43adadb7",
+  "authorizationState": "EVIDENCE_PENDING",
+  "candidateDecision": "REQUIRES_MORE_EVIDENCE",
+  "graphSha256": "77067de176684ac101e2211680be9d7708efcd690a80166766de855b540c7f18",
+  "ledgerSha256": "b24ef74023cbd1d949053b8c9f842243c4e7d8818cb5b4dfcec1ab1fc0c1624b",
+  "securityRegisterSha256": "a9a80f747bf6659606f6a729b582083eb46a5ec0715b501a468acf9db37e57ad"
+ },
+ "note": "Derived by evidence_execution_ops.py run-rehearsals; recomputable on every run. When real evidence arrives the executedAgainst pins change and this matrix is re-derived \u2014 exactly like the Phase 11/12 registers.",
+ "purpose": "The Phase 14 rehearsal matrix: every scenario executed against scratch universes over TEST_FIXTURE_ONLY material. A row here is a machinery demonstration and nothing else \u2014 it is not evidence about the subject artifact, and no row can ever upgrade the real candidate.",
+ "realEvidence": "NONE \u2014 every external gate still awaits its owner; EXTERNAL_EVIDENCE_REQUIRED",
+ "realLedgerByteIdentical": true,
+ "scenarios": [
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expected": "all ten evidence classes route to their declared workstream, destination, and validator",
+   "observed": "all ten evidence classes route to their declared workstream, destination, and validator",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenarioId": "PH14-A1",
+   "title": "every evidence class routes to its workstream",
+   "track": "A"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expected": "an unknown evidence class refuses; it never becomes generic evidence",
+   "observed": "an unknown evidence class refuses; it never becomes generic evidence",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenarioId": "PH14-A2",
+   "title": "unknown evidence class refuses",
+   "track": "A"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expected": "a record matching two classes refuses instead of being guessed at",
+   "observed": "a record matching two classes refuses instead of being guessed at",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenarioId": "PH14-A3",
+   "title": "ambiguous evidence class refuses",
+   "track": "A"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expected": "a fixture-marked record derives TEST_FIXTURE_ONLY and routes nowhere",
+   "observed": "a fixture-marked record derives TEST_FIXTURE_ONLY and routes nowhere",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenarioId": "PH14-A4",
+   "title": "fixture marker is terminal: TEST_FIXTURE_ONLY",
+   "track": "A"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expected": "evidence bound to other bytes derives DOES_NOT_APPLY",
+   "observed": "evidence bound to other bytes derives DOES_NOT_APPLY",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenarioId": "PH14-A5",
+   "title": "wrong-artifact evidence: DOES_NOT_APPLY",
+   "track": "A"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expected": "a record missing required fields derives INCOMPLETE with the gaps named",
+   "observed": "a record missing required fields derives INCOMPLETE with the gaps named",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenarioId": "PH14-A6",
+   "title": "missing fields: INCOMPLETE",
+   "track": "A"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expected": "a signing drill offered as production signing derives REJECTED",
+   "observed": "a signing drill offered as production signing derives REJECTED",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenarioId": "PH14-A7",
+   "title": "signing drill: REJECTED",
+   "track": "A"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expected": "governance records derive REQUIRES_HUMAN_DECISION naming their registry; the router prepares, it never decides",
+   "observed": "governance records derive REQUIRES_HUMAN_DECISION naming their registry; the router prepares, it never decides",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenarioId": "PH14-A8",
+   "title": "governance records: REQUIRES_HUMAN_DECISION",
+   "track": "A"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expected": "the same immutable inputs derive byte-identical sealed cuts",
+   "observed": "the same immutable inputs derive byte-identical sealed cuts",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenarioId": "PH14-B1",
+   "title": "same inputs derive byte-identical cuts",
+   "track": "B"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expected": "evidence arriving after a cut is detected and named; the cut re-derives unchanged from its own inputs",
+   "observed": "evidence arriving after a cut is detected and named; the cut re-derives unchanged from its own inputs",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenarioId": "PH14-B2",
+   "title": "evidence after a cut is detected, not absorbed",
+   "track": "B"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expected": "a policy activated after a cut changes only later cuts; the earlier decision re-derives unchanged",
+   "observed": "a policy activated after a cut changes only later cuts; the earlier decision re-derives unchanged",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenarioId": "PH14-B3",
+   "title": "policy activated after a cut",
+   "track": "B"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expected": "authority assigned after a cut acts only at later cuts; the earlier refusal re-derives unchanged",
+   "observed": "authority assigned after a cut acts only at later cuts; the earlier refusal re-derives unchanged",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenarioId": "PH14-B4",
+   "title": "authority assigned after a cut",
+   "track": "B"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expected": "a record standing at cut A is EXPIRED at cut B; expiry is derived per cut, never edited in",
+   "observed": "a record standing at cut A is EXPIRED at cut B; expiry is derived per cut, never edited in",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenarioId": "PH14-B5",
+   "title": "record expiring between cuts",
+   "track": "B"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expected": "revocation after a cut revokes at later cuts; the earlier cut's decision re-derives exactly as recorded",
+   "observed": "revocation after a cut revokes at later cuts; the earlier cut's decision re-derives exactly as recorded",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenarioId": "PH14-B6",
+   "title": "revocation after authorization",
+   "track": "B"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expected": "once an expiring record exists, a cut without an operator-stated as-of refuses",
+   "observed": "once an expiring record exists, a cut without an operator-stated as-of refuses",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenarioId": "PH14-B7",
+   "title": "expiring records make as-of mandatory",
+   "track": "B"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expected": "a later decision supersedes the earlier one without rewriting it; a rerun of the same cut is not a supersession",
+   "observed": "a later decision supersedes the earlier one without rewriting it; a rerun of the same cut is not a supersession",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenarioId": "PH14-B8",
+   "title": "supersession never rewrites",
+   "track": "B"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expected": "ACCEPTED_RISK against UNRESOLVED leaves the more blocking state effective and requires the security owner's decision",
+   "observed": "ACCEPTED_RISK against UNRESOLVED leaves the more blocking state effective and requires the security owner's decision",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenarioId": "PH14-C1",
+   "title": "security: more blocking state stands",
+   "track": "C"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expected": "one machine passing and another failing preserves both; no SUPPORTED ON PCS conclusion exists",
+   "observed": "one machine passing and another failing preserves both; no SUPPORTED ON PCS conclusion exists",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenarioId": "PH14-C2",
+   "title": "hardware: divergent machines both preserved",
+   "track": "C"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expected": "an unreproduced severe issue stays open; NOT_REPRODUCED is a statement about attempts, never about validity",
+   "observed": "an unreproduced severe issue stays open; NOT_REPRODUCED is a statement about attempts, never about validity",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenarioId": "PH14-C3",
+   "title": "alpha: unreproduced severe issue stays open",
+   "track": "C"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expected": "valid signing evidence for other bytes derives ARTIFACT_MISMATCH and moves no gate",
+   "observed": "valid signing evidence for other bytes derives ARTIFACT_MISMATCH and moves no gate",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenarioId": "PH14-C4",
+   "title": "signing: wrong artifact does not apply",
+   "track": "C"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expected": "a valid decision from an unauthorized role contributes nothing; the required authority is named in the refusal",
+   "observed": "a valid decision from an unauthorized role contributes nothing; the required authority is named in the refusal",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenarioId": "PH14-C5",
+   "title": "unauthorized role contributes nothing",
+   "track": "C"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expected": "four of five floor sources present: AUTHORIZED stays impossible and the refusal names the absent source",
+   "observed": "four of five floor sources present: AUTHORIZED stays impossible and the refusal names the absent source",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenarioId": "PH14-C6",
+   "title": "four of five floor: not authorized",
+   "track": "C"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expected": "a conflict never resolves toward the favorable observation; the unfavorable assessment stands until the named authority decides",
+   "observed": "a conflict never resolves toward the favorable observation; the unfavorable assessment stands until the named authority decides",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenarioId": "PH14-C7",
+   "title": "conflict never resolves favorably",
+   "track": "C"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expected": "a complete valid review is accepted and reconciled; the gate moves to UNDER_ANALYSIS while Criticals await disposition, never straight to SATISFIED",
+   "observed": "a complete valid review is accepted and reconciled; the gate moves to UNDER_ANALYSIS while Criticals await disposition, never straight to SATISFIED",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenarioId": "PH14-D1",
+   "title": "valid review: accepted and reconciled",
+   "track": "D"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expected": "a review bound to the wrong artifact derives ARTIFACT_MISMATCH; no transfer by default",
+   "observed": "a review bound to the wrong artifact derives ARTIFACT_MISMATCH; no transfer by default",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenarioId": "PH14-D2",
+   "title": "review bound to wrong artifact",
+   "track": "D"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expected": "intake ACCEPTED is not contract-valid: a review without an independently computed digest contributes nothing to the gate until revised",
+   "observed": "intake ACCEPTED is not contract-valid: a review without an independently computed digest contributes nothing to the gate until revised",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenarioId": "PH14-D3",
+   "title": "missing independently computed digest",
+   "track": "D"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expected": "a finding outside SEC-BL-001..044 classifies NEW_FINDING and enters triage for its own identifier",
+   "observed": "a finding outside SEC-BL-001..044 classifies NEW_FINDING and enters triage for its own identifier",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenarioId": "PH14-D4",
+   "title": "new finding beyond the baseline",
+   "track": "D"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expected": "a Critical acceptance without authority refuses, an expired acceptance derives EXPIRED, and NOT_APPLICABLE without analysis refuses",
+   "observed": "a Critical acceptance without authority refuses, an expired acceptance derives EXPIRED, and NOT_APPLICABLE without analysis refuses",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenarioId": "PH14-D5",
+   "title": "critical dispositions fail closed",
+   "track": "D"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expected": "conflicting reviewer conclusions preserve both submissions; the effective assessment is the most blocking pending resolution",
+   "observed": "conflicting reviewer conclusions preserve both submissions; the effective assessment is the most blocking pending resolution",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenarioId": "PH14-D6",
+   "title": "conflicting reviewer assessments",
+   "track": "D"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expected": "a revision supersedes its original derivationally; the stored original never changes",
+   "observed": "a revision supersedes its original derivationally; the stored original never changes",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenarioId": "PH14-D7",
+   "title": "revision supersedes derivationally",
+   "track": "D"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expected": "closure evidence from another artifact refuses; approval does not transfer between artifacts",
+   "observed": "closure evidence from another artifact refuses; approval does not transfer between artifacts",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenarioId": "PH14-D8",
+   "title": "closure with foreign evidence refuses",
+   "track": "D"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expected": "one hundred reports against no active policy stay SUFFICIENCY_UNDETERMINED; the repository never invents thresholds",
+   "observed": "one hundred reports against no active policy stay SUFFICIENCY_UNDETERMINED; the repository never invents thresholds",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenarioId": "PH14-E1",
+   "title": "no policy: 100 reports stay undetermined",
+   "track": "E"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expected": "under an active fixture policy, evidence below threshold stays INSUFFICIENT with the shortfall named",
+   "observed": "under an active fixture policy, evidence below threshold stays INSUFFICIENT with the shortfall named",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenarioId": "PH14-E2",
+   "title": "active policy: shortfall stays insufficient",
+   "track": "E"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expected": "thresholds met derive SUFFICIENT inside the isolated fixture universe only; the real registry remains SUFFICIENCY_POLICY_UNDEFINED",
+   "observed": "thresholds met derive SUFFICIENT inside the isolated fixture universe only; the real registry remains SUFFICIENCY_POLICY_UNDEFINED",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenarioId": "PH14-E3",
+   "title": "threshold met: sufficient in fixture universe only",
+   "track": "E"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expected": "a report bound to another artifact is preserved but aggregates into nothing; applicability never widens by similarity",
+   "observed": "a report bound to another artifact is preserved but aggregates into nothing; applicability never widens by similarity",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenarioId": "PH14-E4",
+   "title": "foreign-artifact reports cannot aggregate",
+   "track": "E"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expected": "similar reports stay DISTINCT without a recorded decision; a later recorded decision supersedes reversibly and deletes nothing",
+   "observed": "similar reports stay DISTINCT without a recorded decision; a later recorded decision supersedes reversibly and deletes nothing",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenarioId": "PH14-E5",
+   "title": "duplicates stay distinct without a decision",
+   "track": "E"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expected": "a severe unresolved report caps sufficiency at SUFFICIENT_WITH_UNRESOLVED_BLOCKERS; the report is never deleted to clear the blocker",
+   "observed": "a severe unresolved report caps sufficiency at SUFFICIENT_WITH_UNRESOLVED_BLOCKERS; the report is never deleted to clear the blocker",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenarioId": "PH14-E6",
+   "title": "severe unresolved report caps sufficiency",
+   "track": "E"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expected": "a user-reported success stays user evidence: one observed run on one machine, never hardware support",
+   "observed": "a user-reported success stays user evidence: one observed run on one machine, never hardware support",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenarioId": "PH14-E7",
+   "title": "user success stays user evidence",
+   "track": "E"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expected": "a complete protocol record with machine identity and evidence per PASS is acceptable; machine identity is preserved",
+   "observed": "a complete protocol record with machine identity and evidence per PASS is acceptable; machine identity is preserved",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenarioId": "PH14-F1",
+   "title": "valid hardware PASS record",
+   "track": "F"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expected": "the same machine booting different bytes derives ARTIFACT_MISMATCH; a machine result binds to the artifact it actually ran",
+   "observed": "the same machine booting different bytes derives ARTIFACT_MISMATCH; a machine result binds to the artifact it actually ran",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenarioId": "PH14-F2",
+   "title": "same machine, wrong artifact",
+   "track": "F"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expected": "native 3D PASS beside fallback 3D FAIL: two permanently separate dimensions, never one merged graphics claim",
+   "observed": "native 3D PASS beside fallback 3D FAIL: two permanently separate dimensions, never one merged graphics claim",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenarioId": "PH14-F3",
+   "title": "native 3D and fallback 3D stay separate",
+   "track": "F"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expected": "a record without full machine identity derives INCOMPLETE with the missing identity fields named",
+   "observed": "a record without full machine identity derives INCOMPLETE with the missing identity fields named",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenarioId": "PH14-F4",
+   "title": "missing machine identity",
+   "track": "F"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expected": "a user success claim routes to alpha-feedback and derives a HARDWARE_OBSERVED observation, never a protocol PASS",
+   "observed": "a user success claim routes to alpha-feedback and derives a HARDWARE_OBSERVED observation, never a protocol PASS",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenarioId": "PH14-F5",
+   "title": "user claim without protocol evidence",
+   "track": "F"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expected": "three machines with mixed outcomes stay three machine records; SUPPORTED ON PCS is refused, not derived",
+   "observed": "three machines with mixed outcomes stay three machine records; SUPPORTED ON PCS is refused, not derived",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenarioId": "PH14-F6",
+   "title": "mixed machines derive no support claim",
+   "track": "F"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expected": "a complete production signing record bound to the fixture universe's subject is accepted",
+   "observed": "a complete production signing record bound to the fixture universe's subject is accepted",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenarioId": "PH14-G1",
+   "title": "valid fixture signing record",
+   "track": "G"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expected": "a correct signing shape naming other bytes derives ARTIFACT_MISMATCH",
+   "observed": "a correct signing shape naming other bytes derives ARTIFACT_MISMATCH",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenarioId": "PH14-G2",
+   "title": "correct signature, wrong artifact",
+   "track": "G"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expected": "an approval without each approver's independently recomputed digest derives INCOMPLETE; neither approver inherits the digest",
+   "observed": "an approval without each approver's independently recomputed digest derives INCOMPLETE; neither approver inherits the digest",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenarioId": "PH14-G3",
+   "title": "missing recomputed digest",
+   "track": "G"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expected": "a signing drill confused with production signing is REJECTED at the boundary",
+   "observed": "a signing drill confused with production signing is REJECTED at the boundary",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenarioId": "PH14-G4",
+   "title": "drill confused with production",
+   "track": "G"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expected": "a production signer appearing as second approver is a CONFLICT refusal; only a recorded overlap decision permits the pair",
+   "observed": "a production signer appearing as second approver is a CONFLICT refusal; only a recorded overlap decision permits the pair",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenarioId": "PH14-G5",
+   "title": "signer equals second approver",
+   "track": "G"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expected": "two approvals by one identity are REJECTED; one person approving twice is not a second approval",
+   "observed": "two approvals by one identity are REJECTED; one person approving twice is not a second approval",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenarioId": "PH14-G6",
+   "title": "two approvals by one identity",
+   "track": "G"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expected": "an approval dated before the signing evidence derives REQUIRES_HUMAN_DECISION; it cannot have verified what did not yet exist",
+   "observed": "an approval dated before the signing evidence derives REQUIRES_HUMAN_DECISION; it cannot have verified what did not yet exist",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenarioId": "PH14-G7",
+   "title": "approval predating signer evidence",
+   "track": "G"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expected": "an authority standing at cut A contributes nothing at cut B after its stated expiry; the record itself is never edited",
+   "observed": "an authority standing at cut A contributes nothing at cut B after its stated expiry; the record itself is never edited",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenarioId": "PH14-G8",
+   "title": "expired signing/approval authority",
+   "track": "G"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expected": "a revoked authority stops contributing at cuts on or after the revocation; earlier cuts still see it standing",
+   "observed": "a revoked authority stops contributing at cuts on or after the revocation; earlier cuts still see it standing",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenarioId": "PH14-G9",
+   "title": "revoked authority",
+   "track": "G"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expected": "an approver whose independent recomputation names other bytes derives ARTIFACT_MISMATCH; the mismatch is named, never averaged away",
+   "observed": "an approver whose independent recomputation names other bytes derives ARTIFACT_MISMATCH; the mismatch is named, never averaged away",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenarioId": "PH14-G10",
+   "title": "independent recomputation mismatch",
+   "track": "G"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expected": "the real candidate remains UNSIGNED, frozen, and ROOT \u2014 read from the real immutable inputs",
+   "observed": "the real candidate remains UNSIGNED, frozen, and ROOT \u2014 read from the real immutable inputs",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenarioId": "PH14-G11",
+   "title": "the real candidate remains UNSIGNED",
+   "track": "G"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expected": "zero external evidence: the real candidate assembles to exactly the committed Phase 13 state \u2014 EVIDENCE_PENDING, REQUIRES_MORE_EVIDENCE",
+   "observed": "zero external evidence: the real candidate assembles to exactly the committed Phase 13 state \u2014 EVIDENCE_PENDING, REQUIRES_MORE_EVIDENCE",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenarioId": "PH14-H1",
+   "title": "real universe: REQUIRES_MORE_EVIDENCE",
+   "track": "H"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expected": "an empty fixture universe is not authorized; absence derives EVIDENCE_PENDING",
+   "observed": "an empty fixture universe is not authorized; absence derives EVIDENCE_PENDING",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenarioId": "PH14-H2",
+   "title": "empty fixture universe: not authorized",
+   "track": "H"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expected": "four of five floor sources: not authorized, and the absent source is named",
+   "observed": "four of five floor sources: not authorized, and the absent source is named",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenarioId": "PH14-H3",
+   "title": "four of five floor sources",
+   "track": "H"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expected": "five records but one bound to other bytes: the mismatched source counts as absent and authorization stays impossible",
+   "observed": "five records but one bound to other bytes: the mismatched source counts as absent and authorization stays impossible",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenarioId": "PH14-H4",
+   "title": "floor present, one wrong artifact",
+   "track": "H"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expected": "everything present but security unresolved: the ladder holds at SECURITY_REVIEW_PENDING; the review completes before anything else is weighed",
+   "observed": "everything present but security unresolved: the ladder holds at SECURITY_REVIEW_PENDING; the review completes before anything else is weighed",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenarioId": "PH14-H5",
+   "title": "security unresolved holds the ladder",
+   "track": "H"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expected": "all evidence present but the alpha policy undefined: not authorized \u2014 evidence cannot become sufficient against undefined thresholds",
+   "observed": "all evidence present but the alpha policy undefined: not authorized \u2014 evidence cannot become sufficient against undefined thresholds",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenarioId": "PH14-H6",
+   "title": "alpha policy undefined: not authorized",
+   "track": "H"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expected": "an active fixture policy with insufficient evidence: not authorized, with the determination recorded",
+   "observed": "an active fixture policy with insufficient evidence: not authorized, with the determination recorded",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenarioId": "PH14-H7",
+   "title": "active policy, insufficient evidence",
+   "track": "H"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expected": "every mechanical requirement satisfied by fixture evidence: AUTHORIZED is demonstrable inside the isolated fixture universe only, through a validated authorization record",
+   "observed": "every mechanical requirement satisfied by fixture evidence: AUTHORIZED is demonstrable inside the isolated fixture universe only, through a validated authorization record",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenarioId": "PH14-H8",
+   "title": "fixture universe AUTHORIZED (isolated only)",
+   "track": "H"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expected": "a fixture authorization followed by revocation: the later cut no longer authorizes, and the earlier cut's record is not rewritten",
+   "observed": "a fixture authorization followed by revocation: the later cut no longer authorizes, and the earlier cut's record is not rewritten",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenarioId": "PH14-H9",
+   "title": "authorized then revoked at a later cut",
+   "track": "H"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expected": "a successor artifact inherits nothing: authorization never crosses an artifact edge and evidence does not transfer without a recorded decision",
+   "observed": "a successor artifact inherits nothing: authorization never crosses an artifact edge and evidence does not transfer without a recorded decision",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenarioId": "PH14-H10",
+   "title": "successor artifact inherits nothing",
+   "track": "H"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expected": "an authority valid at cut A confers nothing at cut B after expiry; the activation it validated at A is not rewritten",
+   "observed": "an authority valid at cut A confers nothing at cut B after expiry; the activation it validated at A is not rewritten",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenarioId": "PH14-I1",
+   "title": "authority valid at A, expired at B",
+   "track": "I"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expected": "a risk acceptance standing at cut A is EXPIRED at cut B and contributes no favorable state afterward",
+   "observed": "a risk acceptance standing at cut A is EXPIRED at cut B and contributes no favorable state afterward",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenarioId": "PH14-I2",
+   "title": "risk acceptance valid at A, expired at B",
+   "track": "I"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expected": "a revocation recorded before its target authorization exists refuses; a revocation of nothing revokes nothing",
+   "observed": "a revocation recorded before its target authorization exists refuses; a revocation of nothing revokes nothing",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenarioId": "PH14-I3",
+   "title": "revocation before authorization refuses",
+   "track": "I"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expected": "future-dated evidence derives REQUIRES_HUMAN_DECISION; a claim observed after it arrived conflicts with intake ordering",
+   "observed": "future-dated evidence derives REQUIRES_HUMAN_DECISION; a claim observed after it arrived conflicts with intake ordering",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenarioId": "PH14-I4",
+   "title": "future-dated evidence flags",
+   "track": "I"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expected": "a revision received before its original derives REQUIRES_HUMAN_DECISION; a correction cannot precede what it corrects",
+   "observed": "a revision received before its original derives REQUIRES_HUMAN_DECISION; a correction cannot precede what it corrects",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenarioId": "PH14-I5",
+   "title": "revision predating original flags",
+   "track": "I"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expected": "two disagreeing dates for one act are an ambiguous time basis and fail closed to a human decision",
+   "observed": "two disagreeing dates for one act are an ambiguous time basis and fail closed to a human decision",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenarioId": "PH14-I6",
+   "title": "ambiguous time basis fails closed",
+   "track": "I"
+  },
+  {
+   "evidenceClass": "FIXTURE_DEMONSTRATION_ONLY",
+   "expected": "every evaluation that needs an expiry answer without an operator-stated as-of refuses; nothing is assumed away",
+   "observed": "every evaluation that needs an expiry answer without an operator-stated as-of refuses; nothing is assumed away",
+   "realEvidenceStatus": "EXTERNAL_EVIDENCE_REQUIRED",
+   "result": "AS_EXPECTED",
+   "scenarioId": "PH14-I7",
+   "title": "no as-of: every expiry evaluation refuses",
+   "track": "I"
+  }
+ ],
+ "schemaVersion": 1,
+ "subjectArtifact": "e906a48793d7"
+}

@@ -1,0 +1,22 @@
+# SPDX-FileCopyrightText: 2026 ComradeArt
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# Applied by accounts-daemon when it *creates* a standard account — the
+# D-Bus CreateUser that the shell's Users panel (gnome-control-center) and
+# gnome-initial-setup on an OEM device both call. Measured on
+# accountsservice 23.13.9/fc44: the installed filename must be the bare
+# account type (`standard`, no extension), and an account that already
+# exists when the daemon meets it — one made with useradd from a shell —
+# is never templated; the greeter still offers Bunny to it. The installer
+# still writes the record for the account it creates
+# (installer/backend/anaconda.py, _place_handoff): that account must land
+# in the Bunny session on its very first login, before accounts-daemon has
+# ever created anything.
+#
+# A user's own later choice still wins: the template seeds the record once,
+# and GDM updates the same record when a different session is picked in the
+# greeter.
+[User]
+Session=bunny
+XSession=bunny
+SystemAccount=false

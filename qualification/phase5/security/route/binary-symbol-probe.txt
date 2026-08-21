@@ -1,0 +1,40 @@
+
+== /usr/bin/skopeo ==
+  size 26035008 bytes
+  does it carry the knownhosts package at all?
+    NO -- 'golang.org/x/crypto/ssh/knownhosts' does not appear
+  named symbol hostKeyDB.IsRevoked:
+    absent
+  x/crypto packages the binary does carry (first 12):
+      golang.org/x/crypto/cast5
+      golang.org/x/crypto/cast5/cast5
+      golang.org/x/crypto/chacha20
+      golang.org/x/crypto/chacha20/chacha
+      golang.org/x/crypto/chacha20poly1305
+      golang.org/x/crypto/chacha20poly1305/chacha20poly1305
+      golang.org/x/crypto/chacha20poly1305/fips140only
+      golang.org/x/crypto/chacha20/xor
+      golang.org/x/crypto/cryptobyte
+      golang.org/x/crypto/cryptobyte/asn1
+      golang.org/x/crypto/cryptobyte/asn1/asn1
+      golang.org/x/crypto/cryptobyte/builder
+
+== /usr/bin/podman ==
+  size 45220848 bytes
+  does it carry the knownhosts package at all?
+    NO -- 'golang.org/x/crypto/ssh/knownhosts' does not appear
+  named symbol hostKeyDB.IsRevoked:
+    absent
+  x/crypto packages the binary does carry (first 12):
+      golang.org/x/crypto/argon2
+      golang.org/x/crypto/argon2/blamka
+      golang.org/x/crypto/blake2b
+      golang.org/x/crypto/blake2b/blake2b
+      golang.org/x/crypto/blake2b/register
+      golang.org/x/crypto/blowfish
+      golang.org/x/crypto/blowfish/block
+      golang.org/x/crypto/blowfish/cipher
+      golang.org/x/crypto/cast5
+      golang.org/x/crypto/cast5/cast5
+      golang.org/x/crypto/chacha20
+      golang.org/x/crypto/chacha20/chacha

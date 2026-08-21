@@ -193,6 +193,12 @@ def _schema_validation(root: Path) -> ValidatorOutcome:
         *_walk(root, "*.schema.json", under="schemas"),
         *_walk(root, "*.schema.json", under="shell/schemas"),
         *_walk(root, "*.schema.json", under="security"),
+        # Bunny Model Studio's training configuration schema. It lives in
+        # model_studio/schemas rather than schemas/ because the latter is an
+        # install route and a training schema has no business on a Bunny
+        # machine — but a schema nothing validates is a schema that rots, so it
+        # is walked here.
+        *_walk(root, "*.schema.json", under="model_studio/schemas"),
     })
     for path in paths:
         name = _name(root, path)
@@ -270,7 +276,21 @@ def _python_compilation(root: Path) -> ValidatorOutcome:
 
 
 def _shell_paths(root: Path) -> list[Path]:
-    return _walk(root, "*.sh")
+    """Every maintained shell script — not the ones inside evidence trees.
+
+    ``qualification/*/evidence/`` holds the harness scripts exactly as they
+    ran on the host that produced the records beside them. They are records:
+    the preservation tests pin those trees byte-for-byte, so a lint finding
+    there is unfixable without changing evidence, and Stage 2's committed
+    harness scripts turned the ShellCheck validator red for exactly that
+    reason. Evidence has its own validator ("Committed evidence
+    consistency"); the shell validators cover the code the repository
+    maintains.
+    """
+    return [
+        path for path in _walk(root, "*.sh")
+        if not ("qualification" in path.parts and "evidence" in path.parts)
+    ]
 
 
 def _bash_executable() -> str | None:

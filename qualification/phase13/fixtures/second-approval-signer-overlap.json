@@ -1,0 +1,24 @@
+{
+ "fixture": true,
+ "fixtureClass": "TEST_FIXTURE_ONLY",
+ "purpose": "Drives the same-person control: the second approver is the production signer. Phase 9 accepts the record (two distinct approvers), but AUTHORIZED must refuse the signer/approver overlap unless a recorded separation decision permits it.",
+ "record": {
+  "date": "2026-08-19",
+  "firstApprover": {
+   "date": "2026-08-19",
+   "decision": "APPROVE",
+   "name": "Constructed Fixture Approver A",
+   "recomputedDigest": "sha256:c87a6616008ce34f97840f63814e08fdb33574b52202fbb4841b7f5aa7f8562d",
+   "role": "owner"
+  },
+  "scope": "constructed fixture: distribute the ISO to the controlled Alpha cohort",
+  "secondApprover": {
+   "date": "2026-08-19",
+   "decision": "APPROVE",
+   "name": "Constructed Fixture Key Authority (public identity)",
+   "recomputedDigest": "sha256:c87a6616008ce34f97840f63814e08fdb33574b52202fbb4841b7f5aa7f8562d",
+   "role": "second approver"
+  }
+ },
+ "test_fixture_only": true
+}

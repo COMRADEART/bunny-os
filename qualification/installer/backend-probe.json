@@ -1,0 +1,44 @@
+{
+ "schemaVersion": 1,
+ "evidenceLevel": "HOST RUNTIME VALIDATED",
+ "note": "The installer protocol driven over a real socket with the recording executor behind the gate. No disk was written and Anaconda was not involved.",
+ "findings": [],
+ "observed": {
+  "socketMode": "0o600",
+  "wrongToken": "authentication",
+  "initialize": {
+   "backend": "anaconda-adapter",
+   "destructiveExecutionAvailable": true,
+   "protocolVersion": 1
+  },
+  "disksSeen": [
+   "/dev/vda"
+  ],
+  "planValid": true,
+  "replay": "authentication",
+  "wrongPhrase": "destructive confirmation does not match the selected disk",
+  "confirmationPhrase": "ERASE /dev/vda 7D5628",
+  "start": {
+   "currentOperation": "Preparing the validated installation request",
+   "destructiveWriteStarted": false,
+   "estimatedCompletionTime": null,
+   "failure": null,
+   "mayCancel": true,
+   "overallProgress": 0,
+   "stage": "Preparing",
+   "status": "installing",
+   "warning": null
+  },
+  "kickstartLines": 27,
+  "disksNamed": [
+   "--drives=vda",
+   "--ondisk=vda"
+  ],
+  "stagesReported": [
+   "Validating storage",
+   "Partitioning",
+   "Encrypting",
+   "Creating filesystems"
+  ]
+ }
+}

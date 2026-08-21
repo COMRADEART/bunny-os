@@ -1,0 +1,34 @@
+{
+ "fixtureClass": "TEST_FIXTURE_ONLY",
+ "purpose": "Drives the performance dry run: a subjective observation and a tester-provided measurement in one report. The register keeps them in separate arrays, both USER_REPORTED; neither becomes a regression by itself.",
+ "record": {
+  "schema": "bunny-os/alpha-tester-report/1",
+  "tester_id": "T-008",
+  "testerId": "T-008",
+  "report_type": "PERFORMANCE",
+  "submitted_at": "2026-08-18",
+  "date": "2026-08-18",
+  "journey": "exploratory",
+  "artifact_claimed_by_tester": "bunny-os-0.3.0-live.e906a48793d7-x86_64.iso (constructed fixture)",
+  "artifact_digest_observed": "823d50caba35afe72452768affd5f6fa0ac8cfc13c164f0e1bc909fa887ab421",
+  "artifact_digest_verified": true,
+  "artifact_identity_status": "VERIFIED",
+  "environment_summary": "constructed fixture: QEMU/KVM 9.1, q35, UEFI, 4 vCPU / 6 GB, llvmpipe",
+  "environment": "constructed fixture: QEMU/KVM 9.1, q35, UEFI, 4 vCPU / 6 GB, llvmpipe",
+  "steps": [],
+  "user_observation": "The desktop felt slow.",
+  "expected_behavior": "smooth response",
+  "actual_behavior": "noticeable lag opening the panel",
+  "additional_context": "TEST_FIXTURE_ONLY dry run material",
+  "artifactDigest": "823d50caba35afe72452768affd5f6fa0ac8cfc13c164f0e1bc909fa887ab421",
+  "performance_measurement": {
+   "method": "constructed fixture: top -b -n 60 during panel use",
+   "interval": "60s at 1s samples",
+   "environment": "same VM as the report",
+   "raw_values": [
+    "cpu idle 61%",
+    "load1 2.4"
+   ]
+  }
+ }
+}

@@ -1,0 +1,984 @@
+{
+  "assistant_action": {
+    "final": {
+      "controlCount": 344,
+      "reason": "no activity for five minutes",
+      "says": "the request was declined",
+      "state": "sleeping"
+    },
+    "request": "Open Files",
+    "route": "pointer",
+    "transitions": [
+      {
+        "reason": "no activity for five minutes",
+        "says": "the request was declined",
+        "state": "sleeping"
+      }
+    ]
+  },
+  "assistant_factual": {
+    "final": {
+      "controlCount": 344,
+      "reason": "no activity for five minutes",
+      "says": "the request was declined",
+      "state": "sleeping"
+    },
+    "request": "What files are in my Downloads folder?",
+    "route": "pointer",
+    "transitions": [
+      {
+        "reason": "no activity for five minutes",
+        "says": "the request was declined",
+        "state": "sleeping"
+      }
+    ]
+  },
+  "baselineClean": true,
+  "bridge_action": {
+    "accepted": false,
+    "errors": [],
+    "eventCount": 0,
+    "finishedPhase": "",
+    "phases": [],
+    "ran": true,
+    "reply": "",
+    "request": "Open Files",
+    "returncode": null
+  },
+  "bridge_action_files": {
+    "busName": {
+      "name": "org.gnome.Nautilus",
+      "owned": true
+    },
+    "launched": false,
+    "process": {
+      "present": false,
+      "processes": []
+    },
+    "startedByTheShell": false,
+    "unit": {
+      "present": false,
+      "units": []
+    },
+    "windowVisible": false,
+    "windows": {
+      "count": 0,
+      "frames": []
+    }
+  },
+  "bridge_factual": {
+    "accepted": true,
+    "errors": [],
+    "eventCount": 9,
+    "finishedPhase": "success",
+    "phases": [
+      "starting",
+      "understanding",
+      "planning",
+      "working",
+      "presenting_result",
+      "success"
+    ],
+    "ran": true,
+    "reply": "Your Downloads folder is empty.",
+    "request": "What files are in my Downloads folder?",
+    "returncode": 0
+  },
+  "controlCount": 326,
+  "controlsAfter": [],
+  "display": {
+    "height": 1080,
+    "width": 1920
+  },
+  "files": {
+    "busName": {
+      "name": "org.gnome.Nautilus",
+      "owned": true
+    },
+    "launched": true,
+    "process": {
+      "present": true,
+      "processes": [
+        "12009 /usr/bin/nautilus --gapplication-service"
+      ]
+    },
+    "startedByTheShell": true,
+    "unit": {
+      "present": true,
+      "units": [
+        "dbus-:1.2-org.gnome.Nautilus@0.service                                                                                                                loaded    active     running         dbus-:1.2-org.gnome.Nautilus@0.service",
+        "app-dbus\\x2d:1.2\\x2dorg.gnome.Nautilus.slice                                                                                                          loaded    active     active          Slice /app/dbus-:1.2-org.gnome.Nautilus"
+      ]
+    },
+    "windowVisible": true,
+    "windows": {
+      "count": 1,
+      "frames": [
+        {
+          "active": true,
+          "description": "",
+          "extents": {
+            "height": 550,
+            "width": 890,
+            "x": 0,
+            "y": 0
+          },
+          "name": "Home",
+          "path": [],
+          "role": "frame",
+          "showing": true,
+          "visible": true
+        }
+      ]
+    }
+  },
+  "filesClosed": {
+    "busName": {
+      "name": "org.gnome.Nautilus",
+      "owned": true
+    },
+    "launched": true,
+    "process": {
+      "present": true,
+      "processes": [
+        "12009 /usr/bin/nautilus --gapplication-service"
+      ]
+    },
+    "startedByTheShell": true,
+    "unit": {
+      "present": true,
+      "units": [
+        "dbus-:1.2-org.gnome.Nautilus@0.service                                                                                                                loaded    active     running         dbus-:1.2-org.gnome.Nautilus@0.service",
+        "app-dbus\\x2d:1.2\\x2dorg.gnome.Nautilus.slice                                                                                                          loaded    active     active          Slice /app/dbus-:1.2-org.gnome.Nautilus"
+      ]
+    },
+    "windowVisible": false,
+    "windows": {
+      "count": 0,
+      "frames": []
+    }
+  },
+  "journey": {
+    "activated": true,
+    "activationRoute": "pointer",
+    "activationState": "idle",
+    "approvalLabels": [],
+    "approvalVisible": true,
+    "decision": "denied",
+    "fastFind": {
+      "complete": true,
+      "nodesVisited": 268,
+      "ok": true
+    },
+    "final": {
+      "controlCount": 344,
+      "reason": "returned from a transient state",
+      "says": "the request was declined",
+      "state": "idle"
+    },
+    "fixture": {
+      "kind": "real",
+      "neighbourDigest": "fccb535f5b234bcbcc251d6a9a8e71ad",
+      "ok": true,
+      "source": "/home/alex/Pictures/holiday.png",
+      "sourceDigest": "5de7c234a1c3bdcf6b194ac44cf2df96"
+    },
+    "ready": {
+      "markerSeen": true,
+      "notReady": [],
+      "ok": true
+    },
+    "result": {
+      "files": [],
+      "neighbourDigest": "fccb535f5b234bcbcc251d6a9a8e71ad",
+      "ok": true,
+      "pixels": null,
+      "sourceDigest": "5de7c234a1c3bdcf6b194ac44cf2df96"
+    },
+    "sawAskingState": false,
+    "statesAfterApproval": [
+      "idle",
+      "warning",
+      "idle"
+    ],
+    "statesBeforeApproval": [
+      "thinking",
+      "idle"
+    ]
+  },
+  "schemaVersion": 1,
+  "shellAfterFiles": {
+    "call": {
+      "argv": [
+        "/usr/bin/sudo",
+        "-u",
+        "alex",
+        "-H",
+        "/usr/bin/env",
+        "XDG_RUNTIME_DIR=/run/user/1000",
+        "DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus",
+        "DISPLAY=:0",
+        "WAYLAND_DISPLAY=wayland-0",
+        "XDG_SESSION_TYPE=wayland",
+        "/usr/bin/gdbus",
+        "call",
+        "--session",
+        "--dest",
+        "org.gnome.Shell",
+        "--object-path",
+        "/org/gnome/Shell",
+        "--method",
+        "org.gnome.Shell.Extensions.GetExtensionInfo",
+        "\"bunny-shell@bunny-os.org\""
+      ],
+      "ran": true,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "({'uuid': <'bunny-shell@bunny-os.org'>, 'name': <'Bunny Shell'>, 'description': <'The Bunny OS desktop: top bar, sidebar, dock, dashboard and the Bunny assistant character, plus the launcher, workspace, task, approval and privacy entry points on GNOME Shell.'>, 'shell-version': <[<'50'>]>, 'session-modes': <[<'user'>]>, 'settings-schema': <'org.gnome.shell.extensions.bunny-shell'>, 'url': <'https://github.com/COMRADEART/bunny-os'>, 'version': <2.0>, 'type': <1.0>, 'state': <1.0>, 'enabled': <true>, 'path': <'/usr/share/gnome-shell/extensions/bunny-shell@bunny-os.org'>, 'error': <''>, 'hasPrefs': <false>, 'hasUpdate': <false>, 'canChange': <true>, 'sessionModes': <[<'user'>]>},)"
+    },
+    "extensionEnabled": true,
+    "extensionState": 1,
+    "responded": true
+  },
+  "shellAfterTerminal": {
+    "call": {
+      "argv": [
+        "/usr/bin/sudo",
+        "-u",
+        "alex",
+        "-H",
+        "/usr/bin/env",
+        "XDG_RUNTIME_DIR=/run/user/1000",
+        "DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus",
+        "DISPLAY=:0",
+        "WAYLAND_DISPLAY=wayland-0",
+        "XDG_SESSION_TYPE=wayland",
+        "/usr/bin/gdbus",
+        "call",
+        "--session",
+        "--dest",
+        "org.gnome.Shell",
+        "--object-path",
+        "/org/gnome/Shell",
+        "--method",
+        "org.gnome.Shell.Extensions.GetExtensionInfo",
+        "\"bunny-shell@bunny-os.org\""
+      ],
+      "ran": true,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "({'uuid': <'bunny-shell@bunny-os.org'>, 'name': <'Bunny Shell'>, 'description': <'The Bunny OS desktop: top bar, sidebar, dock, dashboard and the Bunny assistant character, plus the launcher, workspace, task, approval and privacy entry points on GNOME Shell.'>, 'shell-version': <[<'50'>]>, 'session-modes': <[<'user'>]>, 'settings-schema': <'org.gnome.shell.extensions.bunny-shell'>, 'url': <'https://github.com/COMRADEART/bunny-os'>, 'version': <2.0>, 'type': <1.0>, 'state': <1.0>, 'enabled': <true>, 'path': <'/usr/share/gnome-shell/extensions/bunny-shell@bunny-os.org'>, 'error': <''>, 'hasPrefs': <false>, 'hasUpdate': <false>, 'canChange': <true>, 'sessionModes': <[<'user'>]>},)"
+    },
+    "extensionEnabled": true,
+    "extensionState": 1,
+    "responded": true
+  },
+  "status": "complete",
+  "steps": [
+    {
+      "files": {
+        "busName": {
+          "name": "org.gnome.Nautilus",
+          "owned": true
+        },
+        "launched": false,
+        "process": {
+          "present": false,
+          "processes": []
+        },
+        "startedByTheShell": false,
+        "unit": {
+          "present": false,
+          "units": []
+        },
+        "windowVisible": false,
+        "windows": {
+          "count": 0,
+          "frames": []
+        }
+      },
+      "step": "baseline",
+      "terminal": {
+        "busName": {
+          "name": "org.gnome.Terminal",
+          "owned": true
+        },
+        "launched": false,
+        "process": {
+          "present": false,
+          "processes": []
+        },
+        "startedByTheShell": false,
+        "unit": {
+          "present": false,
+          "units": []
+        },
+        "windowVisible": false,
+        "windows": {
+          "count": 0,
+          "frames": []
+        }
+      }
+    },
+    {
+      "markerSeen": true,
+      "notReady": [],
+      "ok": true,
+      "step": "journey-ready"
+    },
+    {
+      "kind": "real",
+      "neighbourDigest": "fccb535f5b234bcbcc251d6a9a8e71ad",
+      "ok": true,
+      "source": "/home/alex/Pictures/holiday.png",
+      "sourceDigest": "5de7c234a1c3bdcf6b194ac44cf2df96",
+      "step": "journey-fixture"
+    },
+    {
+      "activated": true,
+      "route": "pointer",
+      "state": "idle",
+      "step": "journey-activate"
+    },
+    {
+      "request": "Resize this to 100 pixels wide.",
+      "step": "journey-asked"
+    },
+    {
+      "button": "Deny this Bunny action",
+      "found": true,
+      "nodesVisited": 268,
+      "step": "journey-approval-fast"
+    },
+    {
+      "button": "Deny this Bunny action",
+      "extents": {
+        "height": 52,
+        "width": 113,
+        "x": 1753,
+        "y": 887
+      },
+      "labels": [],
+      "role": "button",
+      "step": "journey-approval",
+      "visible": true
+    },
+    {
+      "at": {
+        "x": 1809,
+        "y": 913
+      },
+      "pressed": "Deny this Bunny action",
+      "step": "journey-decision"
+    },
+    {
+      "files": [],
+      "neighbourDigest": "fccb535f5b234bcbcc251d6a9a8e71ad",
+      "ok": true,
+      "pixels": null,
+      "sourceDigest": "5de7c234a1c3bdcf6b194ac44cf2df96",
+      "step": "journey-result"
+    },
+    {
+      "accepted": true,
+      "errors": [],
+      "finished": "success",
+      "phases": [
+        "starting",
+        "understanding",
+        "planning",
+        "working",
+        "presenting_result",
+        "success"
+      ],
+      "reply": "Your Downloads folder is empty.",
+      "request": "What files are in my Downloads folder?",
+      "step": "bridge-factual"
+    },
+    {
+      "accepted": false,
+      "errors": [],
+      "finished": "",
+      "phases": [],
+      "reply": "",
+      "request": "Open Files",
+      "step": "bridge-action"
+    },
+    {
+      "launched": false,
+      "startedByTheShell": false,
+      "step": "bridge-action-opened-files",
+      "windowVisible": false
+    },
+    {
+      "keys": [
+        "alt+f4",
+        "ctrl+w"
+      ],
+      "step": "close-files-after-assistant"
+    },
+    {
+      "answer": "the request was declined",
+      "asked": true,
+      "finalState": "sleeping",
+      "request": "What files are in my Downloads folder?",
+      "route": "pointer",
+      "stateBefore": "sleeping",
+      "states": [
+        "sleeping"
+      ],
+      "step": "assistant-factual"
+    },
+    {
+      "answer": "the request was declined",
+      "asked": true,
+      "finalState": "sleeping",
+      "request": "Open Files",
+      "route": "pointer",
+      "stateBefore": "sleeping",
+      "states": [
+        "sleeping"
+      ],
+      "step": "assistant-action"
+    },
+    {
+      "at": {
+        "x": 900,
+        "y": 1028
+      },
+      "extents": {
+        "height": 46,
+        "width": 52,
+        "x": 874,
+        "y": 1005
+      },
+      "pressed": true,
+      "role": "button",
+      "step": "click-files",
+      "within": [
+        "Main stage",
+        "Bunny dock"
+      ]
+    },
+    {
+      "launched": true,
+      "startedByTheShell": true,
+      "state": {
+        "busName": {
+          "name": "org.gnome.Nautilus",
+          "owned": true
+        },
+        "launched": true,
+        "process": {
+          "present": true,
+          "processes": [
+            "12009 /usr/bin/nautilus --gapplication-service"
+          ]
+        },
+        "startedByTheShell": true,
+        "unit": {
+          "present": true,
+          "units": [
+            "dbus-:1.2-org.gnome.Nautilus@0.service                                                                                                                loaded    active     running         dbus-:1.2-org.gnome.Nautilus@0.service",
+            "app-dbus\\x2d:1.2\\x2dorg.gnome.Nautilus.slice                                                                                                          loaded    active     active          Slice /app/dbus-:1.2-org.gnome.Nautilus"
+          ]
+        },
+        "windowVisible": true,
+        "windows": {
+          "count": 1,
+          "frames": [
+            {
+              "active": true,
+              "description": "",
+              "extents": {
+                "height": 550,
+                "width": 890,
+                "x": 0,
+                "y": 0
+              },
+              "name": "Home",
+              "path": [],
+              "role": "frame",
+              "showing": true,
+              "visible": true
+            }
+          ]
+        }
+      },
+      "step": "files-opened",
+      "units": [
+        "dbus-:1.2-org.gnome.Nautilus@0.service                                                                                                                loaded    active     running         dbus-:1.2-org.gnome.Nautilus@0.service",
+        "app-dbus\\x2d:1.2\\x2dorg.gnome.Nautilus.slice                                                                                                          loaded    active     active          Slice /app/dbus-:1.2-org.gnome.Nautilus"
+      ],
+      "windowVisible": true,
+      "windows": 1
+    },
+    {
+      "keys": [
+        "alt+f4",
+        "ctrl+w"
+      ],
+      "step": "close-files"
+    },
+    {
+      "state": {
+        "busName": {
+          "name": "org.gnome.Nautilus",
+          "owned": true
+        },
+        "launched": true,
+        "process": {
+          "present": true,
+          "processes": [
+            "12009 /usr/bin/nautilus --gapplication-service"
+          ]
+        },
+        "startedByTheShell": true,
+        "unit": {
+          "present": true,
+          "units": [
+            "dbus-:1.2-org.gnome.Nautilus@0.service                                                                                                                loaded    active     running         dbus-:1.2-org.gnome.Nautilus@0.service",
+            "app-dbus\\x2d:1.2\\x2dorg.gnome.Nautilus.slice                                                                                                          loaded    active     active          Slice /app/dbus-:1.2-org.gnome.Nautilus"
+          ]
+        },
+        "windowVisible": false,
+        "windows": {
+          "count": 0,
+          "frames": []
+        }
+      },
+      "step": "files-closed",
+      "windowVisible": false,
+      "windows": 0
+    },
+    {
+      "extensionEnabled": true,
+      "responded": true,
+      "step": "shell-after-files"
+    },
+    {
+      "at": {
+        "x": 1020,
+        "y": 1028
+      },
+      "extents": {
+        "height": 46,
+        "width": 52,
+        "x": 994,
+        "y": 1005
+      },
+      "pressed": true,
+      "role": "button",
+      "step": "click-terminal",
+      "within": [
+        "Main stage",
+        "Bunny dock"
+      ]
+    },
+    {
+      "launched": true,
+      "startedByTheShell": true,
+      "state": {
+        "busName": {
+          "name": "org.gnome.Terminal",
+          "owned": true
+        },
+        "launched": true,
+        "process": {
+          "present": true,
+          "processes": [
+            "12149 /usr/bin/gnome-terminal"
+          ]
+        },
+        "startedByTheShell": true,
+        "unit": {
+          "present": true,
+          "units": [
+            "app-gnome-org.gnome.Terminal-12149.scope                                                                                                              loaded    active     running         Application launched by gnome-shell"
+          ]
+        },
+        "windowVisible": true,
+        "windows": {
+          "count": 1,
+          "frames": [
+            {
+              "active": false,
+              "description": "",
+              "extents": {
+                "height": 581,
+                "width": 788,
+                "x": 0,
+                "y": 0
+              },
+              "name": "Terminal",
+              "path": [],
+              "role": "frame",
+              "showing": true,
+              "visible": true
+            }
+          ]
+        }
+      },
+      "step": "terminal-opened",
+      "units": [
+        "app-gnome-org.gnome.Terminal-12149.scope                                                                                                              loaded    active     running         Application launched by gnome-shell"
+      ],
+      "windowVisible": true,
+      "windows": 1
+    },
+    {
+      "command": "date > /var/home/alex/bunny-terminal-typed.txt",
+      "note": "the file is read from the guest disk after shutdown",
+      "step": "terminal-typed"
+    },
+    {
+      "keys": [
+        "exit",
+        "alt+f4",
+        "ctrl+w"
+      ],
+      "step": "close-terminal"
+    },
+    {
+      "state": {
+        "busName": {
+          "name": "org.gnome.Terminal",
+          "owned": true
+        },
+        "launched": false,
+        "process": {
+          "present": false,
+          "processes": []
+        },
+        "startedByTheShell": true,
+        "unit": {
+          "present": true,
+          "units": [
+            "app-org.gnome.Terminal.slice                                                                                                                          loaded    active     active          Slice /app/org.gnome.Terminal"
+          ]
+        },
+        "windowVisible": false,
+        "windows": {
+          "count": 0,
+          "frames": []
+        }
+      },
+      "step": "terminal-closed",
+      "windowVisible": false,
+      "windows": 0
+    },
+    {
+      "extensionEnabled": true,
+      "responded": true,
+      "step": "shell-after-terminal"
+    },
+    {
+      "at": {
+        "x": 117,
+        "y": 385
+      },
+      "extents": {
+        "height": 18,
+        "width": 34,
+        "x": 100,
+        "y": 376
+      },
+      "pressed": true,
+      "role": "label",
+      "step": "click-home",
+      "within": [
+        "Main stage",
+        "Bunny sidebar",
+        "Home, selected"
+      ]
+    },
+    {
+      "controlCount": 0,
+      "hasFiles": false,
+      "hasTerminal": false,
+      "step": "desktop-still-assembled"
+    }
+  ],
+  "system": {
+    "appliedState": {
+      "argv": [
+        "/usr/bin/sudo",
+        "-u",
+        "alex",
+        "-H",
+        "cat",
+        "/var/home/alex/.local/state/bunny-os/applied.json"
+      ],
+      "ran": true,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "{\n \"applied\": 8,\n \"dryRun\": false,\n \"failures\": [\n  {\n   \"applied\": false,\n   \"detail\": \"No such schema \\u201cart.comrade.BunnyShell\\u201d\",\n   \"intent\": \"Bunny presentation: full\",\n   \"key\": \"companionMode\",\n   \"value\": \"full\"\n  },\n  {\n   \"applied\": false,\n   \"detail\": \"No such schema \\u201cart.comrade.BunnyShell\\u201d\",\n   \"intent\": \"captions\",\n   \"key\": \"companionCaptions\",\n   \"value\": \"true\"\n  },\n  {\n   \"applied\": false,\n   \"detail\": \"symlink absent after enable\",\n   \"intent\": \"start Bunny at login\",\n   \"key\": \"companionAtLogin\",\n   \"value\": true\n  }\n ],\n \"results\": [\n  {\n   \"applied\": true,\n   \"detail\": \"org.gnome.desktop.interface color-scheme = default\",\n   \"intent\": \"appearance: system\",\n   \"key\": \"colourScheme\",\n   \"value\": \"default\"\n  },\n  {\n   \"applied\": true,\n   \"detail\": \"org.gnome.desktop.interface gtk-theme = Adwaita\",\n   \"intent\": \"appearance: GTK theme\",\n   \"key\": \"gtkTheme\",\n   \"value\": \"Adwaita\"\n  },\n  {\n   \"applied\": true,\n   \"detail\": \"org.gnome.desktop.interface text-scaling-factor = 1.0\",\n   \"intent\": \"text size 100%\",\n   \"key\": \"textScale\",\n   \"value\": \"1.0\"\n  },\n  {\n   \"applied\": true,\n   \"detail\": \"org.gnome.desktop.a11y.interface high-contrast = false\",\n   \"intent\": \"high contrast\",\n   \"key\": \"highContrast\",\n   \"value\": \"false\"\n  },\n  {\n   \"applied\": true,\n   \"detail\": \"org.gnome.desktop.interface enable-animations = true\",\n   \"intent\": \"reduced motion\",\n   \"key\": \"reducedMotion\",\n   \"value\": \"true\"\n  },\n  {\n   \"applied\": true,\n   \"detail\": \"org.gnome.desktop.a11y.applications screen-reader-enabled = false\",\n   \"intent\": \"screen reader\",\n   \"key\": \"screenReader\",\n   \"value\": \"false\"\n  },\n  {\n   \"applied\": false,\n   \"detail\": \"No such schema \\u201cart.comrade.BunnyShell\\u201d\",\n   \"intent\": \"Bunny presentation: full\",\n   \"key\": \"companionMode\",\n   \"value\": \"full\"\n  },\n  {\n   \"applied\": false,\n   \"detail\": \"No such schema \\u201cart.comrade.BunnyShell\\u201d\",\n   \"intent\": \"captions\",\n   \"key\": \"companionCaptions\",\n   \"value\": \"true\"\n  },\n  {\n   \"applied\": true,\n   \"detail\": \"org.gnome.desktop.privacy report-technical-problems = false\",\n   \"intent\": \"crash reports\",\n   \"key\": \"crashReports\",\n   \"value\": \"false\"\n  },\n  {\n   \"applied\": true,\n   \"detail\": \"org.gnome.system.location enabled = false\",\n   \"intent\": \"location services\",\n   \"key\": \"location\",\n   \"value\": \"false\"\n  },\n  {\n   \"applied\": false,\n   \"detail\": \"symlink absent after enable\",\n   \"intent\": \"start Bunny at login\",\n   \"key\": \"companionAtLogin\",\n   \"value\": true\n  }\n ],\n \"schemaVersion\": 1,\n \"total\": 11\n}"
+    },
+    "choicesOnTarget": {
+      "argv": [
+        "cat",
+        "/var/lib/bunny-setup/choices.json"
+      ],
+      "ran": true,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "{\n \"accessibility\": {\n  \"captions\": false,\n  \"highContrast\": false,\n  \"reducedMotion\": false,\n  \"screenReader\": false,\n  \"textScale\": 1.0\n },\n \"account\": {\n  \"deviceName\": \"warren\",\n  \"displayName\": \"Alex\",\n  \"username\": \"alex\"\n },\n \"appearance\": {\n  \"accent\": \"violet\",\n  \"colourScheme\": \"system\",\n  \"wallpaper\": \"bunny-default\"\n },\n \"applications\": {\n  \"activities\": [],\n  \"selected\": []\n },\n \"companion\": {\n  \"atLogin\": true,\n  \"captions\": true,\n  \"mode\": \"full\",\n  \"voice\": false\n },\n \"encryption\": {\n  \"enabled\": true\n },\n \"locale\": {\n  \"keyboardLayout\": \"gb\",\n  \"language\": \"en-GB\",\n  \"region\": \"GB\",\n  \"timezone\": \"Europe/London\"\n },\n \"privacy\": {\n  \"camera\": false,\n  \"crashReports\": false,\n  \"diagnostics\": false,\n  \"feedback\": false,\n  \"location\": false,\n  \"microphone\": false,\n  \"onlineAI\": false,\n  \"remoteProcessing\": false\n },\n \"schemaVersion\": 1\n}"
+    },
+    "companionSettings": {
+      "argv": [
+        "/usr/bin/sudo",
+        "-u",
+        "alex",
+        "-H",
+        "cat",
+        "/var/home/alex/.local/state/bunny-os/companion/settings.json"
+      ],
+      "ran": true,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "{\n  \"accessibility\": {\n    \"captionsAlways\": true,\n    \"highContrast\": false,\n    \"noAnimation\": false,\n    \"reducedMotion\": true,\n    \"textOnly\": false,\n    \"uiScale\": 1.0\n  },\n  \"ai\": {\n    \"allowedRemoteAliases\": [],\n    \"costCeilingUnits\": 0,\n    \"preferredModelId\": \"\",\n    \"preferredProviderId\": \"\",\n    \"remoteEnabled\": false\n  },\n  \"character\": {\n    \"animation\": \"full\",\n    \"animationIntensity\": 0.6,\n    \"contextualReactions\": true,\n    \"dock\": \"top-left\",\n    \"idleAnimation\": true,\n    \"packageId\": \"\",\n    \"performance\": \"automatic\",\n    \"renderMode\": \"prerendered\",\n    \"scale\": 1.4,\n    \"threeD\": \"auto\",\n    \"visible\": true\n  },\n  \"containsCredentials\": false,\n  \"privacy\": {\n    \"clipboardCeiling\": \"internal\",\n    \"desktopActionApproval\": \"always\",\n    \"historyRetentionDays\": 0,\n    \"remoteTransferCeiling\": \"public\"\n  },\n  \"schemaVersion\": 1,\n  \"speechInput\": {\n    \"deviceId\": \"\",\n    \"enabled\": true,\n    \"language\": \"automatic\",\n    \"modelId\": \"\",\n    \"shortcut\": \"<Super><Alt>space\",\n    \"wakeWord\": \"disabled\"\n  },\n  \"voice\": {\n    \"enabled\": true,\n    \"modelId\": \"\",\n    \"performanceMode\": \"automatic\",\n    \"providerId\": \"pocket\",\n    \"responseMode\": \"voice-only\",\n    \"speakingRate\": 1.2,\n    \"voiceId\": \"\",\n    \"volume\": 1.0\n  }\n}"
+    },
+    "etcHostname": {
+      "argv": [
+        "cat",
+        "/etc/hostname"
+      ],
+      "ran": true,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "warren"
+    },
+    "etcLocaleConf": {
+      "argv": [
+        "cat",
+        "/etc/locale.conf"
+      ],
+      "ran": true,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "LANG=en_GB.UTF-8"
+    },
+    "etcVconsole": {
+      "argv": [
+        "cat",
+        "/etc/vconsole.conf"
+      ],
+      "ran": true,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "KEYMAP=\"gb\"\nFONT=\"eurlatgr\""
+    },
+    "hostnamectl": {
+      "argv": [
+        "hostnamectl"
+      ],
+      "ran": true,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "Static hostname: warren\n           Icon name: computer-vm\n             Chassis: vm \ud83d\uddb4\n          Machine ID: 42af842c0e00408d95c71893c6e00038\n             Boot ID: 3011b37110644dda96f33be3395bcf69\n      Virtualization: kvm\n    Operating System: Bunny OS 0.1.0 (development)\n         CPE OS Name: cpe:/o:fedoraproject:fedora:44\n      OS Support End: Wed 2027-05-19\nOS Support Remaining: 9month 1d\n              Kernel: Linux 7.1.5-201.fc44.x86_64\n        Architecture: x86-64\n     Hardware Vendor: QEMU\n      Hardware Model: Standard PC _Q35 + ICH9, 2009_\n    Hardware Version: pc-q35-10.2\n    Firmware Version: edk2-20260508-6.fc44\n       Firmware Date: Fri 2026-05-08\n        Firmware Age: 3month 1w 2d"
+    },
+    "localectl": {
+      "argv": [
+        "localectl",
+        "status"
+      ],
+      "ran": true,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "System Locale: LANG=en_GB.UTF-8\n    VC Keymap: gb\n   X11 Layout: (unset)"
+    },
+    "sessions": {
+      "argv": [
+        "loginctl",
+        "list-sessions"
+      ],
+      "ran": true,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "SESSION   UID USER        SEAT  LEADER CLASS         TTY  IDLE SINCE\n      1 60578 gdm-greeter -     2620   manager-early -    no   -\n      2  1000 alex        -     3605   manager       -    no   -\n      3  1000 alex        seat0 3887   user          tty2 no   -\n     c1 60578 gdm-greeter seat0 2603   greeter       tty1 no   -\n\n4 sessions listed."
+    },
+    "userUnits": {
+      "argv": [
+        "/usr/bin/sudo",
+        "-u",
+        "alex",
+        "-H",
+        "/usr/bin/env",
+        "XDG_RUNTIME_DIR=/run/user/1000",
+        "DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus",
+        "systemctl",
+        "--user",
+        "--no-pager",
+        "list-units",
+        "bunny-*"
+      ],
+      "ran": true,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "UNIT                     LOAD   ACTIVE     SUB     JOB   DESCRIPTION\n  bunny-companion.service  loaded active     running       Bunny Companion runtime\n  bunny-config-dir.service loaded active     exited        Establish and verify the Bunny OS per-user configuration directory\n\u25cf bunny-first-run.service  loaded activating start   start Bunny OS first-run experience\n\nLegend: LOAD   \u2192 Reflects whether the unit definition was properly loaded.\n        ACTIVE \u2192 The high-level unit activation state, i.e. generalization of SUB.\n        SUB    \u2192 The low-level unit activation state, values depend on unit type.\n        JOB    \u2192 Pending job for the unit.\n\n3 loaded units listed. Pass --all to see loaded but inactive units, too.\nTo show all installed unit files use 'systemctl list-unit-files'."
+    }
+  },
+  "targets": {
+    "ask": {
+      "description": "",
+      "extents": {
+        "height": 24,
+        "width": 97,
+        "x": 1671,
+        "y": 612
+      },
+      "foundIn": null,
+      "name": "Ask Bunny",
+      "path": [
+        "Main stage",
+        "Bunny assistant"
+      ],
+      "role": "panel"
+    },
+    "ask_send": {
+      "description": "",
+      "extents": {
+        "height": 24,
+        "width": 24,
+        "x": 1800,
+        "y": 612
+      },
+      "foundIn": null,
+      "name": "Send",
+      "path": [
+        "Main stage",
+        "Bunny assistant"
+      ],
+      "role": "button"
+    },
+    "assistant": {
+      "description": "",
+      "extents": {
+        "height": 34,
+        "width": 119,
+        "x": 58,
+        "y": 404
+      },
+      "foundIn": "Bunny sidebar",
+      "name": "AI Assistant",
+      "path": [
+        "Main stage",
+        "Bunny sidebar"
+      ],
+      "role": "button"
+    },
+    "files": {
+      "description": "",
+      "extents": {
+        "height": 46,
+        "width": 52,
+        "x": 874,
+        "y": 1005
+      },
+      "foundIn": "Bunny dock",
+      "name": "Files",
+      "path": [
+        "Main stage",
+        "Bunny dock"
+      ],
+      "role": "button"
+    },
+    "home": {
+      "description": "",
+      "extents": {
+        "height": 18,
+        "width": 34,
+        "x": 100,
+        "y": 376
+      },
+      "foundIn": "Bunny sidebar",
+      "name": "Home",
+      "path": [
+        "Main stage",
+        "Bunny sidebar",
+        "Home, selected"
+      ],
+      "role": "label"
+    },
+    "terminal": {
+      "description": "",
+      "extents": {
+        "height": 46,
+        "width": 52,
+        "x": 994,
+        "y": 1005
+      },
+      "foundIn": "Bunny dock",
+      "name": "Terminal",
+      "path": [
+        "Main stage",
+        "Bunny dock"
+      ],
+      "role": "button"
+    }
+  },
+  "terminal": {
+    "busName": {
+      "name": "org.gnome.Terminal",
+      "owned": true
+    },
+    "launched": true,
+    "process": {
+      "present": true,
+      "processes": [
+        "12149 /usr/bin/gnome-terminal"
+      ]
+    },
+    "startedByTheShell": true,
+    "unit": {
+      "present": true,
+      "units": [
+        "app-gnome-org.gnome.Terminal-12149.scope                                                                                                              loaded    active     running         Application launched by gnome-shell"
+      ]
+    },
+    "windowVisible": true,
+    "windows": {
+      "count": 1,
+      "frames": [
+        {
+          "active": false,
+          "description": "",
+          "extents": {
+            "height": 581,
+            "width": 788,
+            "x": 0,
+            "y": 0
+          },
+          "name": "Terminal",
+          "path": [],
+          "role": "frame",
+          "showing": true,
+          "visible": true
+        }
+      ]
+    }
+  },
+  "terminalClosed": {
+    "busName": {
+      "name": "org.gnome.Terminal",
+      "owned": true
+    },
+    "launched": false,
+    "process": {
+      "present": false,
+      "processes": []
+    },
+    "startedByTheShell": true,
+    "unit": {
+      "present": true,
+      "units": [
+        "app-org.gnome.Terminal.slice                                                                                                                          loaded    active     active          Slice /app/org.gnome.Terminal"
+      ]
+    },
+    "windowVisible": false,
+    "windows": {
+      "count": 0,
+      "frames": []
+    }
+  }
+}

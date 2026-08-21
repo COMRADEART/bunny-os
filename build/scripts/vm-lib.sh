@@ -104,3 +104,66 @@ bunny_list_deployments() {
     local partition="${BUNNY_BOOT_PARTITION:-/dev/sda3}"
     virt-ls -a "${disk}" -m "${partition}" /loader/entries 2>/dev/null || true
 }
+
+# bunny_deployment_checksums <disk>
+#
+# The ostree checksum of each deployment, read from the BLS entries.
+#
+# The *checksum* and not the whole `ostree=` argument, because the argument
+# carries a `boot.N` component that bootc rewrites when the deployment order
+# changes: the same deployment appears as `boot.0/<checksum>/0` in the BLS
+# entry and boots as `boot.1/<checksum>/0` after a rollback. Comparing the
+# whole string would report a correct rollback as a failure.
+bunny_deployment_checksums() {
+    local disk="$1"
+    local partition="${BUNNY_BOOT_PARTITION:-/dev/sda3}"
+    local entry
+    while IFS= read -r entry; do
+        [[ "${entry}" == *.conf ]] || continue
+        virt-cat -a "${disk}" -m "${partition}" "/loader/entries/${entry}" 2>/dev/null \
+            | grep -oE 'ostree=/ostree/boot\.[0-9]+/[^/]+/[a-f0-9]{64}/[0-9]+' \
+            | grep -oE '[a-f0-9]{64}' \
+            | head -1
+    done < <(virt-ls -a "${disk}" -m "${partition}" /loader/entries 2>/dev/null | sort)
+}
+
+# bunny_booted_checksum <log>
+#
+# The deployment checksum the kernel was actually told to boot. The kernel
+# prints its own command line, so this needs nothing injected into the guest.
+bunny_booted_checksum() {
+    grep -aoE 'ostree=/ostree/boot\.[0-9]+/[^/ ]+/[a-f0-9]{64}/[0-9]+' "$1" \
+        | head -1 | grep -oE '[a-f0-9]{64}'
+}
+
+# bunny_require_booted_deployment <log> <ostree-argument>
+#
+# Assert that the boot used a particular deployment.
+#
+# This exists because `vm-rollback-test.sh` reported
+#   "Rollback PASSED: the previous deployment was selected"
+# for three consecutive runs in which the machine booted the *default*
+# deployment every time. Its only check was that a healthy target was reached,
+# and a machine that never rolled back reaches one perfectly well. §5 of the
+# Phase 5 brief names this exact failure: the grader must never interpret "the
+# machine survived" as "the journey succeeded".
+#
+# The kernel prints its own command line, so the evidence is already in the
+# serial log and nothing needs to be injected into the guest to read it.
+bunny_require_booted_deployment() {
+    local log="$1" expected="$2"
+    local observed
+    observed="$(bunny_booted_checksum "${log}")"
+    if [[ -z "${observed}" ]]; then
+        echo "  no ostree= argument in the kernel command line; cannot say which deployment booted" >&2
+        return 1
+    fi
+    if [[ "${observed}" != "${expected}" ]]; then
+        echo "  booted the wrong deployment" >&2
+        echo "    expected: ${expected}" >&2
+        echo "    observed: ${observed}" >&2
+        return 1
+    fi
+    echo "  booted deployment: ${observed}"
+    return 0
+}

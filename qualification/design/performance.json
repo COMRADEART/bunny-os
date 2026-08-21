@@ -1,0 +1,49 @@
+{
+ "bounds": {
+  "frameBehaviour": "Not measured. GNOME Shell exposes no frame counter outside Looking Glass and a number invented here would be about the instrument.",
+  "renderer": "llvmpipe",
+  "themeChangeIncludesTreeWalk": true,
+  "whyThatMatters": "The interval is closed by an AT-SPI tree walk, which is the first thing that can only answer once the restyle has landed and is itself expensive. 1.1s is therefore an upper bound on what a theme change costs, not the cost."
+ },
+ "candidateCommit": "7edd3fd",
+ "idle": {
+  "intervalSeconds": 20.0,
+  "processes": {
+   "companion": {
+    "cpuPercent": 0.35,
+    "cpuSeconds": 0.07,
+    "processes": 1,
+    "rssKib": 63124,
+    "rssMib": 61.6
+   },
+   "gnome-shell": {
+    "cpuPercent": 0.8,
+    "cpuSeconds": 0.16,
+    "processes": 4,
+    "rssKib": 400604,
+    "rssMib": 391.2
+   },
+   "orca": {
+    "cpuPercent": 0.0,
+    "cpuSeconds": 0.0,
+    "processes": 0,
+    "rssKib": 0,
+    "rssMib": 0
+   }
+  },
+  "ran": true
+ },
+ "note": "Measured on a session that is not being driven: --journey skip. CPU is a delta from /proc over the interval, not ps %cpu, which averages since process start.",
+ "schemaVersion": 1,
+ "section": "performance",
+ "themeChange": [
+  {
+   "scale": "1.5",
+   "seconds": 1.1
+  },
+  {
+   "scale": "1.0",
+   "seconds": 1.07
+  }
+ ]
+}

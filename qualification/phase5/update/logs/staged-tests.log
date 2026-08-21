@@ -1,0 +1,33 @@
+== the staged disk ==
+7aef18ca65888d6e54c25c5d1c0173e24d346d8ab2a9a8a277690134a5f4e913  /home/bunny/p5-work/stage/staged.qcow2
+  /ostree/deploy/default/deploy/1804c600590068ff78f9d0e535219c3f091b22035f271b90b04f94c41e33b78a.0/
+  /ostree/deploy/default/deploy/18fd8a7d9673e9107658a90afc06714c707ad9f5303675d89318399653ea1df6.0/
+
+==============================================================
+== vm-upgrade-test.sh, staged mode                          ==
+==============================================================
+== staged deployment entries: 2 ==
+  ostree-1.conf
+  ostree-2.conf
+== booting the staged deployment ==
+  observed: system reached a boot target
+  observed: Bunny OS boot health check finished
+
+Staged update PASSED: the new deployment boots and a rollback target is retained.
+vm-upgrade-test exit=0
+
+==============================================================
+== vm-rollback-test.sh, deployment-rollback mode            ==
+==============================================================
+== default deployment boots ==
+  observed: system reached a boot target
+  observed: Bunny OS boot health check finished
+== selecting the previous deployment ==
+== previous deployment boots ==
+  observed: system reached a boot target
+  observed: Bunny OS boot health check finished
+
+Rollback PASSED: the previous deployment was selected and reached a healthy target.
+vm-rollback-test exit=0
+
+STAGED-TESTS-DONE upgrade=0 rollback=0

@@ -1,31 +1,56 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- SPDX-FileCopyrightText: 2026 ComradeArt -->
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
-<!--
-  The Bunny OS desktop wallpaper.
-
-  Drawn rather than photographed, for three reasons that are all practical. A
-  vector file is 4 KB against the 6 MB a 4K photograph costs on a read-only
-  root that ships in every image. It resamples cleanly to 1366x768 and to
-  5120x1440 from one file, so there is no per-resolution set to keep in step.
-  And it carries no third-party licence, no model release and no embedded
-  colour profile, which is what LICENCE_COMPLIANCE_REPORT.md has to be able to
-  say about every byte in the artifact.
-
-  The composition is built around where the interface goes. The ridge line sits
-  at 62% height so it passes behind the character rather than through the head;
-  the brightest part of the sky is upper-right, away from the top-left greeting;
-  and the lower third is darkened past the point a landscape would naturally be,
-  because the dock and the card columns sit on it and 4.5:1 text contrast is not
-  negotiable. It is a picture arranged around a layout, not a landscape that the
-  layout was placed on afterwards.
-
-  preserveAspectRatio is xMidYMid slice: GNOME scales a background to fill, and
-  a wallpaper that letterboxed on an ultrawide would show the page behind it.
--->
 <svg xmlns="http://www.w3.org/2000/svg" width="3840" height="2160"
      viewBox="0 0 3840 2160" preserveAspectRatio="xMidYMid slice"
      role="img" aria-label="A dark violet night horizon with layered ridges beneath a soft glow">
+  <!--
+    Nothing may go between the XML declaration and this element, and the reason
+    is not style.
+
+    An image loader that is handed a stream rather than a filename identifies
+    the format by sniffing the first bytes. shared-mime-info matches
+    `image/svg+xml` on the literal `<svg` appearing at an offset in the range
+    0:256, and matches `application/xml` on the `<?xml` at offset 0 whatever
+    follows it. This file used to carry 1.2 KB of provenance comment in the
+    header, which put `<svg` at byte 1361, outside the window. GNOME's loader
+    sniffed `application/xml`, had no loader registered for it, and refused the
+    file:
+
+        Failed to load background
+        'file:///usr/share/backgrounds/bunny-os/bunny-nocturne.svg':
+        Unknown image format: application/xml
+
+    It was recorded in Phase 4 as "the image has no SVG pixbuf loader". It has
+    one: `librsvg2-2.62.3` and `glycin-loaders-2.1.5` are both in the artifact
+    (`qualification/phase4/artifact/p4-build.log`, lines 359 and 369 to 371). The
+    loader was never reached. Measured: `Gio.content_type_guess` on this file's
+    content alone returned `application/xml` for this wallpaper and
+    `image/svg+xml` for its two siblings, whose `<svg` is at byte 0.
+
+    `tests/shell/test_svg_assets_are_sniffable.py` holds the line for every
+    shipped SVG. Prose belongs here, inside the element, where it costs nothing.
+
+    Drawn rather than photographed, for three reasons that are all practical. A
+    vector file is 4 KB against the 6 MB a 4K photograph costs on a read-only
+    root that ships in every image. It resamples cleanly to 1366x768 and to
+    5120x1440 from one file, so there is no per-resolution set to keep in step.
+    And it carries no third-party licence, no model release and no embedded
+    colour profile, which is what LICENCE_COMPLIANCE_REPORT.md has to be able to
+    say about every byte in the artifact.
+
+    The composition is built around where the interface goes. The ridge line
+    sits at 62% height so it passes behind the character rather than through the
+    head; the brightest part of the sky is upper-right, away from the top-left
+    greeting; and the lower third is darkened past the point a landscape would
+    naturally be, because the dock and the card columns sit on it and 4.5:1 text
+    contrast is not negotiable. It is a picture arranged around a layout, not a
+    landscape that the layout was placed on afterwards.
+
+    preserveAspectRatio is xMidYMid slice: GNOME scales a background to fill,
+    and a wallpaper that letterboxed on an ultrawide would show the page behind
+    it.
+  -->
   <defs>
     <linearGradient id="sky" x1="0" y1="0" x2="0.35" y2="1">
       <stop offset="0" stop-color="#141033"/>

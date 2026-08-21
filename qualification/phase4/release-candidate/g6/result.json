@@ -1,0 +1,18 @@
+{
+ "findings": [
+  "journal lacks evidence: sessionOpened"
+ ],
+ "harness": "vm-login-story",
+ "interactionStatus": "skipped",
+ "journalChecks": {
+  "companionService": true,
+  "gdmStarted": true,
+  "gnomeShell": true,
+  "graphicalTarget": true,
+  "sessionOpened": false
+ },
+ "machine": "build/out/phase3/machine.qcow2",
+ "schemaVersion": 1,
+ "systemReport": null,
+ "user": "robin"
+}

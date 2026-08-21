@@ -1,0 +1,47 @@
+{
+ "appendMechanism": "qualification/phase13/tools/release_authority_ops.py record authorization",
+ "decisionVocabulary": [
+  "AUTHORIZED",
+  "NOT_AUTHORIZED",
+  "BLOCKED",
+  "REQUIRES_MORE_EVIDENCE",
+  "REVOKED",
+  "EXPIRED"
+ ],
+ "derivableByRepository": [
+  "NOT_AUTHORIZED",
+  "BLOCKED",
+  "REQUIRES_MORE_EVIDENCE"
+ ],
+ "floorSources": [
+  "security-review",
+  "hardware",
+  "signing",
+  "second-approval",
+  "alpha-feedback"
+ ],
+ "note": "No infinite authorization by omission: a record without expires_at is invalid. revocation_status is derived from revocations.json and never stored on a record. Authorization never transfers to a successor artifact.",
+ "purpose": "Sealed authorization records, bound to the exact artifact. Empty means no authorization decision has been recorded. The repository may derive NOT_AUTHORIZED, BLOCKED, or REQUIRES_MORE_EVIDENCE; AUTHORIZED validates only over the satisfied five-source Phase 9 floor, an assigned release authority, a SATISFIED security gate, SUFFICIENT alpha evidence under an active policy, every blocking condition FALSE, and an explicit expiry.",
+ "recordFields": [
+  "authorization_id",
+  "artifact_digest",
+  "artifact_identity",
+  "decision",
+  "authority",
+  "authority_role",
+  "decision_timestamp",
+  "evidence_cut",
+  "security_status",
+  "alpha_status",
+  "hardware_status",
+  "signing_status",
+  "second_approval_status",
+  "blocking_conditions",
+  "accepted_risks",
+  "policy_versions",
+  "issued_at",
+  "expires_at"
+ ],
+ "records": [],
+ "schemaVersion": 1
+}

@@ -72,6 +72,7 @@ REASON_CODES = (
     "not-declared",
     "unknown-application",
     "beyond-ceiling",
+    "not-enforceable",
     "user-denied",
     "granted-previously",
     "catalog-default",
@@ -127,6 +128,15 @@ def resolve(
     if request.resource.kind == "network":
         if not network_within_ceiling(request.resource.identifier, declaration.ceiling_identifier()):
             return Resolution(verdict="deny", reason_code="beyond-ceiling")
+
+    # 4.5. A category nothing in this build enforces. Refused before standing
+    #    grants and before the catalogue default, deliberately: a stale stored
+    #    allow must stop allowing, and a required+consented clipboard must not
+    #    ride catalog-default into a grant no mechanism honours. The prompt for
+    #    an unenforceable category simply never exists — recording a consent the
+    #    build cannot keep would be worse than refusing to ask.
+    if not category.enforced_by_default:
+        return Resolution(verdict="deny", reason_code="not-enforceable")
 
     # 5 and 6. Standing decisions, denials first.
     for grant in matches:

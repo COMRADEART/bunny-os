@@ -1,0 +1,16 @@
+[    6.294826] bash[848]: BUNNY-P5-STATE: boot 2026-08-18T03:32:02+00:00
+[    6.302101] bash[848]: BUNNY-P5-STATE: os-release commit=e501218f2fe0105e5fc92bdf94fd6b3c87d6c470 build=e501218f2fe0.1787016937
+[    6.316137] bash[848]: BUNNY-P5-STATE: cmdline ostree=/ostree/boot.0/default/2d358243c59de6e5a0e6672ca1ae3eec1f2972a8ac33907467cd6d9ffa657404/0
+[    6.524084] bash[848]: BUNNY-P5-STATE: bootc booted=/run/p5update/candidate:e501218f2fe0  staged=None  rollback=localhost/bunny-os-beta:e906a48793d7
+[    6.528918] bash[848]: BUNNY-P5-STATE: PRESENT /var/home/p5-user-data.txt :: user data written before the switch at 2026-08-18T03:15:09+00:00
+[    6.534222] bash[848]: BUNNY-P5-STATE: PRESENT /var/lib/bunny-os/companion/p5-mode.json :: {"mode":"attentive","setBy":"phase5 rollback qualification"}
+[    6.536916] bash[848]: BUNNY-P5-STATE: PRESENT /var/lib/bunny-os/trust/p5-grants.json :: {"grants":[{"capsule":"p5-example","decision":"allow"}]}
+[    6.540275] bash[848]: BUNNY-P5-STATE: PRESENT /var/lib/bunny-os/voice/p5-settings.json :: {"inputDevice":"p5-null-sink","volume":42}
+[    6.543618] bash[848]: BUNNY-P5-STATE: PRESENT /var/lib/bunny-os/p5-settings.txt :: settings written before the switch
+[    6.546127] bash[848]: BUNNY-P5-STATE: end
+[   13.648677] bash[1864]: BUNNY-P5-ROLLBACK: before:
+[   13.897569] bash[1864]: BUNNY-P5-ROLLBACK: running bootc rollback
+[   18.605931] bash[1864]: BUNNY-P5-ROLLBACK: rollback exit=0
+[   18.606143] bash[1864]: BUNNY-P5-ROLLBACK: after:
+[   18.837551] bash[1864]: BUNNY-P5-ROLLBACK: done
+[   18.838464] bash[1862]: BUNNY-P5-ROLLBACK: wrapper exit=0

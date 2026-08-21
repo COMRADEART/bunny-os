@@ -1,0 +1,1536 @@
+{
+ "ready": {
+  "controlCount": 332
+ },
+ "schemaVersion": 1,
+ "script": "build/scripts/phase3-journeys/verify-after-interrupt.json",
+ "status": "complete",
+ "steps": [
+  {
+   "answer": {
+    "command": "system",
+    "label": "system-after-interrupt",
+    "system": {
+     "appliedState": {
+      "argv": [
+       "/usr/bin/sudo",
+       "-u",
+       "alex",
+       "-H",
+       "cat",
+       "/var/home/alex/.local/state/bunny-os/applied.json"
+      ],
+      "ran": true,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "{\n \"applied\": 8,\n \"dryRun\": false,\n \"failures\": [\n  {\n   \"applied\": false,\n   \"detail\": \"No such schema \\u201cart.comrade.BunnyShell\\u201d\",\n   \"intent\": \"Bunny presentation: full\",\n   \"key\": \"companionMode\",\n   \"value\": \"full\"\n  },\n  {\n   \"applied\": false,\n   \"detail\": \"No such schema \\u201cart.comrade.BunnyShell\\u201d\",\n   \"intent\": \"captions\",\n   \"key\": \"companionCaptions\",\n   \"value\": \"true\"\n  },\n  {\n   \"applied\": false,\n   \"detail\": \"symlink absent after enable\",\n   \"intent\": \"start Bunny at login\",\n   \"key\": \"companionAtLogin\",\n   \"value\": true\n  }\n ],\n \"results\": [\n  {\n   \"applied\": true,\n   \"detail\": \"org.gnome.desktop.interface color-scheme = default\",\n   \"intent\": \"appearance: system\",\n   \"key\": \"colourScheme\",\n   \"value\": \"default\"\n  },\n  {\n   \"applied\": true,\n   \"detail\": \"org.gnome.desktop.interface gtk-theme = Adwaita\",\n   \"intent\": \"appearance: GTK theme\",\n   \"key\": \"gtkTheme\",\n   \"value\": \"Adwaita\"\n  },\n  {\n   \"applied\": true,\n   \"detail\": \"org.gnome.desktop.interface text-scaling-factor = 1.0\",\n   \"intent\": \"text size 100%\",\n   \"key\": \"textScale\",\n   \"value\": \"1.0\"\n  },\n  {\n   \"applied\": true,\n   \"detail\": \"org.gnome.desktop.a11y.interface high-contrast = false\",\n   \"intent\": \"high contrast\",\n   \"key\": \"highContrast\",\n   \"value\": \"false\"\n  },\n  {\n   \"applied\": true,\n   \"detail\": \"org.gnome.desktop.interface enable-animations = true\",\n   \"intent\": \"reduced motion\",\n   \"key\": \"reducedMotion\",\n   \"value\": \"true\"\n  },\n  {\n   \"applied\": true,\n   \"detail\": \"org.gnome.desktop.a11y.applications screen-reader-enabled = false\",\n   \"intent\": \"screen reader\",\n   \"key\": \"screenReader\",\n   \"value\": \"false\"\n  },\n  {\n   \"applied\": false,\n   \"detail\": \"No such schema \\u201cart.comrade.BunnyShell\\u201d\",\n   \"intent\": \"Bunny presentation: full\",\n   \"key\": \"companionMode\",\n   \"value\": \"full\"\n  },\n  {\n   \"applied\": false,\n   \"detail\": \"No such schema \\u201cart.comrade.BunnyShell\\u201d\",\n   \"intent\": \"captions\",\n   \"key\": \"companionCaptions\",\n   \"value\": \"true\"\n  },\n  {\n   \"applied\": true,\n   \"detail\": \"org.gnome.desktop.privacy report-technical-problems = false\",\n   \"intent\": \"crash reports\",\n   \"key\": \"crashReports\",\n   \"value\": \"false\"\n  },\n  {\n   \"applied\": true,\n   \"detail\": \"org.gnome.system.location enabled = false\",\n   \"intent\": \"location services\",\n   \"key\": \"location\",\n   \"value\": \"false\"\n  },\n  {\n   \"applied\": false,\n   \"detail\": \"symlink absent after enable\",\n   \"intent\": \"start Bunny at login\",\n   \"key\": \"companionAtLogin\",\n   \"value\": true\n  }\n ],\n \"schemaVersion\": 1,\n \"total\": 11\n}"
+     },
+     "choicesOnTarget": {
+      "argv": [
+       "cat",
+       "/var/lib/bunny-setup/choices.json"
+      ],
+      "ran": true,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "{\n \"accessibility\": {\n  \"captions\": false,\n  \"highContrast\": false,\n  \"reducedMotion\": false,\n  \"screenReader\": false,\n  \"textScale\": 1.0\n },\n \"account\": {\n  \"deviceName\": \"warren\",\n  \"displayName\": \"Alex\",\n  \"username\": \"alex\"\n },\n \"appearance\": {\n  \"accent\": \"violet\",\n  \"colourScheme\": \"system\",\n  \"wallpaper\": \"bunny-default\"\n },\n \"applications\": {\n  \"activities\": [],\n  \"selected\": []\n },\n \"companion\": {\n  \"atLogin\": true,\n  \"captions\": true,\n  \"mode\": \"full\",\n  \"voice\": false\n },\n \"encryption\": {\n  \"enabled\": true\n },\n \"locale\": {\n  \"keyboardLayout\": \"gb\",\n  \"language\": \"en-GB\",\n  \"region\": \"GB\",\n  \"timezone\": \"Europe/London\"\n },\n \"privacy\": {\n  \"camera\": false,\n  \"crashReports\": false,\n  \"diagnostics\": false,\n  \"feedback\": false,\n  \"location\": false,\n  \"microphone\": false,\n  \"onlineAI\": false,\n  \"remoteProcessing\": false\n },\n \"schemaVersion\": 1\n}"
+     },
+     "companionSettings": {
+      "argv": [
+       "/usr/bin/sudo",
+       "-u",
+       "alex",
+       "-H",
+       "cat",
+       "/var/home/alex/.local/state/bunny-os/companion/settings.json"
+      ],
+      "ran": true,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "{\n  \"accessibility\": {\n    \"captionsAlways\": true,\n    \"highContrast\": false,\n    \"noAnimation\": false,\n    \"reducedMotion\": true,\n    \"textOnly\": false,\n    \"uiScale\": 1.0\n  },\n  \"ai\": {\n    \"allowedRemoteAliases\": [],\n    \"costCeilingUnits\": 0,\n    \"preferredModelId\": \"\",\n    \"preferredProviderId\": \"\",\n    \"remoteEnabled\": false\n  },\n  \"character\": {\n    \"animation\": \"full\",\n    \"animationIntensity\": 0.6,\n    \"contextualReactions\": true,\n    \"dock\": \"top-left\",\n    \"idleAnimation\": true,\n    \"packageId\": \"\",\n    \"performance\": \"automatic\",\n    \"renderMode\": \"prerendered\",\n    \"scale\": 1.4,\n    \"threeD\": \"auto\",\n    \"visible\": true\n  },\n  \"containsCredentials\": false,\n  \"privacy\": {\n    \"clipboardCeiling\": \"internal\",\n    \"desktopActionApproval\": \"always\",\n    \"historyRetentionDays\": 0,\n    \"remoteTransferCeiling\": \"public\"\n  },\n  \"schemaVersion\": 1,\n  \"speechInput\": {\n    \"deviceId\": \"\",\n    \"enabled\": true,\n    \"language\": \"automatic\",\n    \"modelId\": \"\",\n    \"shortcut\": \"<Super><Alt>space\",\n    \"wakeWord\": \"disabled\"\n  },\n  \"voice\": {\n    \"enabled\": true,\n    \"modelId\": \"\",\n    \"performanceMode\": \"automatic\",\n    \"providerId\": \"pocket\",\n    \"responseMode\": \"voice-only\",\n    \"speakingRate\": 1.2,\n    \"voiceId\": \"\",\n    \"volume\": 1.0\n  }\n}"
+     },
+     "etcHostname": {
+      "argv": [
+       "cat",
+       "/etc/hostname"
+      ],
+      "ran": true,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "warren"
+     },
+     "etcLocaleConf": {
+      "argv": [
+       "cat",
+       "/etc/locale.conf"
+      ],
+      "ran": true,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "LANG=en_GB.UTF-8"
+     },
+     "etcVconsole": {
+      "argv": [
+       "cat",
+       "/etc/vconsole.conf"
+      ],
+      "ran": true,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "KEYMAP=\"gb\"\nFONT=\"eurlatgr\""
+     },
+     "hostnamectl": {
+      "argv": [
+       "hostnamectl"
+      ],
+      "ran": true,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "Static hostname: warren\n           Icon name: computer-vm\n             Chassis: vm \ud83d\uddb4\n          Machine ID: 42af842c0e00408d95c71893c6e00038\n             Boot ID: 51ce712e778442ce8a34a3b729e0a440\n      Virtualization: kvm\n    Operating System: Bunny OS 0.1.0 (development)\n         CPE OS Name: cpe:/o:fedoraproject:fedora:44\n      OS Support End: Wed 2027-05-19\nOS Support Remaining: 9month 1d\n              Kernel: Linux 7.1.5-201.fc44.x86_64\n        Architecture: x86-64\n     Hardware Vendor: QEMU\n      Hardware Model: Standard PC _Q35 + ICH9, 2009_\n    Hardware Version: pc-q35-10.2\n    Firmware Version: edk2-20260508-6.fc44\n       Firmware Date: Fri 2026-05-08\n        Firmware Age: 3month 1w 2d"
+     },
+     "inhibitors": {
+      "argv": [
+       "systemd-inhibit",
+       "--list",
+       "--no-pager"
+      ],
+      "ran": true,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "WHO            UID  USER PID  COMM           WHAT                                                     WHY                                                         MODE\nNetworkManager 0    root 2363 NetworkManager sleep                                                    NetworkManager needs to turn off networks                   delay\nUPower         0    root 2375 upowerd        sleep                                                    Pause device polling                                        delay\nGNOME Shell    1000 alex 4021 gnome-shell    sleep                                                    GNOME needs to save screen time data                        delay\nalex           1000 alex 4128 gsd-power      handle-lid-switch                                        External monitor attached or configuration changed recently block\nalex           1000 alex 4127 gsd-media-keys handle-power-key:handle-suspend-key:handle-hibernate-key GNOME handling keypresses                                   block\nalex           1000 alex 4127 gsd-media-keys sleep                                                    GNOME handling keypresses                                   delay\nalex           1000 alex 4128 gsd-power      sleep                                                    GNOME needs to lock the screen                              delay\n\n7 inhibitors listed."
+     },
+     "localectl": {
+      "argv": [
+       "localectl",
+       "status"
+      ],
+      "ran": true,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "System Locale: LANG=en_GB.UTF-8\n    VC Keymap: gb\n   X11 Layout: (unset)"
+     },
+     "sessions": {
+      "argv": [
+       "loginctl",
+       "list-sessions"
+      ],
+      "ran": true,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "SESSION  UID USER SEAT  LEADER CLASS   TTY  IDLE SINCE\n      2 1000 alex -     3601   manager -    no   -\n      3 1000 alex seat0 3884   user    tty2 no   -\n\n2 sessions listed."
+     },
+     "userUnits": {
+      "argv": [
+       "/usr/bin/sudo",
+       "-u",
+       "alex",
+       "-H",
+       "/usr/bin/env",
+       "XDG_RUNTIME_DIR=/run/user/1000",
+       "DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus",
+       "systemctl",
+       "--user",
+       "--no-pager",
+       "list-units",
+       "bunny-*"
+      ],
+      "ran": true,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "UNIT                     LOAD   ACTIVE     SUB     JOB   DESCRIPTION\n  bunny-companion.service  loaded active     running       Bunny Companion runtime\n  bunny-config-dir.service loaded active     exited        Establish and verify the Bunny OS per-user configuration directory\n\u25cf bunny-first-run.service  loaded activating start   start Bunny OS first-run experience\n\nLegend: LOAD   \u2192 Reflects whether the unit definition was properly loaded.\n        ACTIVE \u2192 The high-level unit activation state, i.e. generalization of SUB.\n        SUB    \u2192 The low-level unit activation state, values depend on unit type.\n        JOB    \u2192 Pending job for the unit.\n\n3 loaded units listed. Pass --all to see loaded but inactive units, too.\nTo show all installed unit files use 'systemctl list-unit-files'."
+     }
+    }
+   },
+   "request": {
+    "command": "system",
+    "label": "system-after-interrupt",
+    "timeout": 240
+   }
+  },
+  {
+   "answer": {
+    "command": "companion-state",
+    "companion": {
+     "bridgeHealth": {
+      "err": "",
+      "out": "{\"event\": \"health\", \"available\": true, \"endpoint\": \"/run/user/1000/bunny-companion/runtime.sock\", \"schemaVersion\": null, \"runtime\": \"unknown\"}\n",
+      "rc": 0
+     },
+     "capsuleUnits": {
+      "err": "",
+      "out": "",
+      "rc": 0
+     },
+     "journal": {
+      "err": "",
+      "out": "n /run/user/1000/bunny-companion/runtime.sock (unix-socket)\nStopping bunny-companion.service - Bunny Companion runtime...\nStopped bunny-companion.service - Bunny Companion runtime.\nbunny-companion.service: Consumed 1.186s CPU time over 23.669s wall clock time, 47.2M memory peak.\nStarted bunny-companion.service - Bunny Companion runtime.\nbunny-companion-service: listening on /run/user/1000/bunny-companion/runtime.sock (unix-socket)\nStopping bunny-companion.service - Bunny Companion runtime...\nStopped bunny-companion.service - Bunny Companion runtime.\nbunny-companion.service: Consumed 1.121s CPU time over 22.025s wall clock time, 47.1M memory peak.\nStarted bunny-companion.service - Bunny Companion runtime.\nbunny-companion-service: listening on /run/user/1000/bunny-companion/runtime.sock (unix-socket)\nStopping bunny-companion.service - Bunny Companion runtime...\nStopped bunny-companion.service - Bunny Companion runtime.\nbunny-companion.service: Consumed 1.116s CPU time over 24.370s wall clock time, 47.2M memory peak.\nStarted bunny-companion.service - Bunny Companion runtime.\nbunny-companion-service: listening on /run/user/1000/bunny-companion/runtime.sock (unix-socket)\nStopping bunny-companion.service - Bunny Companion runtime...\nStopped bunny-companion.service - Bunny Companion runtime.\nbunny-companion.service: Consumed 1.132s CPU time over 23.339s wall clock time, 47M memory peak.\nStarted bunny-companion.service - Bunny Companion runtime.\nbunny-companion-service: listening on /run/user/1000/bunny-companion/runtime.sock (unix-socket)\nStopping bunny-companion.service - Bunny Companion runtime...\nStopped bunny-companion.service - Bunny Companion runtime.\nbunny-companion.service: Consumed 1.142s CPU time over 22.003s wall clock time, 47.6M memory peak.\nStarted bunny-companion.service - Bunny Companion runtime.\nbunny-companion-service: listening on /run/user/1000/bunny-companion/runtime.sock (unix-socket)\nStopping bunny-companion.service - Bunny Companion runtime...\nStopped bunny-companion.service - Bunny Companion runtime.\nbunny-companion.service: Consumed 1.132s CPU time over 21.973s wall clock time, 47.5M memory peak.\nStarted bunny-companion.service - Bunny Companion runtime.\nbunny-companion-service: listening on /run/user/1000/bunny-companion/runtime.sock (unix-socket)\nStopping bunny-companion.service - Bunny Companion runtime...\nStopped bunny-companion.service - Bunny Companion runtime.\nbunny-companion.service: Consumed 18.532s CPU time over 11min 9.013s wall clock time, 46.9M memory peak.\nStarted bunny-companion.service - Bunny Companion runtime.\nbunny-companion-service: listening on /run/user/1000/bunny-companion/runtime.sock (unix-socket)\nStopping bunny-companion.service - Bunny Companion runtime...\nStopped bunny-companion.service - Bunny Companion runtime.\nbunny-companion.service: Consumed 19.359s CPU time over 8min 39.628s wall clock time, 47.4M memory peak.\nStarted bunny-companion.service - Bunny Companion runtime.\nbunny-companion-service: listening on /run/user/1000/bunny-companion/runtime.sock (unix-socket)\nStarted bunny-companion.service - Bunny Companion runtime.\nbunny-companion-service: listening on /run/user/1000/bunny-companion/runtime.sock (unix-socket)\nStarted bunny-companion.service - Bunny Companion runtime.\nbunny-companion-service: listening on /run/user/1000/bunny-companion/runtime.sock (unix-socket)\nStarted bunny-companion.service - Bunny Companion runtime.\nbunny-companion-service: listening on /run/user/1000/bunny-companion/runtime.sock (unix-socket)\nStarted bunny-companion.service - Bunny Companion runtime.\nbunny-companion-service: listening on /run/user/1000/bunny-companion/runtime.sock (unix-socket)\nStarted bunny-companion.service - Bunny Companion runtime.\nbunny-companion-service: listening on /run/user/1000/bunny-companion/runtime.sock (unix-socket)\nStarted bunny-companion.service - Bunny Companion runtime.\nbunny-companion-service: listening on /run/user/1000/bunny-companion/runtime.sock (unix-socket)\n",
+      "rc": 0
+     },
+     "ok": true,
+     "shellLog": {
+      "err": "",
+      "out": "     },\n        Alloc(\n            \"image/webp\",\n        ): ImageEditorConfig {\n            exec: \"/usr/libexec/glycin-loaders/2+/glycin-image-rs\",\n            expose_base_dir: false,\n            fontconfig: false,\n            operations: [],\n            creator: true,\n            creator_color_icc_profile: false,\n            creator_encoding_quality: false,\n            creator_encoding_compression: false,\n            creator_metadata_key_value: false,\n        },\n        Alloc(\n            \"image/x-exr\",\n        ): ImageEditorConfig {\n            exec: \"/usr/libexec/glycin-loaders/2+/glycin-image-rs\",\n            expose_base_dir: false,\n            fontconfig: false,\n            operations: [],\n            creator: true,\n            creator_color_icc_profile: false,\n            creator_encoding_quality: false,\n            creator_encoding_compression: false,\n            creator_metadata_key_value: false,\n        },\n        Alloc(\n            \"image/x-tga\",\n        ): ImageEditorConfig {\n            exec: \"/usr/libexec/glycin-loaders/2+/glycin-image-rs\",\n            expose_base_dir: false,\n            fontconfig: false,\n            operations: [],\n            creator: true,\n            creator_color_icc_profile: false,\n            creator_encoding_quality: false,\n            creator_encoding_compression: false,\n            creator_metadata_key_value: false,\n        },\n    },\n}\nStarted bunny-companion.service - Bunny Companion runtime.\nbunny-first-boot.service - Bunny OS per-user first-boot preferences skipped, unmet condition check ConditionPathExists=!/home/alex/.config/bunny-os/first-boot-complete.json\nStarting bunny-first-run.service - Bunny OS first-run experience...\nReload requested from client PID 4563 ('systemctl') (unit bunny-first-run.service)...\nbunny-desktop: mutter reports rendering is software\nbunny-desktop: panel blur disabled\nbunny-theme: theme dark at 1x, reduced motion\nbunny-desktop: no battery in /sys/class/power_supply; reporting AC Power\nbunny-desktop: vscode is not installed (tried code.desktop, com.visualstudio.code.desktop)\nbunny-desktop: spotify is not installed (tried com.spotify.Client.desktop, spotify.desktop)\nbunny-desktop: animations are disabled; the character is drawn in a resting pose\nbunny-desktop: obs is not installed (tried com.obsproject.Studio.desktop, obs-studio.desktop)\nbunny-desktop: blender is not installed (tried org.blender.Blender.desktop, blender.desktop)\nbunny-desktop: discord is not installed (tried com.discordapp.Discord.desktop, discord.desktop)\nbunny-desktop: the wallpaper is in uiGroup below the desktop content, which is below the windows\nbunny-desktop: desktop content layer is above the wallpaper and below the windows\nbunny-desktop: the session opened the overview at login; dismissing it for the desktop\nbunny-desktop: focus-desktop-search is bound to <Super>s\nbunny-desktop: focus-desktop-sidebar is bound to <Super><Shift>n\nbunny-desktop: focus-desktop-assistant is bound to <Super><Shift>b\nbunny-desktop: push-to-talk is bound to <Super><Alt>space\nbunny-desktop: storage is /var (ext4 on /dev/mapper/luks-7e67b822-e228-4590-9d34-adb2d7e3dafb), chosen as the writable home filesystem; skipped /home/alex \u2014 overlay is a composed image, not a disk\nbunny-desktop: no thermal sensor found; temperature reports Unavailable\nbunny-desktop: layout 1920x1080 -> wide, 2 card column(s)\nbunny-desktop: the Bunny desktop is up\nbunny-desktop: assistant unavailable: the companion runtime is unreachable: [Errno 2] No such file or directory \u2014 systemctl --user start bunny-companion.service\nbunny-desktop: voice input unavailable: the companion runtime is unreachable: [Errno 2] No such file or directory\nbunny-companion-service: listening on /run/user/1000/bunny-companion/runtime.sock (unix-socket)\nbunny-desktop: the companion runtime is reachable\nbunny-desktop: the shell left its cover pane over the desktop; hidden, so pointer input reaches it\nbunny-desktop: GNOME's panel hidden after the startup deadline\n",
+      "rc": 0
+     },
+     "unit": {
+      "err": "",
+      "out": "ActiveState=active\nSubState=running\nMainPID=4270\nNRestarts=0\nExecMainStatus=0\n",
+      "rc": 0
+     }
+    },
+    "label": "companion-after-interrupt"
+   },
+   "request": {
+    "command": "companion-state",
+    "label": "companion-after-interrupt"
+   }
+  },
+  {
+   "answer": {
+    "command": "task-trace",
+    "label": "trace-after-interrupt",
+    "trace": {
+     "ok": true,
+     "sessions": 1,
+     "tasks": [
+      {
+       "approvals": 0,
+       "errorSummary": "",
+       "eventCount": 15,
+       "events": [
+        {
+         "seq": 99,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 100,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 101,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 102,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 103,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 104,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 105,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 106,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 107,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 108,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 109,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 110,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 111,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 112,
+         "summary": "",
+         "type": null
+        }
+       ],
+       "phase": "success",
+       "request": "",
+       "status": null,
+       "statusText": "Done.",
+       "taskId": "task-0227f31be1f14f159ff6fade91b3a011"
+      },
+      {
+       "approvals": 0,
+       "errorSummary": "the request was declined",
+       "eventCount": 11,
+       "events": [
+        {
+         "seq": 43,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 44,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 45,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 46,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 47,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 48,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 49,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 50,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 51,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 52,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 53,
+         "summary": "",
+         "type": null
+        }
+       ],
+       "phase": "blocked",
+       "request": "",
+       "status": null,
+       "statusText": "Declined; nothing was done.",
+       "taskId": "task-0aea11266c764a8585bea0397c4aae1d"
+      },
+      {
+       "approvals": 0,
+       "errorSummary": "",
+       "eventCount": 15,
+       "events": [
+        {
+         "seq": 29,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 30,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 31,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 32,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 33,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 34,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 35,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 36,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 37,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 38,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 39,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 40,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 41,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 42,
+         "summary": "",
+         "type": null
+        }
+       ],
+       "phase": "success",
+       "request": "",
+       "status": null,
+       "statusText": "Done.",
+       "taskId": "task-12366cd100e14dc383936c3d1f2c5ac8"
+      },
+      {
+       "approvals": 0,
+       "errorSummary": "the request was declined",
+       "eventCount": 11,
+       "events": [
+        {
+         "seq": 17,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 18,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 19,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 20,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 21,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 22,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 23,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 24,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 25,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 26,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 27,
+         "summary": "",
+         "type": null
+        }
+       ],
+       "phase": "blocked",
+       "request": "",
+       "status": null,
+       "statusText": "Declined; nothing was done.",
+       "taskId": "task-2620c0fb4d5a4bf5b0b973806d0f3518"
+      },
+      {
+       "approvals": 0,
+       "errorSummary": "the request was declined",
+       "eventCount": 11,
+       "events": [
+        {
+         "seq": 194,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 195,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 196,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 197,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 198,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 199,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 200,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 201,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 202,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 203,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 204,
+         "summary": "",
+         "type": null
+        }
+       ],
+       "phase": "blocked",
+       "request": "",
+       "status": null,
+       "statusText": "Declined; nothing was done.",
+       "taskId": "task-29cd439dd15f4b3ea209dcde9a1e3584"
+      },
+      {
+       "approvals": 0,
+       "errorSummary": "the task failed",
+       "eventCount": 18,
+       "events": [
+        {
+         "seq": 165,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 166,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 167,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 168,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 169,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 170,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 171,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 172,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 173,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 174,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 175,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 176,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 177,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 178,
+         "summary": "",
+         "type": null
+        }
+       ],
+       "phase": "error",
+       "request": "",
+       "status": null,
+       "statusText": "The task failed: the task failed",
+       "taskId": "task-372aabd8138f43d5a642556df1e93853"
+      },
+      {
+       "approvals": 0,
+       "errorSummary": "the request was declined",
+       "eventCount": 11,
+       "events": [
+        {
+         "seq": 150,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 151,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 152,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 153,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 154,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 155,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 156,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 157,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 158,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 159,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 160,
+         "summary": "",
+         "type": null
+        }
+       ],
+       "phase": "blocked",
+       "request": "",
+       "status": null,
+       "statusText": "Declined; nothing was done.",
+       "taskId": "task-3bf3e8505c854e56ab82bd8d73631ee3"
+      },
+      {
+       "approvals": 0,
+       "errorSummary": "the request was declined",
+       "eventCount": 11,
+       "events": [
+        {
+         "seq": 113,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 114,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 115,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 116,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 117,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 118,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 119,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 120,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 121,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 122,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 123,
+         "summary": "",
+         "type": null
+        }
+       ],
+       "phase": "blocked",
+       "request": "",
+       "status": null,
+       "statusText": "Declined; nothing was done.",
+       "taskId": "task-43b6418fe27646e08b5ecdb6c63822ff"
+      },
+      {
+       "approvals": 0,
+       "errorSummary": "",
+       "eventCount": 18,
+       "events": [
+        {
+         "seq": 84,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 85,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 86,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 87,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 88,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 89,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 90,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 91,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 92,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 93,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 94,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 95,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 96,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 97,
+         "summary": "",
+         "type": null
+        }
+       ],
+       "phase": "success",
+       "request": "",
+       "status": null,
+       "statusText": "Done.",
+       "taskId": "task-5e6d988d3fb24fbc9ffa38c3138e1bfc"
+      },
+      {
+       "approvals": 0,
+       "errorSummary": "",
+       "eventCount": 15,
+       "events": [
+        {
+         "seq": 217,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 218,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 219,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 220,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 221,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 222,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 223,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 224,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 225,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 226,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 227,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 228,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 229,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 230,
+         "summary": "",
+         "type": null
+        }
+       ],
+       "phase": "success",
+       "request": "",
+       "status": null,
+       "statusText": "Done.",
+       "taskId": "task-7ad4e0b145a8498aada287fbd15d154b"
+      },
+      {
+       "approvals": 0,
+       "errorSummary": "",
+       "eventCount": 15,
+       "events": [
+        {
+         "seq": 136,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 137,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 138,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 139,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 140,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 141,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 142,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 143,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 144,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 145,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 146,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 147,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 148,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 149,
+         "summary": "",
+         "type": null
+        }
+       ],
+       "phase": "success",
+       "request": "",
+       "status": null,
+       "statusText": "Done.",
+       "taskId": "task-9a51005ceb00412a8a4066401654dd35"
+      },
+      {
+       "approvals": 0,
+       "errorSummary": "the request was declined",
+       "eventCount": 11,
+       "events": [
+        {
+         "seq": 124,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 125,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 126,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 127,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 128,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 129,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 130,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 131,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 132,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 133,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 134,
+         "summary": "",
+         "type": null
+        }
+       ],
+       "phase": "blocked",
+       "request": "",
+       "status": null,
+       "statusText": "Declined; nothing was done.",
+       "taskId": "task-b9a4b0ecacf34c32bc51e945aaf2ddc3"
+      },
+      {
+       "approvals": 0,
+       "errorSummary": "",
+       "eventCount": 15,
+       "events": [
+        {
+         "seq": 3,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 4,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 5,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 6,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 7,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 8,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 9,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 10,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 11,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 12,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 13,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 14,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 15,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 16,
+         "summary": "",
+         "type": null
+        }
+       ],
+       "phase": "success",
+       "request": "",
+       "status": null,
+       "statusText": "Done.",
+       "taskId": "task-bf80aecac9644427bedb69bac8cff051"
+      },
+      {
+       "approvals": 0,
+       "errorSummary": "",
+       "eventCount": 15,
+       "events": [
+        {
+         "seq": 55,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 56,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 57,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 58,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 59,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 60,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 61,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 62,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 63,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 64,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 65,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 66,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 67,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 68,
+         "summary": "",
+         "type": null
+        }
+       ],
+       "phase": "success",
+       "request": "",
+       "status": null,
+       "statusText": "Done.",
+       "taskId": "task-c4899e28eb974ecfa3982ad13f884758"
+      },
+      {
+       "approvals": 0,
+       "errorSummary": "",
+       "eventCount": 11,
+       "events": [
+        {
+         "seq": 205,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 206,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 207,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 208,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 209,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 210,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 211,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 212,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 213,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 214,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 215,
+         "summary": "",
+         "type": null
+        }
+       ],
+       "phase": "recovering",
+       "request": "",
+       "status": null,
+       "statusText": "After the restart: the task returns to planning with its completed operations already recorded",
+       "taskId": "task-d3467d3f0bf1456e88ac1d381132c213"
+      },
+      {
+       "approvals": 0,
+       "errorSummary": "",
+       "eventCount": 15,
+       "events": [
+        {
+         "seq": 180,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 181,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 182,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 183,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 184,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 185,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 186,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 187,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 188,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 189,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 190,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 191,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 192,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 193,
+         "summary": "",
+         "type": null
+        }
+       ],
+       "phase": "success",
+       "request": "",
+       "status": null,
+       "statusText": "Done.",
+       "taskId": "task-e83a5470a6554c9da92e54c3363789e9"
+      },
+      {
+       "approvals": 0,
+       "errorSummary": "the request was declined",
+       "eventCount": 11,
+       "events": [
+        {
+         "seq": 69,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 70,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 71,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 72,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 73,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 74,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 75,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 76,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 77,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 78,
+         "summary": "",
+         "type": null
+        },
+        {
+         "seq": 79,
+         "summary": "",
+         "type": null
+        }
+       ],
+       "phase": "blocked",
+       "request": "",
+       "status": null,
+       "statusText": "Declined; nothing was done.",
+       "taskId": "task-ea3c274c5ada4cc8abe39837c066364c"
+      }
+     ]
+    }
+   },
+   "request": {
+    "command": "task-trace",
+    "label": "trace-after-interrupt"
+   }
+  },
+  {
+   "answer": {
+    "command": "settings",
+    "label": "settings-after-interrupt",
+    "settings": {
+     "argv": [
+      "/usr/bin/sudo",
+      "-u",
+      "alex",
+      "-H",
+      "/usr/bin/bunny-os",
+      "companion",
+      "settings",
+      "show"
+     ],
+     "ran": true,
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "effect: READ the user settings. A setting is never a credential\nsettings: {\"accessibility\": {\"captionsAlways\": true, \"highContrast\": false, \"noAnimation\": false, \"reducedMotion\": true, \"textOnly\": false, \"uiScale\": 1.0}, \"ai\": {\"allowedRemoteAliases\": [], \"costCeilingUnits\": 0, \"preferredModelId\": \"\", \"preferredProviderId\": \"\", \"remoteEnabled\": false}, \"character\": {\"animation\": \"full\", \"animationIntensity\": 0.6, \"contextualReactions\": true, \"dock\": \"top-left\", \"idleAnimation\": true, \"packageId\": \"\", \"performance\": \"automatic\", \"renderMode\": \"prerendered\", \"scale\": 1.4, \"threeD\": \"auto\", \"visible\": true}, \"containsCredentials\": false, \"privacy\": {\"clipboardCeiling\": \"internal\", \"desktopActionApproval\": \"always\", \"historyRetentionDays\": 0, \"remoteTransferCeiling\": \"public\"}, \"schemaVersion\": 1, \"speechInput\": {\"deviceId\": \"\", \"enabled\": true, \"language\": \"automatic\", \"modelId\": \"\", \"shortcut\": \"<Super><Alt>space\", \"wakeWord\": \"disabled\"}, \"voice\": {\"enabled\": true, \"modelId\": \"\", \"performanceMode\": \"automatic\", \"providerId\": \"pocket\", \"responseMode\": \"voice-only\", \"speakingRate\": 1.2, \"voiceId\": \"\", \"volume\": 1.0}}"
+    }
+   },
+   "request": {
+    "action": "show",
+    "command": "settings",
+    "label": "settings-after-interrupt"
+   }
+  },
+  {
+   "answer": {
+    "ask": {
+     "accepted": true,
+     "errors": [],
+     "eventCount": 9,
+     "finishedPhase": "success",
+     "phases": [
+      "starting",
+      "understanding",
+      "planning",
+      "working",
+      "presenting_result",
+      "success"
+     ],
+     "ran": true,
+     "reply": "Your Downloads folder is empty.",
+     "request": "What files are in my Downloads folder?",
+     "returncode": 0
+    },
+    "command": "ask",
+    "label": "companion-answers-again"
+   },
+   "request": {
+    "command": "ask",
+    "label": "companion-answers-again",
+    "request": "What files are in my Downloads folder?",
+    "timeout": 120
+   }
+  }
+ ]
+}

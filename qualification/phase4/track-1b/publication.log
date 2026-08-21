@@ -1,0 +1,163 @@
+api.github.com/user attempt 1: HTTP 503
+api.github.com/user attempt 2: HTTP 503
+api.github.com/user attempt 3: HTTP 503
+api.github.com/user attempt 4: HTTP 503
+api.github.com/user attempt 5: HTTP 503
+api.github.com/user attempt 6: HTTP 503
+api.github.com/user attempt 7: HTTP 503
+api.github.com/user attempt 8: HTTP 503
+api.github.com/user attempt 9: HTTP 503
+api.github.com/user attempt 10: HTTP 503
+api.github.com/user attempt 11: HTTP 503
+api.github.com/user attempt 12: HTTP 503
+api.github.com/user attempt 13: HTTP 503
+api.github.com/user attempt 14: HTTP 503
+api.github.com/user attempt 15: HTTP 503
+api.github.com/user attempt 16: HTTP 503
+api.github.com/user attempt 17: HTTP 503
+api.github.com/user attempt 18: HTTP 503
+api.github.com/user attempt 19: HTTP 200
+=== kind: base ===
+publishing base
+  lock       build/inputs/base-image-lock.json
+  digest     sha256:1f08084a9a8545bd528641d4fda14e18408dfb1298acda243eaf583cd907a844
+  source     /var/lib/bunny-retention/base-images/sha256-c466de539ec94fe2ea996785b8cda08b274316cd6bf21d5e13bd4d9a7f7aee5b
+  registry   ghcr.io/comradeart/bunny-os-base:fedora-bootc-44-1f08084a9a8545bd
+
+authenticated to ghcr.io as COMRADEART
+Getting image source signatures
+Copying blob sha256:258c95279a15b1da4c7e01760ddd9377614d8e969ae6bb0af8f901de95ea828d
+Copying blob sha256:169416761b0c0422b55333210762f1cb205d4aa2791bfe49e46ae9eac3b45df5
+Copying blob sha256:3512c8da9e960b5d3375f2b2593d8f9d020cba6a70be5095ece41e9a7e3d186c
+Copying blob sha256:2e2a62e3a66f3a352afb6311faf34093978cd15561f5fd2d9d8ed35e670b4e3c
+Copying blob sha256:53c91e0cc2022b9e090a4048e01ad9bc169ba568f9c9be57f83014ee33d29a19
+Copying blob sha256:abe5c38ee08bbc39d43e3d08730bb4649925544ca9c2701b52c22da6b2f8cdd3
+Copying blob sha256:b5f9d61b621d9be7434fb9b870738bacb61eefc130874aeee761ad835967311a
+Copying blob sha256:fa1129df4c1b1ce363b760d9a766b4017c81a5ba9e0c24014cce0aaf14fe0744
+Copying blob sha256:4b2d3792c123453ee3862c42956f5bf0d6cc4e722e611174ace0eda8b278cd88
+Copying blob sha256:6a452016241bdd37169c900916ee07e617ee19c746e42d3df20a15bd48ded4dc
+Copying blob sha256:30f3d7850d2bcd84b49240b2df9663640bba3161a1f669e5bbdabd0614f9c848
+Copying blob sha256:a7d470be727e968c45ce00317b05064bdf1d33329516aa4764a7f50fe23ac602
+Copying blob sha256:4f6f462f98690dd92c82daad1a74be61924e1b6644f3c186d20eca01ce95fb60
+Copying blob sha256:9af0c63dcdb1a6433f7defdad53eae6ab7228bd8a29f498b577250b9ebd6f3ee
+Copying blob sha256:1db927dcff1e779d46c67e7e494a8bfc83c3a1514fe3acd382a723d62435737f
+Copying blob sha256:ea662d50ae003ca93750c30092d7911950fe422716a3c6c574ee7d0e37c0e5ba
+Copying blob sha256:3fbc793a2a0e6aee40d2c0afdda1260d09f3c734b12cfe515478eda1d0e3a592
+Copying blob sha256:3e66fc8241c7b75eefc3b36d2b0028779d34cb37a372e3d224b036b27c2ce6c0
+Copying blob sha256:c137dcc76bfcd6b800993ca3d1e2dc7fbcbf3458d335fb2b586184033d2fce5e
+Copying blob sha256:a14c220cdc17b1fde584b620fa4961aed20bf9976910a65025cbdf9a693d2909
+Copying blob sha256:ee974c1c53f39a0040574e5a4032b878ff617ea3876f89cf8e12bd6dc1116386
+Copying blob sha256:b44fa3aa3710eaf3b195d1b08dfa169e4a4db9360fa15764c45999d7bf6b003d
+Copying blob sha256:181578eb2e918299ce52dc4dcbe7657db32edec2c90608e4abe8d7c1f2a0cc8a
+Copying blob sha256:8a139b37dfdf37926b69465431928e50c1fea4fea139eae2194ab86445c06016
+Copying blob sha256:421f4cb2632a74caf226704fa92d40f42c6e872c8c6f1023fd39f797ac055888
+Copying blob sha256:91393a89a2290a61eb579934636221b49516c712947fdd6e0e7f2d6393be2fa1
+Copying blob sha256:c5281e3fbfae6df30042320fcf9a656dd60011ae576cfd18b617ab7bfa121256
+Copying blob sha256:3bcb2e0670417557be8ab62340800cec3f55a84620585722a51df960b16873d5
+Copying blob sha256:68021654a6a1c0e879dd44eef624e17cc782a73a372df2747ba8b46a577877ca
+Copying blob sha256:60d47eb8e12bed0f5c34b4c16b31489e924fc3fee3374531065b73d2cae2ad88
+Copying blob sha256:1152d2efc20792b32117e701224ce4d716e5c4b959dec45bf90b0a9c561ce0a9
+Copying blob sha256:d31ce559ac2cb6003095a5d4af14f48a4d2bdad3c17a2951cadb975dbce1aea5
+Copying blob sha256:0153e9c51ef22e097a553d0359dd87c45f00097a0064d568f834ac4e67098b07
+Copying blob sha256:ce9455412e0ad6f316acf49a79c75e815616770ec37b83d66f2888ecac9a6d9a
+Copying blob sha256:a6e0542a9bbd2985d9834f328ab97bec576b168f81f7f5a6cbc4a7ebfb6d8e6b
+Copying blob sha256:0aa4e98adfe11706b8bdd0f80da63bbbb9b21671852fe38e4dfdc36ae7da2bd3
+Copying blob sha256:f1dffa7298059ccee1ba6b8de164371dc5cf0d6c00ad75da6fbb4964e832c954
+Copying blob sha256:6b38cff649ea78bbeb99291c8c4c5fc5e10cee00847c14cdf42bb63a2dc66976
+Copying blob sha256:153420631039a51f357a7bc9479ef6ba502e0f521e1f281ddd8d05800c9f6dc4
+Copying blob sha256:069ec5d06fd1044230492c0290d3cad147ce936a89d04355a8bd740302fc4edd
+Copying blob sha256:037f083c28ca767ad189c0cbdf85a9dc15b816d857e03c911ba6cfc24df5471d
+Copying blob sha256:7c15d5ca2805a423cf5ec2bf1084575730d689f2f079c972f8b00633587c1678
+Copying blob sha256:57d1ed1fc23f1440bc5963d6bc26879e5fd297bb35189875574a39e6338f79b1
+Copying blob sha256:38394833f08119db77d0f855126db812fa367f2ed3e8694b5f7678875645bf56
+Copying blob sha256:1091598b46211efcce56daab46a91220b97dab27a9ce40a7a6c32fc565447cfc
+Copying blob sha256:c4d5d18d54f5ed324a03f687be412cf6c12530dd3dd5dd14726e4007bca30f2f
+Copying blob sha256:526e9e5dfddf3dae74fabe792955f9f99bba3bc40f3f494930791f9bdcc81750
+Copying blob sha256:d3454c95d5e570f887a7e25a0f0fa39fe74bc02c294f82737af7f2747585ffa5
+Copying blob sha256:9173be97af0aecdd489d6624e337744895391fdeefeb8529e5aa1e82d44b2840
+Copying blob sha256:e185b683a373d22f7d12fc537c7dcf2b891c82f3d910c0ae82b327a36bb6e3d4
+Copying blob sha256:1ba145c7739e1b3fa258498331a86378a3d62dc0b6958c72ef03904d19e168e1
+Copying blob sha256:e90b248a424efb543f79b16cc93fc6d6407dbd174144ef92877d09b4dd1a0dc4
+Copying blob sha256:e4d3689f05c1a8013fd0d32421cafc13e88461e587981df4c9fc8784351f590f
+Copying blob sha256:998fd2954f9128ce049c4f231b5ff17fadb60ea9cfeca59d64216d719dff6f50
+Copying blob sha256:5947ed78ce21606db3d0a23c7ae2a2c0438f0a5a93e9ffa3402ab5cccb76bcdf
+Copying blob sha256:d8cc819c8e09c7194fa51e46ca1fcfd2ff2af6c6d575a9e1ef09cc8aea459c7e
+Copying blob sha256:b6de9bdbe687b60cf5196a91869f89fa0329025dd45148279a0e02cdb328078f
+Copying blob sha256:2f76a7613ef775f9910db85d88b2af335bf626db3e3470cf64c7d86f2da9fb06
+Copying blob sha256:b90f5f9f0f63d8848a26b458bd7a893021cf23e76214445e5107badace236ce6
+Copying blob sha256:05ac858bf082f0161524906bfb29cb5c897e7a81ab8cb78523285e6cef7e0692
+Copying blob sha256:481f2576a068e7e39a84cfb1da286f93f48cdbf82829d38b752b19789990e583
+Copying blob sha256:02c74f40e9136b10d85e83d2af1d90eed5e6ab3e0b9aed445d5c3e82131808f9
+Copying blob sha256:228f77122a81751125c9879c6c7fbd9de768c53b737818805460d81977331df4
+Copying blob sha256:69a7fd0e70a987c666fb06523013efc42ca3f243ce56e2d2da2027881363be37
+Copying blob sha256:9dad063a624b62064bf25dbbc2e802e472d636056f661f2a0be73efd8a4da98b
+Copying config sha256:e0925ed8bc2bc20c88bb3fd0b2b8462932372c684f66a85741d964299472b533
+Writing manifest to image destination
+  pushed digest matches the lock: sha256:1f08084a9a8545bd528641d4fda14e18408dfb1298acda243eaf583cd907a844
+    recorded base: ghcr.io/comradeart/bunny-os-base@sha256:1f08084a9a8545bd528641d4fda14e18408dfb1298acda243eaf583cd907a844
+    65 layers, 1088162578 bytes
+    published so far: base, builder, snapshot
+    wrote build/inputs/input-publication-lock.json
+
+published ghcr.io/comradeart/bunny-os-base@sha256:1f08084a9a8545bd528641d4fda14e18408dfb1298acda243eaf583cd907a844
+Qualification builds must use the digest. The tag fedora-bootc-44-1f08084a9a8545bd is a convenience
+reference and nothing reads it during a build.
+=== kind: builder ===
+publishing builder
+  lock       build/inputs/builder-image-lock.json
+  digest     sha256:bf9f00d81c5d707830676193041862dbb5bccc88c18a000cdb674311917d1f3e
+  source     /var/lib/bunny-retention/builder-images/9c525bf1ca34
+  registry   ghcr.io/comradeart/bunny-os-builder:9c525bf1ca34
+
+authenticated to ghcr.io as COMRADEART
+Getting image source signatures
+Copying blob sha256:995ed2ca5484212a1882e22e5cb4bc00f0e5d32026084279aa08dc64fa5c7a7e
+Copying blob sha256:c06a0c8a60fa16498064429232d3d6186e77037c1c503aa6ee6c220a3ae21a0f
+Copying blob sha256:c4636eed55feadea12fd2599e59e7ffbf50b425c4105ffe240addd76a041664f
+Copying blob sha256:bb7d3478e38315f3bc8bf55df920befcce7bbef198194e5f4435af309305fb6e
+Copying blob sha256:e962adaa547b33ba1a1a673ed82df5f35501f8f9fdd4de6b466866c8705e5998
+Copying blob sha256:e522da0cb53a2c18aee76705d4d3ec48369607c6bac26b6fb99c00481c20dc75
+Copying blob sha256:7cce7e1c868700ebc5d84ed7e0b854613de89086158a1fc017cfca84ad137242
+Copying config sha256:91f88086323ade02a9cc31aef8eb4315f4ab5fedd27f0f73c1c1fc3a162026dc
+Writing manifest to image destination
+  pushed digest matches the lock: sha256:bf9f00d81c5d707830676193041862dbb5bccc88c18a000cdb674311917d1f3e
+    recorded builder: ghcr.io/comradeart/bunny-os-builder@sha256:bf9f00d81c5d707830676193041862dbb5bccc88c18a000cdb674311917d1f3e
+    7 layers, 250006266 bytes
+    published so far: base, builder, snapshot
+    wrote build/inputs/input-publication-lock.json
+
+published ghcr.io/comradeart/bunny-os-builder@sha256:bf9f00d81c5d707830676193041862dbb5bccc88c18a000cdb674311917d1f3e
+Qualification builds must use the digest. The tag 9c525bf1ca34 is a convenience
+reference and nothing reads it during a build.
+=== kind: snapshot ===
+publishing snapshot
+  lock       build/inputs/package-snapshot-lock.json
+  digest     fa89f5e28175abf037acb0e83a5a7fa2868b415db12732c2afff98017fb70ada
+  source     /var/lib/bunny-retention/package-snapshots/fedora-44-beta-20260810-tts
+  registry   ghcr.io/comradeart/bunny-os-package-snapshot:fedora-44-beta-20260810-tts
+
+authenticated to ghcr.io as COMRADEART
+STEP 1/3: FROM scratch
+STEP 2/3: COPY snapshot /snapshot
+--> ecf0d44a0ee5
+STEP 3/3: LABEL art.comrade.bunny-os.input="package-snapshot"       art.comrade.bunny-os.contract="1.0.0"       org.opencontainers.image.title="Bunny OS retained package snapshot"
+COMMIT localhost/bunny-os-package-snapshot:fedora-44-beta-20260810-tts
+--> e68a1860bf2f
+Successfully tagged localhost/bunny-os-package-snapshot:fedora-44-beta-20260810-tts
+e68a1860bf2f7740aed19fc85119e879ca98b5ba4dca559dc8a067a1ef197466
+time="2026-08-17T12:17:18-04:00" level=info msg="Not using native diff for overlay, this may cause degraded performance for building images: kernel has CONFIG_OVERLAY_FS_REDIRECT_DIR enabled"
+Getting image source signatures
+Copying blob sha256:ef01d75d2a643ec648ebf2ffd9e44440bc1041b3ccb9f8a55af762ff4bbbb087
+Copying config sha256:e68a1860bf2f7740aed19fc85119e879ca98b5ba4dca559dc8a067a1ef197466
+Writing manifest to image destination
+  snapshot manifest digest (signed content) fa89f5e28175abf037acb0e83a5a7fa2868b415db12732c2afff98017fb70ada
+  OCI wrapper digest (registry)             sha256:648636edf40e290be0425984370837859b1eaa1b5d9a56a6cd01623e4aed7195
+    recorded snapshot: ghcr.io/comradeart/bunny-os-package-snapshot@sha256:648636edf40e290be0425984370837859b1eaa1b5d9a56a6cd01623e4aed7195
+    1 layers, 624559019 bytes
+    published so far: base, builder, snapshot
+    wrote build/inputs/input-publication-lock.json
+
+published ghcr.io/comradeart/bunny-os-package-snapshot@sha256:648636edf40e290be0425984370837859b1eaa1b5d9a56a6cd01623e4aed7195
+Qualification builds must use the digest. The tag fedora-44-beta-20260810-tts is a convenience
+reference and nothing reads it during a build.
+TRACK1B-ALL-DONE

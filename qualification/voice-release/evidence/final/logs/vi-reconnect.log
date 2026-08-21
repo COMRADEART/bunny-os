@@ -1,0 +1,37 @@
+===== speaking: /tmp/utt-memory.raw =====
+microphone open at 06:47:43.295
+utterance queued at 06:47:43.700
+
+===== events =====
+voice_started            {}
+microphone               {"active": true}
+voice_phase              {"phase": "listening", "statusText": "Listening..."}
+partial                  {"text": "how"}
+partial                  {"text": "how much"}
+partial                  {"text": "how much memory"}
+partial                  {"text": "how much memory and"}
+partial                  {"text": "how much memory am i"}
+partial                  {"text": "how much memory and i"}
+partial                  {"text": "how much memory am i using"}
+microphone               {"active": false}
+voice_phase              {"phase": "transcribing", "statusText": "Transcribing..."}
+microphone               {"active": false}
+microphone               {"active": false}
+microphone               {"active": false}
+transcript               {"text": "how much memory am i using", "confidence": 1.0, "providerId": "vosk"}
+accepted                 {"taskId": "task-6f161138f4e54320b71612248ce16bba"}
+phase                    {"phase": "starting", "statusText": "Starting...", "taskId": "task-6f161138f4e54320b71612248ce16bba"}
+phase                    {"phase": "understanding", "statusText": "Understanding...", "taskId": "task-6f161138f4e54320b71612248ce16bba"}
+phase                    {"phase": "planning", "statusText": "Planning...", "taskId": "task-6f161138f4e54320b71612248ce16bba"}
+phase                    {"phase": "working", "statusText": "Working...", "taskId": "task-6f161138f4e54320b71612248ce16bba"}
+phase                    {"phase": "presenting_result", "statusText": "Preparing the response...", "taskId": "task-6f161138f4e54320b71612248ce16bba"}
+reply                    {"text": "You are using 2.0 GiB of 5.8 GiB of memory (34%).", "taskId": "task-6f161138f4e54320b71612248ce16bba"}
+speech_started           {"taskId": "task-6f161138f4e54320b71612248ce16bba", "providerId": "pocket", "deviceId": "alsa_output.pci-0000_00_04.0.analog-stereo"}
+phase                    {"phase": "speaking", "statusText": "Speaking...", "taskId": "task-6f161138f4e54320b71612248ce16bba"}
+speech_finished          {"taskId": "task-6f161138f4e54320b71612248ce16bba"}
+phase                    {"phase": "success", "statusText": "Done", "taskId": "task-6f161138f4e54320b71612248ce16bba"}
+finished                 {"phase": "success", "taskId": "task-6f161138f4e54320b71612248ce16bba"}
+--- stderr ---
+--- mic daemon ---
+mic-daemon: speaking restored.raw (5.87s)
+mic-daemon: speaking offline.raw (3.89s)

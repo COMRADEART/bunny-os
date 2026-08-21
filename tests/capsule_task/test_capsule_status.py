@@ -83,13 +83,28 @@ class HonestyTests(unittest.TestCase):
         self.addCleanup(self.world.close)
 
     def test_an_unenforced_permission_becomes_a_caveat_not_a_silence(self) -> None:
+        """Backend-level unenforcement: a grant the chosen backend cannot hold
+        must surface as a caveat. Clipboard no longer works as the specimen —
+        policy refuses that category before a grant can exist — so the specimen
+        is a real grant on a backend that cannot enforce it."""
+        world = World.build(probe=unconfined_probe())
+        self.addCleanup(world.close)
+        capsule = world.install(manifest_for(optional=("gpu",)))
+        world.answer(("gpu", "allow", "always"))
+        world.request(capsule, category="gpu")
+        world_capsule = world.runtime.open("org.example.PhotoEditor")
+        status = capsule_status(
+            world_capsule, world.runtime.build_plan(world_capsule, allow_unconfined=True)
+        )
+        self.assertTrue(any("Graphics acceleration" in caveat for caveat in status.caveats))
+        self.assertTrue(any("cannot stop" in caveat for caveat in status.caveats))
+
+    def test_an_unenforceable_category_is_refused_not_granted(self) -> None:
         capsule = self.world.install(manifest_for(optional=("clipboard",)))
         self.world.answer(("clipboard", "allow", "session"))
-        self.world.request(capsule, category="clipboard")
-        world_capsule = self.world.runtime.open("org.example.PhotoEditor")
-        status = capsule_status(world_capsule, self.world.runtime.build_plan(world_capsule))
-        self.assertTrue(any("Clipboard" in caveat for caveat in status.caveats))
-        self.assertTrue(any("cannot stop" in caveat for caveat in status.caveats))
+        decision = self.world.request(capsule, category="clipboard")
+        self.assertFalse(decision.allowed)
+        self.assertEqual(decision.reason_code, "not-enforceable")
 
     def test_an_unfilterable_network_class_never_reads_as_a_boundary(self) -> None:
         """The sentence this test exists to prevent is 'Network: example.com only'
@@ -109,7 +124,25 @@ class HonestyTests(unittest.TestCase):
         self.assertFalse(plan.network_enforced)
         self.assertEqual(dict(status.plain)["Network"], "On")
         self.assertNotIn("example.com", dict(status.plain)["Network"])
-        self.assertTrue(any("cannot restrict it" in caveat for caveat in status.caveats))
+        self.assertTrue(any("cannot hold it" in caveat for caveat in status.caveats))
+        self.assertTrue(any("anything on the internet" in caveat for caveat in status.caveats))
+
+    def test_a_local_network_grant_reads_as_on_not_as_a_subnet(self) -> None:
+        """'Your local network' implies a boundary nothing in this build holds."""
+        capsule = self.world.install(
+            manifest_for(optional=("network",), network_ceiling="local-network")
+        )
+        self.world.answer(("network", "allow", "always"))
+        self.world.request(
+            capsule, category="network",
+            resource=trust.network_resource("local-network"),
+        )
+        reopened = self.world.runtime.open("org.example.PhotoEditor")
+        plan = self.world.runtime.build_plan(reopened)
+        status = capsule_status(reopened, plan)
+        self.assertFalse(plan.network_enforced)
+        self.assertEqual(dict(status.plain)["Network"], "On")
+        self.assertTrue(any("anything on the internet" in caveat for caveat in status.caveats))
 
     def test_a_non_confining_plan_says_so_in_the_plain_layer(self) -> None:
         world = World.build(probe=unconfined_probe())

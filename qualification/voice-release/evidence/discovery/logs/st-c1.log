@@ -1,0 +1,33 @@
+===== speaking: /tmp/utt-memory.raw =====
+microphone open at 05:55:25.753
+utterance queued at 05:55:26.158
+
+===== events =====
+voice_started            {}
+microphone               {"active": true}
+voice_phase              {"phase": "listening", "statusText": "Listening..."}
+partial                  {"text": "how much"}
+partial                  {"text": "how much memory"}
+partial                  {"text": "how much memory am i"}
+partial                  {"text": "how much memory am i using"}
+microphone               {"active": false}
+microphone               {"active": false}
+microphone               {"active": false}
+voice_phase              {"phase": "transcribing", "statusText": "Transcribing..."}
+transcript               {"text": "how much memory am i using", "confidence": 1.0, "providerId": "vosk"}
+accepted                 {"taskId": "task-6ba038299e0e4d1f80c5dad3b6af240c"}
+phase                    {"phase": "starting", "statusText": "Starting...", "taskId": "task-6ba038299e0e4d1f80c5dad3b6af240c"}
+phase                    {"phase": "understanding", "statusText": "Understanding...", "taskId": "task-6ba038299e0e4d1f80c5dad3b6af240c"}
+phase                    {"phase": "planning", "statusText": "Planning...", "taskId": "task-6ba038299e0e4d1f80c5dad3b6af240c"}
+phase                    {"phase": "working", "statusText": "Working...", "taskId": "task-6ba038299e0e4d1f80c5dad3b6af240c"}
+phase                    {"phase": "presenting_result", "statusText": "Preparing the response...", "taskId": "task-6ba038299e0e4d1f80c5dad3b6af240c"}
+reply                    {"text": "You are using 2.0 GiB of 5.8 GiB of memory (34%).", "taskId": "task-6ba038299e0e4d1f80c5dad3b6af240c"}
+speech_started           {"taskId": "task-6ba038299e0e4d1f80c5dad3b6af240c", "providerId": "pocket", "deviceId": "alsa_output.pci-0000_00_04.0.analog-stereo"}
+phase                    {"phase": "speaking", "statusText": "Speaking...", "taskId": "task-6ba038299e0e4d1f80c5dad3b6af240c"}
+speech_finished          {"taskId": "task-6ba038299e0e4d1f80c5dad3b6af240c"}
+phase                    {"phase": "success", "statusText": "Done", "taskId": "task-6ba038299e0e4d1f80c5dad3b6af240c"}
+finished                 {"phase": "success", "taskId": "task-6ba038299e0e4d1f80c5dad3b6af240c"}
+--- stderr ---
+--- mic daemon ---
+mic-daemon: speaking noisy.raw (5.87s)
+mic-daemon: speaking c1.raw (5.87s)

@@ -1,0 +1,80 @@
+{
+ "fixtureClass": "TEST_FIXTURE_ONLY",
+ "purpose": "Drives the reviewer-conflict dry run: two accepted submissions disagree about the same baseline Critical and about the overall outcome. Both are preserved; the conflict is recorded and classified; the effective assessment pending resolution is the most blocking.",
+ "records": [
+  {
+   "schema": "bunny-os/security-review-submission/1",
+   "reviewer_id": "REVIEWER-001",
+   "reviewer": "REVIEWER-001",
+   "organisation": "TEST_FIXTURE_ONLY dry run",
+   "independence": {
+    "declaration": "constructed fixture: this reviewer had no role in producing artifact e906a48793d7 and no interest in its approval",
+    "relationship_to_project": "none",
+    "is_release_decision_authority": false,
+    "policy_exception": null
+   },
+   "artifact_digest": "sha256:c87a6616008ce34f97840f63814e08fdb33574b52202fbb4841b7f5aa7f8562d",
+   "artifactDigest": "sha256:c87a6616008ce34f97840f63814e08fdb33574b52202fbb4841b7f5aa7f8562d",
+   "independently_computed_digest": "sha256:c87a6616008ce34f97840f63814e08fdb33574b52202fbb4841b7f5aa7f8562d",
+   "digest_basis": "image",
+   "digest_computation": "constructed fixture: skopeo inspect --format {{.Digest}} oci-archive:bunny-alpha.tar",
+   "review_scope_version": "SCOPE-1",
+   "scope": "constructed fixture: independent review of artifact e906a48793d7 under REVIEW_SCOPE.md SCOPE-1",
+   "review_start": "2026-08-17",
+   "review_end": "2026-08-18",
+   "date": "2026-08-18",
+   "findings": [
+    {
+     "reviewer_finding_id": "A-F1",
+     "title": "constructed fixture finding for GHSA-p77j-4mvh-x3m3",
+     "severity": "Critical",
+     "affected_component": "google.golang.org/grpc",
+     "applicability": "NOT_APPLICABLE",
+     "evidence": "constructed fixture: no grpc server is instantiated in any shipped binary; listener audit attached",
+     "rationale": "server-side vulnerability with no server present",
+     "recommended_disposition": "NOT_APPLICABLE",
+     "baseline_advisory": "GHSA-p77j-4mvh-x3m3"
+    }
+   ],
+   "overall_assessment": "APPROVED",
+   "disposition": "APPROVED"
+  },
+  {
+   "schema": "bunny-os/security-review-submission/1",
+   "reviewer_id": "REVIEWER-002",
+   "reviewer": "REVIEWER-002",
+   "organisation": "TEST_FIXTURE_ONLY dry run",
+   "independence": {
+    "declaration": "constructed fixture: this reviewer had no role in producing artifact e906a48793d7 and no interest in its approval",
+    "relationship_to_project": "none",
+    "is_release_decision_authority": false,
+    "policy_exception": null
+   },
+   "artifact_digest": "sha256:c87a6616008ce34f97840f63814e08fdb33574b52202fbb4841b7f5aa7f8562d",
+   "artifactDigest": "sha256:c87a6616008ce34f97840f63814e08fdb33574b52202fbb4841b7f5aa7f8562d",
+   "independently_computed_digest": "sha256:c87a6616008ce34f97840f63814e08fdb33574b52202fbb4841b7f5aa7f8562d",
+   "digest_basis": "image",
+   "digest_computation": "constructed fixture: skopeo inspect --format {{.Digest}} oci-archive:bunny-alpha.tar",
+   "review_scope_version": "SCOPE-1",
+   "scope": "constructed fixture: independent review of artifact e906a48793d7 under REVIEW_SCOPE.md SCOPE-1",
+   "review_start": "2026-08-17",
+   "review_end": "2026-08-18",
+   "date": "2026-08-18",
+   "findings": [
+    {
+     "reviewer_finding_id": "B-F1",
+     "title": "constructed fixture finding for GHSA-p77j-4mvh-x3m3",
+     "severity": "Critical",
+     "affected_component": "google.golang.org/grpc",
+     "applicability": "APPLICABLE",
+     "evidence": "constructed fixture: podman system service exposes a grpc endpoint on demand; capture attached",
+     "rationale": "the server path is reachable under a supported configuration",
+     "recommended_disposition": "FIX_BEFORE_ALPHA",
+     "baseline_advisory": "GHSA-p77j-4mvh-x3m3"
+    }
+   ],
+   "overall_assessment": "BLOCKED",
+   "disposition": "BLOCKED"
+  }
+ ]
+}

@@ -1,0 +1,58 @@
+{
+ "fixtureClass": "TEST_FIXTURE_ONLY",
+ "fixture": true,
+ "test_fixture_only": true,
+ "warning": [
+  "TEST_FIXTURE_ONLY",
+  "NOT EXTERNAL EVIDENCE",
+  "NOT APPLICABLE TO THE SUBJECT ARTIFACT"
+ ],
+ "purpose": "A structurally complete example of a conditional-approval review submission. Drives the valid-review scenarios in scratch universes and travels in the reviewer handoff package as a marked example. The wrapper you are reading is refused by the intake mechanically; the inner record exists so a reviewer sees the shape, never so anyone submits it.",
+ "record": {
+  "schema": "bunny-os/security-review-submission/1",
+  "reviewer_id": "REVIEWER-EX1",
+  "reviewer": "REVIEWER-EX1",
+  "independence": {
+   "declaration": "constructed fixture: this reviewer had no role in producing artifact e906a48793d7 and no interest in its approval",
+   "relationship_to_project": "none",
+   "is_release_decision_authority": false,
+   "policy_exception": null
+  },
+  "artifact_digest": "sha256:c87a6616008ce34f97840f63814e08fdb33574b52202fbb4841b7f5aa7f8562d",
+  "artifactDigest": "sha256:c87a6616008ce34f97840f63814e08fdb33574b52202fbb4841b7f5aa7f8562d",
+  "independently_computed_digest": "sha256:c87a6616008ce34f97840f63814e08fdb33574b52202fbb4841b7f5aa7f8562d",
+  "digest_basis": "image",
+  "digest_computation": "constructed fixture: skopeo inspect --format {{.Digest}} oci-archive:bunny-alpha.tar",
+  "review_scope_version": "SCOPE-1",
+  "scope": "constructed fixture: independent review of artifact e906a48793d7 under REVIEW_SCOPE.md SCOPE-1",
+  "review_start": "2026-08-17",
+  "review_end": "2026-08-19",
+  "date": "2026-08-19",
+  "findings": [
+   {
+    "reviewer_finding_id": "EX1-F1",
+    "title": "constructed fixture finding for GHSA-5cgq-3rg8-m6cv",
+    "severity": "Critical",
+    "affected_component": "golang.org/x/crypto",
+    "applicability": "APPLICABLE",
+    "evidence": "constructed fixture: the vulnerable symbol is present in a shipped binary and the transport path that reaches it is enabled",
+    "rationale": "constructed fixture: presence plus reachability establish applicability",
+    "recommended_disposition": "FIX_BEFORE_ALPHA",
+    "baseline_advisory": "GHSA-5cgq-3rg8-m6cv"
+   },
+   {
+    "reviewer_finding_id": "EX1-F2",
+    "title": "constructed fixture finding for CVE-2020-27815",
+    "severity": "High",
+    "affected_component": "linux-kernel",
+    "applicability": "NOT_APPLICABLE",
+    "evidence": "constructed fixture: the affected filesystem is not compiled into the shipped kernel; config listing attached in a real review",
+    "rationale": "constructed fixture: the affected code cannot be loaded on the artifact as shipped",
+    "recommended_disposition": "NOT_APPLICABLE",
+    "baseline_advisory": "CVE-2020-27815"
+   }
+  ],
+  "overall_assessment": "APPROVED_WITH_CONDITIONS",
+  "disposition": "APPROVED_WITH_CONDITIONS"
+ }
+}

@@ -1,0 +1,33 @@
+speech started for task-47ab8068fa02448fae9bc4f377df03b4
+players before the cancel: 1  sink: RUNNING
+cancel answered: {"event": "speech_output_cancelled", "available": true, "cancelled": ["speech-572377f322f74039a96771e104bcd025"], "captionRetained": true, "count": 1, "taskAffe
+audio stopped 130 ms after the cancel
+--- did anything play afterwards? ---
+sink state: SUSPENDED
+players now: 0
+--- events ---
+voice_started        {}
+microphone           {}
+voice_phase          {"phase": "listening"}
+partial              {"text": "what"}
+partial              {"text": "what can"}
+partial              {"text": "what can you"}
+partial              {"text": "what can you do"}
+microphone           {}
+microphone           {}
+microphone           {}
+voice_phase          {"phase": "transcribing"}
+transcript           {"text": "what can you do", "providerId": "vosk"}
+accepted             {}
+phase                {"phase": "starting"}
+phase                {"phase": "understanding"}
+phase                {"phase": "planning"}
+phase                {"phase": "working"}
+phase                {"phase": "presenting_result"}
+reply                {"text": "I can resize an image, open applications and folders, search approved user folders, read current system metrics, and control an ac
+speech_started       {"providerId": "pocket"}
+phase                {"phase": "speaking"}
+speech_finished      {"disposition": "cancelled"}
+phase                {"phase": "success"}
+finished             {"phase": "success"}
+listen client reaped

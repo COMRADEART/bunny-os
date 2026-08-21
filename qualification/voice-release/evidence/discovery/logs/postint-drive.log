@@ -1,0 +1,85 @@
+  watcher-started: {"samples": 1}
+  microphone-button: {"found": true, "at": {"x": 1830, "y": 684, "width": 24, "height": 24}}
+  clicked-microphone: {"at": {"x": 1842, "y": 696}}
+  state: listening (+0.7s)
+  listening: {"microphoneIndicator": true}
+  allowed: {"detail": "none"}
+  spoke: {"utterance": "/tmp/utt-memory.raw"}
+  allowed: {"detail": "none"}
+  state: thinking (+10.6s)
+  allowed: {"detail": "none"}
+  state: working (+10.8s)
+  allowed: {"detail": "none"}
+  state: thinking (+10.9s)
+  allowed: {"detail": "none"}
+  state: success (+71.3s)
+  allowed: {"detail": "none"}
+  state: idle (+74.5s)
+  allowed: {"detail": "none"}
+/root/bunny-ops/e2e/runs/s2/screens/ee1-00-idle.png (1920x1080)
+/root/bunny-ops/e2e/runs/s2/screens/ee1-01-listening.png (1920x1080)
+/root/bunny-ops/e2e/runs/s2/screens/ee1-02-talking.png (1920x1080)
+/root/bunny-ops/e2e/runs/s2/screens/ee1-03-approval.png (1920x1080)
+/root/bunny-ops/e2e/runs/s2/screens/ee1-04-after.png (1920x1080)
+/root/bunny-ops/e2e/runs/s2/screens/mem-00-idle.png (1920x1080)
+/root/bunny-ops/e2e/runs/s2/screens/mem-01-listening.png (1920x1080)
+/root/bunny-ops/e2e/runs/s2/screens/mem-02-talking.png (1920x1080)
+/root/bunny-ops/e2e/runs/s2/screens/mem-03-approval.png (1920x1080)
+/root/bunny-ops/e2e/runs/s2/screens/mem-04-after.png (1920x1080)
+/root/bunny-ops/e2e/runs/s2/screens/pdfs-00-idle.png (1920x1080)
+/root/bunny-ops/e2e/runs/s2/screens/pdfs-01-listening.png (1920x1080)
+/root/bunny-ops/e2e/runs/s2/screens/pdfs-02-talking.png (1920x1080)
+/root/bunny-ops/e2e/runs/s2/screens/pdfs-03-approval.png (1920x1080)
+/root/bunny-ops/e2e/runs/s2/screens/pdfs-04-after.png (1920x1080)
+/root/bunny-ops/e2e/runs/s2/screens/postint-00-idle.png (1920x1080)
+/root/bunny-ops/e2e/runs/s2/screens/postint-01-listening.png (1920x1080)
+/root/bunny-ops/e2e/runs/s2/screens/postint-03-approval.png (1920x1080)
+/root/bunny-ops/e2e/runs/s2/screens/postint-04-after.png (1920x1080)
+/root/bunny-ops/e2e/runs/s2/screens/s2-00-desktop.png (1920x1080)
+{
+  "tag": "postint",
+  "utterance": "/tmp/utt-memory.raw",
+  "transitions": [
+    {
+      "state": "listening",
+      "at": 1786855915.995,
+      "sinceClick": 0.66
+    },
+    {
+      "state": "thinking",
+      "at": 1786855925.981,
+      "sinceClick": 10.64
+    },
+    {
+      "state": "working",
+      "at": 1786855926.134,
+      "sinceClick": 10.79
+    },
+    {
+      "state": "thinking",
+      "at": 1786855926.287,
+      "sinceClick": 10.95
+    },
+    {
+      "state": "success",
+      "at": 1786855986.598,
+      "sinceClick": 71.26
+    },
+    {
+      "state": "idle",
+      "at": 1786855989.804,
+      "sinceClick": 74.46
+    }
+  ],
+  "screens": {
+    "00-idle": "/root/bunny-ops/e2e/runs/s2/screens/postint-00-idle.ppm",
+    "01-listening": "/root/bunny-ops/e2e/runs/s2/screens/postint-01-listening.ppm",
+    "03-approval": "/root/bunny-ops/e2e/runs/s2/screens/postint-03-approval.ppm",
+    "04-after": "/root/bunny-ops/e2e/runs/s2/screens/postint-04-after.ppm"
+  },
+  "listeningSeen": true,
+  "talkingSeen": false,
+  "approved": false,
+  "finalState": "idle",
+  "says": "Bunny says: You are using 2.0 GiB of 5.8 GiB of memory (34%)."
+}

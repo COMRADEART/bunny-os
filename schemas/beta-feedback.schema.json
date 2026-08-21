@@ -22,7 +22,7 @@
         "source": { "type": "string", "minLength": 1, "maxLength": 64 },
         "sourceId": { "type": "string", "minLength": 1, "maxLength": 128 },
         "affectedVersion": { "type": "string", "minLength": 1, "maxLength": 128 },
-        "component": { "type": "string", "enum": ["Boot", "Installer", "Encryption", "Secure Boot", "Recovery", "Updates", "Rollback", "Kernel", "Firmware", "Graphics", "Display", "Wi-Fi", "Bluetooth", "Audio", "Camera", "Suspend", "Power", "Bunny Shell", "Bunny Core", "Bunny Desktop", "Privileged broker", "Applications", "Flatpak", "Accessibility", "Privacy", "Security", "Performance", "Documentation"] },
+        "component": { "type": "string", "enum": ["Boot", "Installer", "Encryption", "Secure Boot", "Recovery", "Updates", "Rollback", "Kernel", "Firmware", "Graphics", "Display", "Wi-Fi", "Bluetooth", "Audio", "Camera", "Suspend", "Power", "Bunny Shell", "Bunny Core", "Bunny Desktop", "Privileged broker", "Applications", "Flatpak", "Accessibility", "Privacy", "Security", "Performance", "Documentation", "Companion", "Voice", "Trust", "App capsules"] },
         "severity": { "type": "string", "enum": ["Blocker", "Critical", "High", "Medium", "Low", "Enhancement"] },
         "reproducibility": { "type": "string", "enum": ["always", "intermittent", "once", "not_reproduced", "unknown"] },
         "environment": { "type": "object", "additionalProperties": { "type": ["string", "number", "boolean", "null"] }, "maxProperties": 32 },

@@ -1,0 +1,130 @@
+{
+ "allSevenAnnounced": true,
+ "bounds": {
+  "audio": "Speech is routed to sd_dummy; this guest has no sound device. This records what was submitted to be spoken, not that it was audible or at what rate.",
+  "notKeyboardDriven": "The journey was driven by pointer with Orca listening. Nobody navigated the prompt by keyboard with a screen reader, which is the fuller question.",
+  "oneSliceOnly": "granted. blocked and failed were not driven with Orca running."
+ },
+ "candidateCommit": "7edd3fd",
+ "capture": {
+  "orcaDebugUtterances": 56,
+  "source": "orca-debug",
+  "speechdUtterances": 0,
+  "totalUtterances": 56
+ },
+ "covered": {
+  "applicationName": {
+   "announced": true,
+   "phrase": "Bunny Image Tool",
+   "utterance": "Bunny Image Tool wants to open Pictures/holiday.png It will save a copy as holiday-resized.png. Your original file will not be changed. Shared with the application: Pictures/holiday.png Files: Pictures/holiday.png only Network: Off App data: Isolated Allow, or deny. Deny is selected."
+  },
+  "bothOptions": {
+   "announced": true,
+   "phrase": "Allow, or deny",
+   "utterance": "Bunny Image Tool wants to open Pictures/holiday.png It will save a copy as holiday-resized.png. Your original file will not be changed. Shared with the application: Pictures/holiday.png Files: Pictures/holiday.png only Network: Off App data: Isolated Allow, or deny. Deny is selected."
+  },
+  "completed": {
+   "announced": true,
+   "phrase": "Done. I made",
+   "utterance": "Bunny says: Done. I made Pictures/holiday-resized.png at 100 pixels wide. Your original wasn't changed."
+  },
+  "confinement": {
+   "announced": true,
+   "phrase": "Network: Off",
+   "utterance": "Bunny Image Tool wants to open Pictures/holiday.png It will save a copy as holiday-resized.png. Your original file will not be changed. Shared with the application: Pictures/holiday.png Files: Pictures/holiday.png only Network: Off App data: Isolated Allow, or deny. Deny is selected."
+  },
+  "focusedControlIsTheSafeOne": {
+   "announced": true,
+   "phrase": "Deny this Bunny action",
+   "utterance": "Deny this Bunny action"
+  },
+  "reason": {
+   "announced": true,
+   "phrase": "will save a copy",
+   "utterance": "Bunny Image Tool wants to open Pictures/holiday.png It will save a copy as holiday-resized.png. Your original file will not be changed. Shared with the application: Pictures/holiday.png Files: Pictures/holiday.png only Network: Off App data: Isolated Allow, or deny. Deny is selected."
+  },
+  "requestedResource": {
+   "announced": true,
+   "phrase": "holiday.png",
+   "utterance": "Bunny Image Tool wants to open Pictures/holiday.png It will save a copy as holiday-resized.png. Your original file will not be changed. Shared with the application: Pictures/holiday.png Files: Pictures/holiday.png only Network: Off App data: Isolated Allow, or deny. Deny is selected."
+  }
+ },
+ "observations": [
+  "The whole prompt is one utterance of 283 characters, in reading order: identity, effect, disclosure, the three confinement rows, then the options and which is selected. Complete and correctly ordered; whether it is followable at speech rate is a question for a listener, not a log.",
+  "Allow is never announced as a control, because Orca announces the focused one and Deny holds focus by design. The choice is conveyed by the prompt itself - 'Allow, or deny. Deny is selected.' - so a person hears that Allow exists. The first version of this check demanded the button's name be spoken on appearance, which is a screen reader behaviour nobody wants, and reported a defect that was not there.",
+  "The repeats are Orca key echo and container roles - 'panel', single letters while typing - not duplicated Bunny announcements."
+ ],
+ "orca": {
+  "debugLines": 2945,
+  "isOurInstance": true,
+  "unitExecStart": "ExecStart={ path=/usr/bin/orca ; argv[]=/usr/bin/orca --debug --debug-file=/tmp/bunny-orca-debug.txt ; ignore_errors=no ; start_time=[Thu 2026-08-13 00:42:57 UTC] ; stop_time=[n/a] ; pid=2847 ; code=(null) ; status=0/0 }",
+  "version": "orca-50.2-1.fc44"
+ },
+ "repeatedUtterances": {
+  "Main stage.": 2,
+  "left shift": 2,
+  "notification": 2
+ },
+ "schemaVersion": 2,
+ "section": "screen-reader",
+ "thePromptAnnouncement": "Bunny Image Tool wants to open Pictures/holiday.png It will save a copy as holiday-resized.png. Your original file will not be changed. Shared with the application: Pictures/holiday.png Files: Pictures/holiday.png only Network: Off App data: Isolated Allow, or deny. Deny is selected.",
+ "utterances": [
+  "Screen reader on.",
+  "left super",
+  "left shift",
+  "B",
+  "Main stage.",
+  "Bunny assistant",
+  "panel",
+  "Ask Bunny",
+  "panel",
+  "text.",
+  "Ask anything...",
+  "left shift",
+  "R",
+  "e",
+  "s",
+  "i",
+  "z",
+  "e",
+  "space",
+  "t",
+  "h",
+  "i",
+  "s",
+  "space",
+  "t",
+  "o",
+  "space",
+  "1",
+  "0",
+  "0",
+  "space",
+  "p",
+  "i",
+  "x",
+  "e",
+  "l",
+  "s",
+  "space",
+  "w",
+  "i",
+  "d",
+  "e",
+  ".",
+  "return",
+  "notification",
+  "Bunny says: Let me look at that.",
+  "Main stage.",
+  "Bunny assistant Waiting for permission...",
+  "panel",
+  "Bunny Image Tool wants to open Pictures/holiday.png It will save a copy as holiday-resized.png. Your original file will not be changed. Shared with the application: Pictures/holiday.png Files: Pictures/holiday.png only Network: Off App data: Isolated Allow, or deny. Deny is selected.",
+  "panel",
+  "Deny this Bunny action",
+  "button.",
+  "notification",
+  "Bunny says: Done. I made Pictures/holiday-resized.png at 100 pixels wide. Your original wasn't changed.",
+  "Screen reader off."
+ ],
+ "verdict": "MEASURED"
+}

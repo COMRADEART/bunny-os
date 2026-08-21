@@ -54,7 +54,130 @@ _PHASES_AFTER_THE_RECORD = (
     # record that covered a tree still being written to would have to be
     # rewritten on every run, which is the opposite of immutable.
     "qualification/capsules/",
+    # The design-system phase (Orca and screenshot evidence), the installer
+    # phase (journey evidence and the installed-system context), and Stage 2's
+    # voice release each committed their own trees after the record. Declared
+    # when Phase 3 classified the two preservation failures they caused: the
+    # failures fired because later phases existed, not because earlier
+    # evidence changed.
+    "qualification/design/",
+    "qualification/installer/",
+    "qualification/installer-journeys/",
+    "qualification/voice-release/",
+    # Phase 3's own tree.
+    "qualification/phase3/",
+    # Phase 4's, for the same reason: the Alpha hardening phase committed the
+    # power-key investigation and the release-candidate qualification under
+    # its own name. A later phase existing is not an earlier phase changing.
+    "qualification/phase4/",
+    # Phase 5's baseline record and evidence.
+    "qualification/phase5/",
+    # Phase 6's, for the same reason. Its tree is where the external-gate work
+    # lives: the baseline freeze, the blocking conditions, the update-refusal
+    # qualification and its negative control, the security review package, and
+    # three hardware journeys whose expectations were written before any machine
+    # existed. Note that Phase 6 also carries a *correction* to Phase 5's
+    # security evidence — and it is a correction record under this prefix, not
+    # an edit to Phase 5's files, which is why the byte-identity check above
+    # still passes unchanged.
+    "qualification/phase6/",
+    # Phase 7's, for the same reason. Its tree opens with the blocking
+    # conditions committed before any result, and will carry the rollback,
+    # recovery, accessibility, immutability and executability evidence. Phase 7
+    # also closes the gap this exempt list *is*: everything declared here after
+    # fa49380 is pinned by nothing, which Phase 6 measured and recorded. The
+    # successor record — `qualification/phase7/immutability/frozen-evidence.json`,
+    # enforced by `tests/release/test_frozen_evidence.py` — pins every tree in
+    # this list except the one still being written to. This test keeps guarding
+    # its own record unchanged; the successor guards the rest.
+    "qualification/phase7/",
+    # Phase 8's, for the same reason: the external-validation governance tree
+    # — blocking conditions, the review package, the hardware matrix, signing
+    # readiness, the Alpha program operations. A later phase existing is not
+    # an earlier phase changing. The successor guard declares it too, in its
+    # own PHASES_AFTER_THE_RECORD.
+    "qualification/phase8/",
+    # Phase 9's: the external-evidence intake boundary — the append-only
+    # ledger with its own sealed-entry guard (tests/release/test_phase9_intake.py),
+    # the triage registry, and the Alpha release decision record. Incoming
+    # evidence lands here and never in a Phase 4–8 tree; both this guard and
+    # the successor refused these files as additions until this declaration,
+    # which is the refusal a new tree is supposed to earn.
+    "qualification/phase9/",
+    # Phase 10's: candidate operations — the artifact graph, the evidence
+    # applicability engine, the impact mapping and requalification planner,
+    # the candidate and finding state machines, and the derived candidate
+    # status. Same refusal earned, same deliberate declaration.
+    "qualification/phase10/",
+    # Phase 11's: independent-security-review operations — the review
+    # commissioning package, the frozen scope, the pinned finding baseline,
+    # the submission contract, and the derived security finding register,
+    # which re-derives as accepted evidence arrives. Same refusal earned,
+    # same deliberate declaration.
+    "qualification/phase11/",
+    # Phase 12's: Alpha tester program operations — the canonical tester
+    # package with its pinned Phase 7/8 sources, the recorded dedup and
+    # reproduction records, the sufficiency policy, and the derived Alpha
+    # finding register, which re-derives as tester evidence arrives. Same
+    # refusal earned, same deliberate declaration.
+    "qualification/phase12/",
+    # Phase 13's: release authority and decision governance — the authority
+    # model and sealed assignment registry, the owner-controlled sufficiency
+    # threshold registry, the blocking-condition registry over a pinned
+    # Phase 8 source, the sealed decision registries (risk acceptance,
+    # authorization, revocation, conflict resolution), and the derived
+    # authorization status, which re-derives as authority records and
+    # evidence arrive. Same refusal earned, same deliberate declaration.
+    "qualification/phase13/",
+    # Phase 14's: external-evidence execution and decision rehearsal — the
+    # router, sealed evidence cuts, and the decision assembler, exercised
+    # only on TEST_FIXTURE_ONLY material in scratch universes. MATRIX.json
+    # re-derives from the live phase 9-13 inputs it pins, so the tree cannot
+    # be pinned. Same refusal earned, same deliberate declaration.
+    "qualification/phase14/",
+    # Phase 15's: security-review execution operations — the reviewer
+    # handoff, the derived receipt register, append-only evidence cuts, and
+    # EXTERNAL_STATUS.json / FAILURE_RECOVERY_MATRIX.json, which re-derive
+    # from the live phase 9-14 inputs as evidence arrives, so the tree
+    # cannot be pinned. Same refusal earned, same deliberate declaration.
+    "qualification/phase15/",
+    # Phase 16's external-security-review receipt and gate-execution tree:
+    # reviewer handoff, identity ceremony, the composed one-door operator,
+    # derived matrices/status, and verification. Real evidence can advance its
+    # live views, so this elder cut cannot pin it. Both standing guards refused
+    # all twenty committed files before this deliberate declaration.
+    "qualification/phase16/",
+    # The grader is not evidence at all — it is the instrument, extracted from
+    # ``build/scripts/vm-login-story.sh`` so that it can be unit-tested against
+    # recorded runs. It lives under ``qualification/`` because that directory is
+    # not a ``COPY`` root in ``build/Containerfile``: nothing here reaches the
+    # image, so correcting a check does not require a rebuild and a new artifact
+    # identity. Its ``fixtures/`` hold manifests that *point at* earlier phases'
+    # evidence rather than copying it, so this declaration adds a tool, not a
+    # second copy of a record.
+    "qualification/grader/",
 )
+
+#: Maintained tooling that lives under an earlier phase's directory but is not
+#: a record: the matrix importer is edited by every phase that writes matrix
+#: rows (the installer phase grew its ``journey:`` evidence kind), and pinning
+#: it byte-for-byte makes evidence immutability fail whenever the *tooling*
+#: legitimately improves. Evidence stays pinned; the one named script does not.
+#: Named singly rather than as a directory, so a new file appearing beside it
+#: still fails the added-files check until somebody declares it.
+_MAINTAINED_TOOLING = frozenset({
+    "qualification/installed-system/scripts/import_matrix_results.py",
+    # Phase 5 made ``qualification/`` a Python package so that
+    # ``qualification.grader`` — the extracted VM journey grader — is
+    # importable. The file is a docstring and nothing else; it is tooling, not
+    # a record, and it sits at the top of the tree rather than inside any
+    # phase's directory, so no prefix in ``_PHASES_AFTER_THE_RECORD`` covers it.
+    #
+    # Named singly, like the importer above, and for the same reason: another
+    # file appearing beside it still fails the added-files check until somebody
+    # declares it deliberately.
+    "qualification/__init__.py",
+})
 
 #: Build residue, which is not evidence and is not in the repository.
 #:
@@ -113,7 +236,7 @@ class PreservedEvidence(unittest.TestCase):
         mismatched: list[str] = []
         missing: list[str] = []
         for name, expected in sorted(self.record["preservedEvidence"].items()):
-            if _is_residue(name):
+            if _is_residue(name) or name in _MAINTAINED_TOOLING:
                 continue
             path = _ROOT / name
             if not path.is_file():
@@ -150,6 +273,7 @@ class PreservedEvidence(unittest.TestCase):
             if name not in recorded
             and not name.startswith(_PHASES_AFTER_THE_RECORD)
             and not _is_residue(name)
+            and name not in _MAINTAINED_TOOLING
         ]
         self.assertEqual(added, [], "a file was added to an earlier phase's evidence tree")
 

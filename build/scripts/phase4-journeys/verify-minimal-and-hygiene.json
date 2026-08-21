@@ -1,0 +1,10 @@
+[
+ {"command": "system", "label": "system-before", "timeout": 240},
+ {"command": "settings", "action": "show", "label": "verify-minimal-after-reboot"},
+ {"command": "character", "label": "character-minimal", "timeout": 120},
+ {"command": "process-audit", "label": "audit-logged-in", "timeout": 180},
+ {"command": "settings", "action": "set", "section": "character",
+  "field": "companion_mode", "value": "full", "label": "restore-full"},
+ {"command": "logout", "label": "logout", "timeout": 60, "sleep": 20},
+ {"command": "process-audit", "label": "audit-after-logout", "timeout": 180}
+]

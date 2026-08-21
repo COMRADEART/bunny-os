@@ -933,3 +933,58 @@ because the driver knows when each one is reached.
 That also delivers most of the accessibility items for free: the buttons already
 have accessible names, so the AT-SPI run *is* the interaction path rather than a
 separate inspection.
+
+### The Trust prompt renders. The shell gives up before it can.
+
+Photographed, twice, and now isolated to one cause.
+
+**It renders.** In a run where the journey was the session's *third* request, the
+shell drew it unprompted from the real task:
+
+> Bunny Image Tool wants to open Pictures/holiday.png. It will save a copy as
+> holiday-resized.p…  `[Deny]` `[Allow]` — under *"Waiting for permission…"*
+
+So §3 and §4 are satisfied by the product as it stands. The buttons carry
+accessible names (`Allow this Bunny action`, `Deny this Bunny action`) and are
+wired to `resolve_approval`.
+
+**And it does not, when the session is cold.** With `BUNNY_SESSION_READY`
+genuinely satisfied — all eight conditions, marker seen — the same request as
+the session's first produces:
+
+> the runtime did not finish within the deadline
+
+The character goes `thinking → warning → idle`. The task is submitted and the
+runtime does reach `waiting_for_approval`; the shell assistant's `ask` deadline
+simply expires before it gets there, so the question is never put on screen.
+Under llvmpipe the first task of a session is slow enough to cross that line and
+later ones are not, which is exactly why this looked like an ordering problem
+for three cycles.
+
+**This is a product defect, not a harness one.** A permission request that takes
+longer than a client's timeout must not become "the runtime did not finish" — the
+person is left with a warning where a question should be, and the task sits
+waiting for an answer nobody was asked for. The fix belongs in the shell's
+assistant service: an approval is not a slow answer, it is a different kind of
+answer, and the deadline that bounds one should not bound the other.
+
+Everything downstream is ready for it: `desktop-drive.py --journey
+{granted,denied,failing}` waits on the readiness probe, writes the fixture as the
+user, types the request, waits on the character state, walks the tree once, and
+presses the button by accessible name. It never calls `resolve_approval`.
+
+### Harness faults fixed along the way, recorded because the pattern matters
+
+Nine, and the product was correct every time: `_run` unpacked as a tuple (killing
+the probe, so every later answer read `null`); one bad command taking the whole
+probe with it; the shortcut not firing with no pointer fallback; a `listening`
+check stricter than the path that works; polling the whole accessibility tree
+every two seconds until the instrument stalled and reported an empty desktop;
+raising the walk depth to 20 on a wrong theory, which broke a working instrument;
+keeping only the parsed controls so "0 seen" could not be told from "never ran";
+`WAYLAND_DISPLAY` missing from the probe's environment, so the readiness probe
+reported no compositor on a desktop that was drawing; and the journey inheriting
+a spent assistant.
+
+Three of those were fixed only after a screenshot settled what text-only evidence
+could not.

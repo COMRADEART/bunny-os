@@ -1,0 +1,65 @@
+{
+ "deployments": [
+  {
+   "blsEntry": "ostree-1.conf",
+   "blsVersion": 1,
+   "bootChecksum": "dd33960330844f1ec11b6e93710464634d03be77bbcb9580480b16cfa08c892d",
+   "deployCommit": "1804c600590068ff78f9d0e535219c3f091b22035f271b90b04f94c41e33b78a",
+   "originImage": "ostree-unverified-registry:localhost/bunny-os-beta:e906a48793d7",
+   "title": "Bunny OS 0.1.0 (development) (ostree:1)"
+  },
+  {
+   "blsEntry": "ostree-2.conf",
+   "blsVersion": 2,
+   "bootChecksum": "2d358243c59de6e5a0e6672ca1ae3eec1f2972a8ac33907467cd6d9ffa657404",
+   "deployCommit": "18fd8a7d9673e9107658a90afc06714c707ad9f5303675d89318399653ea1df6",
+   "originImage": "ostree-unverified-image:oci:/run/p5update/candidate:e501218f2fe0",
+   "title": "Bunny OS Alpha 0.1 (ostree:0)"
+  }
+ ],
+ "journey": "phase7-rollback",
+ "rules": {
+  "bootRestage": [
+   "the staged disk boots the before-update deployment by default (measured before this harness was designed); the restage boot must put the machine on the update target, or observe it is already there, before the qualified rollback runs",
+   "the restage boot's own identity must be readable from all three sources like every other boot"
+  ],
+  "bootRollback": [
+   "the journey unit reports the booted deployment from the kernel cmdline, bootc status --json, and the /etc identity marker; all three must name the same deployment",
+   "bootc rollback must exit 0",
+   "ostree admin status after the rollback must list the OTHER deployment first (the selected rollback target)"
+  ],
+  "bootVerify": [
+   "the booted deployment must be the selected rollback target, agreed independently by the kernel cmdline ostree= argument, by bootc status --json, and by the /etc identity marker",
+   "a healthy boot target on any other deployment is FAIL, not PASS and not NOT_RUN"
+  ],
+  "hostname": {
+   "expectAfterRollback": "ABSENT (transient hostname localhost)",
+   "file": "ABSENT in both deployments before the journey"
+  },
+  "locale": {
+   "expectAfterRollback": "LANG=\"C.UTF-8\" (the fallback locale.conf, identical in both deployments)"
+  },
+  "perDeploymentEtc": "the /etc identity marker read after rollback must name the rollback target's deploy commit -- proving the per-deployment /etc actually switched",
+  "preservedByteIdentical": {
+   "/var/home/p5-user-data.txt": "7e3a01f60998d08ee985ee5204d58c56a2274171d25bbd76f977e98636b0bf64",
+   "/var/home/p7-user-data.txt": "ccb215428c8d373d0c15bb9c69d3327204c7f8933788901b29c6a158c22b75da",
+   "/var/lib/bunny-os/companion/p5-mode.json": "8f7aa3425a2f89d2eae2a769a6ff9c99144839c47d2813e577552483e2a1d6fa",
+   "/var/lib/bunny-os/companion/p7-position.json": "79f479147a41bd4867bf4952dd0e4b0d7392648eb5cc19f21eb0bcccf1c86bbd",
+   "/var/lib/bunny-os/companion/p7-scale.json": "da43f01de90a2bd79ff633d8f978664c72ad0f94487d355d3ff00efb77a340ce",
+   "/var/lib/bunny-os/p5-settings.txt": "ba054c9ad4d0e5e329c2f20c29454f731cb4d8256da743144a67f1d985481a1d",
+   "/var/lib/bunny-os/trust/p5-grants.json": "1d385651bb01f7e1e2c287b7eaabff47cf3a12022795118701d37c71b4e100ce",
+   "/var/lib/bunny-os/voice/p5-settings.json": "8c3203f55a470a4028223b32a0ac66bfc1882ac22bdbca69d2dd68626ed91ff1"
+  },
+  "verdicts": {
+   "FAIL": "any rule fails, including healthy-but-wrong-deployment",
+   "NOT_RUN": "a precondition was absent and no deployment switch was exercised",
+   "PASS": "every rule above holds"
+  }
+ },
+ "schemaVersion": 1,
+ "subjectDisk": {
+  "backing": "Phase 4 Alpha RC e906a48793d7 qcow2 with the Phase 5 e501218f2fe0 update staged",
+  "stagedFrom": "/home/bunny/p5-work/stage/staged.qcow2"
+ },
+ "writtenBeforeBoot": true
+}

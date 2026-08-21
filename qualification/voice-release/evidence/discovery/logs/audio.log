@@ -1,0 +1,103 @@
+===== PIPEWIRE PROCESSES =====
+1540 /usr/bin/pipewire
+1542 /usr/bin/wireplumber
+1545 /usr/bin/pipewire-pulse
+2738 /bin/bash -lc echo "===== PIPEWIRE PROCESSES =====" pgrep -a -u bunny -f "pipewire|wireplumber" || echo "none" echo "===== USER UNITS =====" systemctl --user is-active pipewire pipewire-pulse wireplumber 2>&1 echo "===== ALSA CARDS =====" cat /proc/asound/cards 2>&1 echo "--- aplay -l ---"; aplay -l 2>&1 | head -20 echo "--- arecord -l ---"; arecord -l 2>&1 | head -20 echo "===== PACTL INFO =====" pactl info 2>&1 | head -20 echo "===== SINKS =====" pactl list sinks short 2>&1 echo "===== SOURCES =====" pactl list sources short 2>&1 echo "===== DEFAULT SINK/SOURCE =====" pactl get-default-sink 2>&1; pactl get-default-source 2>&1 echo "===== WPCTL STATUS =====" wpctl status 2>&1 | head -40 echo "===== SINK DETAIL =====" pactl list sinks 2>&1 | grep -E "Name:|Sample Specification:|Channel Map:|State:|Description:" | head -20 echo "===== SOURCE DETAIL =====" pactl list sources 2>&1 | grep -E "Name:|Sample Specification:|Channel Map:|State:|Description:" | head -30 
+===== USER UNITS =====
+active
+active
+active
+===== ALSA CARDS =====
+ 0 [Intel          ]: HDA-Intel - HDA Intel
+                      HDA Intel at 0x80840000 irq 40
+--- aplay -l ---
+**** List of PLAYBACK Hardware Devices ****
+card 0: Intel [HDA Intel], device 0: Generic Analog [Generic Analog]
+  Subdevices: 1/1
+  Subdevice #0: subdevice #0
+--- arecord -l ---
+**** List of CAPTURE Hardware Devices ****
+card 0: Intel [HDA Intel], device 0: Generic Analog [Generic Analog]
+  Subdevices: 1/1
+  Subdevice #0: subdevice #0
+===== PACTL INFO =====
+Server String: /run/user/1000/pulse/native
+Library Protocol Version: 35
+Server Protocol Version: 35
+Is Local: yes
+Client Index: 90
+Tile Size: 65472
+User Name: bunny
+Host Name: fedora
+Server Name: PulseAudio (on PipeWire 1.6.8)
+Server Version: 15.0.0
+Default Sample Specification: float32le 2ch 48000Hz
+Default Channel Map: front-left,front-right
+Default Sink: alsa_output.pci-0000_00_04.0.analog-stereo
+Default Source: alsa_input.pci-0000_00_04.0.analog-stereo
+Cookie: e6d5:474f
+===== SINKS =====
+55	alsa_output.pci-0000_00_04.0.analog-stereo	PipeWire	s16le 2ch 48000Hz	SUSPENDED
+===== SOURCES =====
+55	alsa_output.pci-0000_00_04.0.analog-stereo.monitor	PipeWire	s16le 2ch 48000Hz	SUSPENDED
+56	alsa_input.pci-0000_00_04.0.analog-stereo	PipeWire	s16le 2ch 48000Hz	SUSPENDED
+===== DEFAULT SINK/SOURCE =====
+alsa_output.pci-0000_00_04.0.analog-stereo
+alsa_input.pci-0000_00_04.0.analog-stereo
+===== WPCTL STATUS =====
+PipeWire 'pipewire-0' [1.6.8, bunny@fedora, cookie:3872737103]
+ └─ Clients:
+        32. WirePlumber                         [1.6.8, bunny@fedora, pid:1542]
+        37. pipewire                            [1.6.8, bunny@fedora, pid:1545]
+        38. GNOME Volume Control Media Keys     [1.6.8, bunny@fedora, pid:1397]
+        47. WirePlumber [export]                [1.6.8, bunny@fedora, pid:1542]
+        58. Bunny Desktop                       [1.6.8, bunny@fedora, pid:1242]
+        59. gnome-shell                         [1.6.8, bunny@fedora, pid:1242]
+        60. GNOME Shell Volume Control          [1.6.8, bunny@fedora, pid:1242]
+        61. xdg-desktop-portal                  [1.6.8, bunny@fedora, pid:1557]
+        63. wpctl                               [1.6.8, bunny@fedora, pid:2780]
+
+Audio
+ ├─ Devices:
+ │      51. Built-in Audio                      [alsa]
+ │  
+ ├─ Sinks:
+ │  *   55. Built-in Audio Analog Stereo        [vol: 0.40]
+ │  
+ ├─ Sources:
+ │  *   56. Built-in Audio Analog Stereo        [vol: 1.00]
+ │  
+ ├─ Filters:
+ │  
+ └─ Streams:
+
+Video
+ ├─ Devices:
+ │  
+ ├─ Sinks:
+ │  
+ ├─ Sources:
+ │  
+ ├─ Filters:
+ │  
+ └─ Streams:
+
+Settings
+ └─ Default Configured Devices:
+===== SINK DETAIL =====
+	State: SUSPENDED
+	Name: alsa_output.pci-0000_00_04.0.analog-stereo
+	Description: Built-in Audio Analog Stereo
+	Sample Specification: s16le 2ch 48000Hz
+	Channel Map: front-left,front-right
+===== SOURCE DETAIL =====
+	State: SUSPENDED
+	Name: alsa_output.pci-0000_00_04.0.analog-stereo.monitor
+	Description: Monitor of Built-in Audio Analog Stereo
+	Sample Specification: s16le 2ch 48000Hz
+	Channel Map: front-left,front-right
+	State: SUSPENDED
+	Name: alsa_input.pci-0000_00_04.0.analog-stereo
+	Description: Built-in Audio Analog Stereo
+	Sample Specification: s16le 2ch 48000Hz
+	Channel Map: front-left,front-right

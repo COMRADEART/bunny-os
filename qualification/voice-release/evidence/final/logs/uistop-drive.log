@@ -1,0 +1,84 @@
+  watcher-started: {"samples": 1}
+  microphone-button: {"found": true, "at": {"x": 1830, "y": 684, "width": 24, "height": 24}}
+  clicked-microphone: {"at": {"x": 1842, "y": 696}}
+  state: listening (+0.8s)
+  listening: {"microphoneIndicator": true}
+  allowed: {"detail": "none"}
+  spoke: {"utterance": "/tmp/utt-capabilities.raw"}
+  allowed: {"detail": "none"}
+  state: thinking (+6.8s)
+  allowed: {"detail": "none"}
+  allowed: {"detail": "none"}
+  state: talking (+13.7s)
+  talking: {"says": "Bunny says: I can resize an image, open applications and folders, search approved user folders, read current system metrics, and control an active media player "}
+  allowed: {"detail": "none"}
+  clicked-stop: {"at": {"x": 1842, "y": 696}}
+  state: idle (+15.3s)
+  allowed: {"detail": "none"}
+  state: success (+15.5s)
+  allowed: {"detail": "none"}
+/root/bunny-ops/e2e/runs/s2b/screens/ee1-00-idle.png (1920x1080)
+/root/bunny-ops/e2e/runs/s2b/screens/ee1-01-listening.png (1920x1080)
+/root/bunny-ops/e2e/runs/s2b/screens/ee1-02-talking.png (1920x1080)
+/root/bunny-ops/e2e/runs/s2b/screens/ee1-03-approval.png (1920x1080)
+/root/bunny-ops/e2e/runs/s2b/screens/ee1-04-after.png (1920x1080)
+/root/bunny-ops/e2e/runs/s2b/screens/mem-00-idle.png (1920x1080)
+/root/bunny-ops/e2e/runs/s2b/screens/mem-01-listening.png (1920x1080)
+/root/bunny-ops/e2e/runs/s2b/screens/mem-02-talking.png (1920x1080)
+/root/bunny-ops/e2e/runs/s2b/screens/mem-03-approval.png (1920x1080)
+/root/bunny-ops/e2e/runs/s2b/screens/mem-04-after.png (1920x1080)
+/root/bunny-ops/e2e/runs/s2b/screens/pdfs-00-idle.png (1920x1080)
+/root/bunny-ops/e2e/runs/s2b/screens/pdfs-01-listening.png (1920x1080)
+/root/bunny-ops/e2e/runs/s2b/screens/pdfs-02-talking.png (1920x1080)
+/root/bunny-ops/e2e/runs/s2b/screens/pdfs-03-approval.png (1920x1080)
+/root/bunny-ops/e2e/runs/s2b/screens/pdfs-04-after.png (1920x1080)
+/root/bunny-ops/e2e/runs/s2b/screens/s2b-00-desktop.png (1920x1080)
+/root/bunny-ops/e2e/runs/s2b/screens/uistop-00-idle.png (1920x1080)
+/root/bunny-ops/e2e/runs/s2b/screens/uistop-01-listening.png (1920x1080)
+/root/bunny-ops/e2e/runs/s2b/screens/uistop-02-talking.png (1920x1080)
+/root/bunny-ops/e2e/runs/s2b/screens/uistop-03-approval.png (1920x1080)
+/root/bunny-ops/e2e/runs/s2b/screens/uistop-04-after.png (1920x1080)
+{
+  "tag": "uistop",
+  "utterance": "/tmp/utt-capabilities.raw",
+  "transitions": [
+    {
+      "state": "listening",
+      "at": 1786862715.893,
+      "sinceClick": 0.81
+    },
+    {
+      "state": "thinking",
+      "at": 1786862721.851,
+      "sinceClick": 6.77
+    },
+    {
+      "state": "talking",
+      "at": 1786862728.733,
+      "sinceClick": 13.65
+    },
+    {
+      "state": "idle",
+      "at": 1786862730.407,
+      "sinceClick": 15.32
+    },
+    {
+      "state": "success",
+      "at": 1786862730.56,
+      "sinceClick": 15.48
+    }
+  ],
+  "screens": {
+    "00-idle": "/root/bunny-ops/e2e/runs/s2b/screens/uistop-00-idle.ppm",
+    "01-listening": "/root/bunny-ops/e2e/runs/s2b/screens/uistop-01-listening.ppm",
+    "03-approval": "/root/bunny-ops/e2e/runs/s2b/screens/uistop-03-approval.ppm",
+    "02-talking": "/root/bunny-ops/e2e/runs/s2b/screens/uistop-02-talking.ppm",
+    "04-after": "/root/bunny-ops/e2e/runs/s2b/screens/uistop-04-after.ppm"
+  },
+  "stopRequestedAt": 1786862729.738,
+  "listeningSeen": true,
+  "talkingSeen": true,
+  "approved": false,
+  "finalState": "success",
+  "says": "Bunny says: I can resize an image, open applications and folders, search approved user folders, read current system metrics, and control an active media player \u2014 try \u201cResize this to 1024 pixels wide\u201d, \u201cOpen Files\u201d or \u201cHow much memory am I using?\u201d. I d\u2026"
+}

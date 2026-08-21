@@ -1,0 +1,71 @@
+===== voice health through the shipped bridge =====
+{"event": "voice_health", "available": true, "reason": "", "providerId": "vosk", "implementationId": "vosk/native-c-api-1+vosk-model-small-en-us-0.15", "language": "", "devices": [{"backendId": "pipewire", "default": true, "description": "Built-in Audio Analog Stereo", "deviceId": "alsa_input.pci-0000_00_04.0.analog-stereo", "healthy": true, "monitor": false, "name": "alsa_input.pci-0000_00_04.0.analog-stereo", "sampleSpecification": "", "state": "suspended"}, {"backendId": "pulse", "default": false, "description": "PipeWire", "deviceId": "alsa_output.pci-0000_00_04.0.analog-stereo.monitor", "healthy": true, "monitor": true, "name": "alsa_output.pci-0000_00_04.0.analog-stereo.monitor", "sampleSpecification": "s16le 2ch 48000Hz", "state": "SUSPENDED"}, {"backendId": "pulse", "default": true, "description": "PipeWire", "deviceId": "alsa_input.pci-0000_00_04.0.analog-stereo", "healthy": true, "monitor": false, "name": "alsa_input.pci-0000_00_04.0.analog-stereo", "sampleSpecification": "s16le 2ch 48000Hz", "state": "SUSPENDED"}, {"backendId": "alsa", "default": true, "description": "card 0: Intel [HDA Intel], device 0: Generic Analog [Generic Analog]", "deviceId": "hw:0,0", "healthy": true, "monitor": false, "name": "hw:0,0", "sampleSpecification": "", "state": ""}], "selectedDevice": "", "readinessState": "STT_READY", "maxCaptureMs": 30000, "wakeWord": "disabled"}
+
+===== the model directory as shipped =====
+total 12
+drwxr-xr-x. 3 root root  66 Jan  1  1970 .
+drwxr-xr-x. 9 root root 311 Jan  1  1970 ..
+drwxr-xr-x. 6 root root 140 Jan  1  1970 vosk-model-small-en-us-0.15
+--- model contents ---
+total 32
+drwxr-xr-x. 6 root root  140 Jan  1  1970 .
+drwxr-xr-x. 3 root root   66 Jan  1  1970 ..
+-r--r--r--. 1 root root 2555 Jan  1  1970 .bunny-model.json
+-r--r--r--. 1 root root  199 Jan  1  1970 README
+drwxr-xr-x. 2 root root   48 Jan  1  1970 am
+drwxr-xr-x. 2 root root   70 Jan  1  1970 conf
+drwxr-xr-x. 3 root root  111 Jan  1  1970 graph
+drwxr-xr-x. 2 root root  170 Jan  1  1970 ivector
+--- manifest? ---
+{
+  "schemaVersion": 1,
+  "modelId": "vosk-model-small-en-us-0.15",
+  "provider": "vosk",
+  "language": "en",
+  "locale": "en-US",
+  "license": "Apache-2.0",
+  "sourceUrl": "https://alphacephei.com/vosk/models/vosk-model-small-en-us-0.15.zip",
+  "sourceArchiveSha256": "30f26242c4eb449f948e42cb302dd7a686cb29a3423a8367f99ff41780942498",
+  "files": [
+    {
+      "path": "am/final.mdl",
+      "sizeBytes": 15962575,
+      "sha256": "75370a0137f9daf8f469dedd7daa4513ae7a621f03240c6e512e2b50b656a7b6"
+    },
+    {
+      "path": "conf/mfcc.conf",
+      "sizeBytes": 131,
+      "sha256": "1e2228006d01d805ad1c267fee9f79709ca87ac51bd82b0e3f5c69ba543f0fc4"
+    },
+    {
+      "path": "conf/model.conf",
+      "sizeBytes": 290,
+      "sha256": "8f14cb1eeb07c762c371db648c6be688d347236155ca0f64fb13b6567a8ce81f"
+    },
+    {
+      "path": "graph/disambig_tid.int",
+      "sizeBytes": 102,
+      "sha256": "9ad87cc166d0998f08f758f47a6223a120dfffcbee805c4849c3aa5e6bb3c0fc"
+    },
+    {
+      "path": "graph/Gr.fst",
+      "sizeBytes": 24013795,
+      "sha256": "023c8b7e30704a9e37765c635c252e608a02f361235bf94abdcf2a5225d85b20"
+    },
+    {
+      "path": "graph/HCLr.fst",
+      "sizeBytes": 22416994,
+      "sha256": "5caafba3081e1646545ac6bff0dd7a318e53dcbdc86f237909ce1d2ac1293d34"
+    },
+
+===== ask the packaged discovery why =====
+search path: ('/usr/share/bunny-os/speech-models', '/var/lib/bunny-os/voice/models', '~/.local/share/bunny-os/speech-models')
+status : STT_READY
+detail : 
+path   : /usr/share/bunny-os/speech-models/vosk-model-small-en-us-0.15
+candidate vosk-model-small-en-us-0.15 -> (True, '')
+
+===== libvosk present? =====
+-rwxr-xr-x. 1 root root 39437200 Jan  1  1970 /usr/lib64/libvosk.so
+===== svg loader present? =====
+librsvg2-2.62.3-1.fc44.x86_64

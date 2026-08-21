@@ -1,0 +1,69 @@
+{
+ "acceptForAlphaRequires": [
+  "risk",
+  "owner",
+  "affectedArtifact",
+  "rationale",
+  "reviewBy"
+ ],
+ "categoryVocabulary": [
+  "SECURITY",
+  "PRIVACY",
+  "DATA_LOSS",
+  "RELEASE_BLOCKER",
+  "ACCESSIBILITY",
+  "FUNCTIONAL",
+  "PERFORMANCE",
+  "UX",
+  "HARDWARE",
+  "HARNESS",
+  "ENVIRONMENT"
+ ],
+ "confidenceVocabulary": [
+  "CONFIRMED",
+  "LIKELY",
+  "REPORTED",
+  "UNREPRODUCED"
+ ],
+ "dispositionVocabulary": [
+  "FIX_NOW",
+  "FIX_BEFORE_ALPHA",
+  "ACCEPT_FOR_ALPHA",
+  "DEFER",
+  "NOT_REPRODUCIBLE",
+  "NOT_APPLICABLE"
+ ],
+ "findings": [],
+ "hardwareClassificationVocabulary": [
+  "RELEASE_BLOCKER",
+  "SUPPORTED_HARDWARE_FAILURE",
+  "DRIVER",
+  "FIRMWARE",
+  "CONFIGURATION",
+  "PERFORMANCE",
+  "FALLBACK_FAILURE",
+  "ENVIRONMENT",
+  "UNKNOWN"
+ ],
+ "identifierSchemes": {
+  "alpha-feedback": "ALPHA-P9-NNN",
+  "hardware": "HW-P9-NNN",
+  "security-review": "SEC-P9-NNN"
+ },
+ "note": "Zero findings. A finding exists only downstream of an ACCEPTED intake entry in qualification/phase9/intake/LEDGER.json and cites its intakeId; an empty list means no external evidence has produced a finding, never that no issues exist.",
+ "reproductionBoundaryVocabulary": [
+  "ON_SUBJECT_ARTIFACT",
+  "ON_NEWER_ARTIFACT"
+ ],
+ "schemaVersion": 1,
+ "securityDisagreementVocabulary": [
+  "REVIEWER_ADDED",
+  "REVIEWER_REMOVED",
+  "VERSION_DIFFERENCE",
+  "EXPOSURE_DIFFERENCE",
+  "ARTIFACT_MISMATCH",
+  "ANALYSIS_DIFFERENCE",
+  "UNKNOWN"
+ ],
+ "subjectArtifact": "e906a48793d7"
+}

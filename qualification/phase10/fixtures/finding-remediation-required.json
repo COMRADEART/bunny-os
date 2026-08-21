@@ -1,0 +1,14 @@
+{
+ "fixtureClass": "TEST_FIXTURE_ONLY",
+ "purpose": "Drives the remediation-required-transition dry run: a confirmed finding whose fix must route through a new artifact - never REMEDIATION_REQUIRED to AUTHORIZED directly, and never closed because code changed.",
+ "finding": {
+  "findingId": "SEC-EXT-001",
+  "state": "CONFIRMED",
+  "artifact": "e906a48793d7",
+  "category": "SECURITY",
+  "severity": "critical",
+  "intakeId": "INTAKE-001",
+  "description": "constructed fixture: a confirmed critical requiring a product fix",
+  "reproducedOn": "ON_SUBJECT_ARTIFACT"
+ }
+}

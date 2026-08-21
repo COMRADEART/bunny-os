@@ -1,0 +1,192 @@
+python3 scripts/task.py test
++ /usr/sbin/python3 -m unittest discover -s tests -t /home/bunny/bunny-os
+..............................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................bunny-image-tool: the input path is outside this app's own space
+.................................................................................................................................................................................................................................................................................................................................s....................................................................................................................s.................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................s........................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................FF...................................................................................................................................................................................................................................................................F...................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................bunny-config-dir: /tmp/tmpk6ipzaf8/.config/bunny-os: exists and is not a directory (-rw-r--r--). Refused rather than replaced: this program does not delete user data.
+.sbunny-config-dir: /tmp/tmpr264crv3/.config/bunny-os: is a symbolic link to '/tmp/tmpr264crv3/elsewhere'. Refused: following it would place Bunny configuration, and a bind mount writable by this service, wherever the link points. Remove the link and let the directory be created.
+.bunny-config-dir: /tmp/tmpao2i10yp/.config/bunny-os: exists and is not a directory (-rw-r--r--). Refused rather than replaced: this program does not delete user data.
+bunny-config-dir: /tmp/tmpao2i10yp/.config/bunny-os: exists and is not a directory (-rw-r--r--). Refused rather than replaced: this program does not delete user data.
+.bunny-config-dir: /tmp/tmphx6e8nl6/.config/bunny-os: is a symbolic link to '/tmp/tmphx6e8nl6/nowhere-at-all'. Refused: following it would place Bunny configuration, and a bind mount writable by this service, wherever the link points. Remove the link and let the directory be created.
+.sbunny-config-dir: /tmp/tmpukysqlk6/.config/bunny-os: parent directory is not accessible ([Errno 13] Permission denied: '/tmp/tmpukysqlk6/.config/bunny-os')
+bunny-config-dir: /tmp/tmpukysqlk6/.config/systemd/user: parent directory is not accessible ([Errno 13] Permission denied: '/tmp/tmpukysqlk6/.config/systemd/user')
+.bunny-config-dir: /tmp/tmpn5klaf8j/.config/bunny-os: exists and is not a directory (-rw-r--r--). Refused rather than replaced: this program does not delete user data.
+.bunny-config-dir: /tmp/tmp89vlyjry/.config/bunny-os: exists and is not a directory (-rw-r--r--). Refused rather than replaced: this program does not delete user data.
+.bunny-config-dir: /tmp/tmp6o7ekicf/.config/bunny-os: is a symbolic link to '/tmp/tmp4ifqvmm5'. Refused: following it would place Bunny configuration, and a bind mount writable by this service, wherever the link points. Remove the link and let the directory be created.
+.bunny-config-dir: /tmp/tmpvzfdkede/.config/bunny-os: is a symbolic link to '/tmp/tmpvzfdkede/elsewhere'. Refused: following it would place Bunny configuration, and a bind mount writable by this service, wherever the link points. Remove the link and let the directory be created.
+.....................................................................................................................................................................................................................................................................................check-copy-size: /nonexistent/tree is not a directory
+..check-copy-size: refusing — 3 MB exceeds the 1 MB limit for a source copy.
+  largest directories:
+    assets                                3 MB
+  exclude the generated ones, or raise --limit-mb if this is genuinely source.
+.....................................................................................BLOCKED: capture /tmp/tmp9qlyxzyx/guest.pcap does not exist. A capture that never started is not evidence of silence.
+.BLOCKED: file is 10 bytes; a pcap global header is 24
+......BLOCKED: /tmp/tmpq__o4yf2/expected.json entry 0 must be {kind: dns|tcp|udp, pattern: <glob>, reason: <non-empty>}
+.............................................F.....F.....................................................................................................ssssssssss............................................................................................................................................................................................................................................sssss.................................................................................................................................................................................................................................................................................................s...............................................................F.F.................F..................................................................................................s.............................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................
+======================================================================
+FAIL: test_every_prior_evidence_file_is_byte_identical (tests.companion.test_three_d_preservation.PreservedEvidence.test_every_prior_evidence_file_is_byte_identical)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/bunny/bunny-os/tests/companion/test_three_d_preservation.py", line 126, in test_every_prior_evidence_file_is_byte_identical
+    self.assertEqual(mismatched, [], "prior evidence files changed")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Lists differ: ['qualification/installed-system/scripts/import_matrix_results.py'] != []
+
+First list contains 1 additional elements.
+First extra element 0:
+'qualification/installed-system/scripts/import_matrix_results.py'
+
+- ['qualification/installed-system/scripts/import_matrix_results.py']
++ [] : prior evidence files changed
+
+======================================================================
+FAIL: test_no_file_was_added_to_an_earlier_phase_tree (tests.companion.test_three_d_preservation.PreservedEvidence.test_no_file_was_added_to_an_earlier_phase_tree)
+Added means *committed*, so the question is asked of git.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/bunny/bunny-os/tests/companion/test_three_d_preservation.py", line 154, in test_no_file_was_added_to_an_earlier_phase_tree
+    self.assertEqual(added, [], "a file was added to an earlier phase's evidence tree")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Lists differ: ['qualification/design/orca.json', 'qualif[2443 chars]son'] != []
+
+First list contains 38 additional elements.
+First extra element 0:
+'qualification/design/orca.json'
+
+Diff is 2609 characters long. Set self.maxDiff to None to see it. : a file was added to an earlier phase's evidence tree
+
+======================================================================
+FAIL: test_shell_renders_and_resolves_action_approval_without_weakening_policy (tests.companion.test_voice_interaction_milestone.ShellVoiceBoundaryTests.test_shell_renders_and_resolves_action_approval_without_weakening_policy)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/bunny/bunny-os/tests/companion/test_voice_interaction_milestone.py", line 959, in test_shell_renders_and_resolves_action_approval_without_weakening_policy
+    self.assertIn("'Deny'", panel)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+AssertionError: "'Deny'" not found in '// SPDX-FileCopyrightText: 2026 ComradeArt\n// SPDX-License-Identifier: GPL-3.0-or-later\n//\n// AssistantPanel: the persistent place to type, as a card.\n//\n// The brief is explicit that this does not replace the character. It is the\n// surface for the things a bubble is bad at — a transcript you can scroll back\n// through, a reply long enough to need wrapping, a text field that is always\n// there. The character remains the representation; this is the keyboard.\n//\n// The microphone button starts *the companion\'s* speech input, not a capture\n// stream of its own. companion/speech owns the microphone, the consent\n// prompt, the recogniser and the confirmation step, all of which have been\n// reviewed. A shell that opened a PipeWire stream to draw a level meter would\n// be a second thing recording, on a privacy-reviewed image, with none of that.\n// Where the speech service is not reachable the button is disabled and says so,\n// which is the honest state.\n\nimport Clutter from \'gi://Clutter\';\nimport St from \'gi://St\';\n\nimport {Card} from \'../cards/base.js\';\nimport {box} from \'../widgets.js\';\nimport {enter} from \'../animation.js\';\nimport {logError_, makeActivatable} from \'../util.js\';\nimport {Icons, themedIcon} from \'../icons.js\';\nimport {TrustComponent} from \'../components/trust.js\';\nimport {buildApproval} from \'../trustPrompt.js\';\nimport {currentTheme} from \'../design/current.js\';\n\n/** Transcript entries kept in the card. Older ones live in the companion store. */\nconst MAX_TURNS = 6;\n\nexport class AssistantPanel extends Card {\n    /**\n     * @param {{assistant, onSubmit, onVoice, blur, onOpenFull}} context\n     */\n    constructor(context) {\n        super({\n            title: \'Bunny\',\n            blur: context.blur,\n            accessibleName: \'Bunny assistant\',\n            headerTrailing: Card.headerButton(\'Open\', () => context.onOpenFull()),\n        });\n        this._context = context;\n        this._turns = [];\n        this._voiceAvailable = false;\n        this._voiceActive = false;\n        this._voiceStoppable = false;\n\n        this._scroll = new St.ScrollView({\n            style_class: \'bunny-assistant-scroll\',\n            hscrollbar_policy: St.PolicyType.NEVER,\n            vscrollbar_policy: St.PolicyType.AUTOMATIC,\n            y_expand: true,\n        });\n        this._transcript = box({vertical: true, style_class: \'bunny-assistant-transcript\'});\n        this._scroll.set_child(this._transcript);\n        this.content.add_child(this._scroll);\n\n        this._status = new St.Label({text: \'\', style_class: \'bunny-assistant-status\'});\n        this._status.visible = false;\n        this.content.add_child(this._status);\n\n        // The permission question. A component rather than a label and two\n        // buttons: see lib/components/trust.js for what it replaced and why.\n        this._approvalDecision = null;\n        this._trust = new TrustComponent({\n            onDecision: (verdict, requestId) => {\n                // The panel does not decide anything either; it forwards to the\n                // callback DesktopShell registered, which sends the verdict over\n                // the protocol for the runtime to check against the question it\n                // issued.\n                this._approvalDecision?.(verdict, requestId);\n            },\n        });\n        this.content.add_child(this._trust.actor);\n\n        this._fileResultsScroll = new St.ScrollView({\n            style_class: \'bunny-assistant-file-results-scroll\',\n            hscrollbar_policy: St.PolicyType.NEVER,\n            vscrollbar_policy: St.PolicyType.AUTOMATIC,\n        });\n        this._fileResults = box({vertical: true, style_class: \'bunny-assistant-file-results\'});\n        this._fileResultsScroll.set_child(this._fileResults);\n        this._fileResultsScroll.visible = false;\n        this._fileResultItems = [];\n        this.content.add_child(this._fileResultsScroll);\n\n        const inputRow = box({style_class: \'bunny-assistant-input-row\'});\n        this._entry = new St.Entry({\n            style_class: \'bunny-assistant-entry\',\n            hint_text: \'Ask anything...\',\n            can_focus: true,\n            x_expand: true,\n        });\n        this._entry.accessible_name = \'Ask Bunny\';\n        this._entry.clutter_text.connect(\'activate\', () => this._submit());\n        // Escape leaves. An input that traps focus is an input a keyboard user\n        // has to guess their way out of, and this one is reachable from a\n        // global shortcut — so it is reachable by accident, and getting out has\n        // to be as cheap as getting in.\n        this._entry.clutter_text.connect(\'key-press-event\', (_actor, event) => {\n            if (event.get_key_symbol() !== Clutter.KEY_Escape)\n                return Clutter.EVENT_PROPAGATE;\n            this._entry.set_text(\'\');\n            this._context.onDismiss?.();\n            return Clutter.EVENT_STOP;\n        });\n        inputRow.add_child(this._entry);\n\n        this._microphone = this._iconButton(Icons.MICROPHONE, \'Speak to Bunny\',\n            () => this._context.onVoice?.());\n        inputRow.add_child(this._microphone);\n\n        this._send = this._iconButton(Icons.SEND, \'Send\', () => this._submit());\n        inputRow.add_child(this._send);\n        this.content.add_child(inputRow);\n    }\n\n    /** Focus the text field. Bound to the sidebar\'s AI Assistant destination. */\n    focusInput() {\n        this._entry.grab_key_focus();\n    }\n\n    /** Put text in the field and send it, for a suggestion chip. */\n    submitText(text) {\n        this._entry.set_text(text);\n        this._submit();\n    }\n\n    /** @param {\'user\'|\'bunny\'} who */\n    addTurn(who, text, {tone = \'normal\'} = {}) {\n        const bubble = box({vertical: true, style_class: `bunny-turn bunny-turn-${who}`});\n        const label = new St.Label({text, style_class: \'bunny-turn-text\'});\n        label.clutter_text.line_wrap = true;\n        label.clutter_text.set_line_wrap_mode(2);\n        bubble.add_child(label);\n        if (tone === \'error\')\n            bubble.add_style_class_name(\'bunny-turn-error\');\n        bubble.accessible_name = `${who === \'user\' ? \'You\' : \'Bunny\'}: ${text}`;\n\n        this._transcript.add_child(bubble);\n        enter(bubble, {rise: 6});\n        this._turns.push(bubble);\n        while (this._turns.length > MAX_TURNS)\n            this._turns.shift().destroy();\n\n        // Scroll to the newest turn. Done on the adjustment rather than by\n        // grabbing focus, which would steal the caret out of the entry field\n        // mid-conversation.\n        const adjustment = this._scroll.vscroll?.adjustment ?? this._scroll.get_vadjustment?.();\n        if (adjustment)\n            adjustment.value = adjustment.upper;\n    }\n\n    /** A one-line transient status under the transcript: "Thinking…", errors. */\n    setStatus(text, {tone = \'normal\'} = {}) {\n        this._status.visible = text !== \'\';\n        this._status.text = text;\n        this._status.remove_style_class_name(\'bunny-assistant-status-error\');\n        if (tone === \'error\')\n            this._status.add_style_class_name(\'bunny-assistant-status-error\');\n    }\n\n    /** Disable input while a request is in flight, so two cannot overlap. */\n    setBusy(busy) {\n        this._entry.reactive = !busy;\n        this._entry.can_focus = !busy;\n        this._send.reactive = !busy;\n        this.actor.remove_style_class_name(\'bunny-assistant-busy\');\n        if (busy)\n            this.actor.add_style_class_name(\'bunny-assistant-busy\');\n    }\n\n    /**\n     * Display one exact permission question from the canonical task state.\n     *\n     * The model comes from `buildApproval`, which reads the structured facts in\n     * `approval.prompt` and falls back to `approval.reason` when there are none.\n     * Nothing is composed here: this method passes an approval to a projection\n     * and a model to a component.\n     */\n    showApproval(approval, onDecision) {\n        const requestId = String(approval?.requestId ?? \'\');\n        if (!requestId)\n            return;\n        this._approvalDecision = typeof onDecision === \'function\' ? onDecision : null;\n        // Building the model must not be able to lose the question. A prompt\n        // this projection cannot read is still a permission request that a\n        // person has to answer, so a throw here degrades to the bare reason\n        // rather than leaving a task waiting on a dialog nobody drew.\n        let model;\n        try {\n            model = buildApproval(approval, {\n                highContrast: currentTheme().highContrast,\n                largeText: currentTheme().textScale > 1,\n            });\n        } catch (error) {\n            logError_(\'the permission question could not be laid out; showing its reason alone\', error);\n            model = buildApproval({\n                requestId,\n                reason: String(approval?.reason ?? \'Allow Bunny to perform this action?\'),\n                safeDefault: String(approval?.safeDefault ?? \'denied\'),\n            });\n        }\n        this._trust.show(model);\n        this.actor.add_style_class_name(\'bunny-assistant-approval-active\');\n    }\n\n    clearApproval(requestId = \'\') {\n        this._trust.hide(requestId);\n        if (!this._trust.requestId) {\n            this._approvalDecision = null;\n            this.actor.remove_style_class_name(\'bunny-assistant-approval-active\');\n        }\n    }\n\n    approvalDecisionFailed(requestId) {\n        this._trust.decisionFailed(requestId);\n    }\n\n    /** Grey the microphone when the companion\'s speech service cannot be reached. */\n    setVoiceAvailable(available, reason = \'\') {\n        this._voiceAvailable = available;\n        const enabled = available || this._voiceActive || this._voiceStoppable;\n        this._microphone.reactive = enabled;\n        this._microphone.can_focus = enabled;\n        this._microphone.opacity = enabled ? 255 : 110;\n        this._microphone.accessible_name = this._voiceStoppable\n            ? \'Stop Bunny speaking\'\n            : enabled ? \'Speak to Bunny\' : `Speak to Bunny. Unavailable: ${reason}`;\n    }\n\n    /** Make recording and stop semantics unambiguous on the button itself. */\n    setVoiceState(active, phase = \'\') {\n        this._voiceActive = active;\n        this._voiceStoppable = phase === \'speaking\';\n        this._microphone.remove_style_class_name(\'bunny-assistant-microphone-active\');\n        if (active)\n            this._microphone.add_style_class_name(\'bunny-assistant-microphone-active\');\n        const enabled = this._voiceAvailable || active || this._voiceStoppable;\n        this._microphone.reactive = enabled;\n        this._microphone.can_focus = enabled;\n        this._microphone.opacity = enabled ? 255 : 110;\n        this._microphone.accessible_name = active\n            ? \'Stop listening to Bunny\'\n            : phase === \'speaking\' ? \'Stop Bunny speaking\' : \'Speak to Bunny\';\n    }\n\n    /** Numbered, bounded results. Paths are display labels, never launch input. */\n    showFileResults(results) {\n        this._fileResultItems = Array.isArray(results) ? results.slice(0, 24) : [];\n        this._renderFileResults(false);\n    }\n\n    _renderFileResults(expanded) {\n        this._fileResults.destroy_all_children();\n        const safe = expanded ? this._fileResultItems : this._fileResultItems.slice(0, 6);\n        this._fileResultsScroll.visible = safe.length > 0;\n        safe.forEach((result, index) => {\n            const row = box({style_class: \'bunny-assistant-file-result\'});\n            const text = box({vertical: true, x_expand: true});\n            const title = new St.Label({\n                text: `${index + 1}. ${result.name ?? \'File\'}`,\n                style_class: \'bunny-assistant-file-title\',\n            });\n            title.clutter_text.ellipsize = 3;\n            const location = new St.Label({\n                text: result.display ?? \'\',\n                style_class: \'bunny-assistant-file-location\',\n            });\n            location.clutter_text.ellipsize = 3;\n            text.add_child(title);\n            text.add_child(location);\n            row.add_child(text);\n            row.add_child(this._textButton(\'Open\', () =>\n                this._context.onFileResult?.(index + 1, \'open\')));\n            row.add_child(this._textButton(\'Folder\', () =>\n                this._context.onFileResult?.(index + 1, \'show_containing_folder\')));\n            this._fileResults.add_child(row);\n        });\n        if (!expanded && this._fileResultItems.length > safe.length) {\n            this._fileResults.add_child(this._textButton(\n                `Show all ${this._fileResultItems.length} results`,\n                () => this._renderFileResults(true)));\n        }\n    }\n\n    _submit() {\n        const text = this._entry.get_text().trim();\n        if (text === \'\')\n            return;\n        this._entry.set_text(\'\');\n        this._context.onSubmit?.(text);\n    }\n\n    _iconButton(iconName, accessibleName, onActivate) {\n        const button = box({style_class: \'bunny-assistant-icon-button\'});\n        button.add_child(themedIcon(iconName, {size: 16}));\n        button.y_align = Clutter.ActorAlign.CENTER;\n        makeActivatable(button, onActivate, {accessibleName});\n        return button;\n    }\n\n    _textButton(label, onActivate) {\n        const button = new St.Label({text: label, style_class: \'bunny-assistant-file-action\'});\n        makeActivatable(button, onActivate, {accessibleName: `${label} file result`});\n        return button;\n    }\n}\n'
+
+======================================================================
+FAIL: test_repository_satisfies_the_gate_as_configured (tests.licensing.test_licence_gate.GateTests.test_repository_satisfies_the_gate_as_configured)
+The real record and the real tree, together, must pass.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/bunny/bunny-os/tests/licensing/test_licence_gate.py", line 125, in test_repository_satisfies_the_gate_as_configured
+    self.assertTrue(result.passed, f"unmet: {result.unmet}")
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: False is not true : unmet: ('spdx-identifiers: installer: 1 file(s) declare <missing>, expected GPL-3.0-or-later',)
+
+======================================================================
+FAIL: test_spdx_headers_match_the_declared_split (tests.licensing.test_licence_gate.RepositoryLayoutTests.test_spdx_headers_match_the_declared_split)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/bunny/bunny-os/tests/licensing/test_licence_gate.py", line 157, in test_spdx_headers_match_the_declared_split
+    self.assertNotIn("<missing>", counts, f"{directory} has files without an SPDX header")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: '<missing>' unexpectedly found in {'GPL-3.0-or-later': 46, '<missing>': 1} : installer has files without an SPDX header
+
+======================================================================
+FAIL: test_this_repository_currently_passes_every_validator (tests.portability.test_repository_validation.EveryRequiredValidatorIsReportedTests.test_this_repository_currently_passes_every_validator)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/bunny/bunny-os/tests/portability/test_repository_validation.py", line 83, in test_this_repository_currently_passes_every_validator
+    self.assertTrue(report.passed, [o.as_dict() for o in report.failing])
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: False is not true : [{'validator': 'ShellCheck', 'result': 'FAIL', 'checked': 86, 'summary': '86 scripts, no suppression', 'skipReason': None, 'failures': [{'path': 'build/scripts/vm-install-story.sh:114', 'detail': 'SC2054 (warning): Use spaces, not commas, to separate array elements.'}, {'path': 'build/scripts/vm-install-story.sh:137', 'detail': 'SC2329 (info): This function is never invoked. Check usage (or ignored if invoked indirectly).'}, {'path': 'build/scripts/vm-live-boot-checkpoints.sh:168', 'detail': 'SC2329 (info): This function is never invoked. Check usage (or ignored if invoked indirectly).'}]}]
+
+======================================================================
+FAIL: test_validate_writes_the_machine_readable_report (tests.portability.test_repository_validation.MachineReadableOutputTests.test_validate_writes_the_machine_readable_report)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/bunny/bunny-os/tests/portability/test_repository_validation.py", line 213, in test_validate_writes_the_machine_readable_report
+    self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 1 != 0 : repository validation: FAIL
+  ok    JSON parsing                     322 documents parsed
+  ok    Schema validation                55 schemas
+  ok    Python compilation               1021 files compiled in memory
+  ok    Shell syntax                     86 scripts parsed by bash -n
+  ok    Line endings                     120 attribute-protected files are LF
+  FAIL  ShellCheck                       86 scripts, no suppression
+           build/scripts/vm-install-story.sh:114
+             SC2054 (warning): Use spaces, not commas, to separate array elements.
+           build/scripts/vm-install-story.sh:137
+             SC2329 (info): This function is never invoked. Check usage (or ignored if invoked indirectly).
+           build/scripts/vm-live-boot-checkpoints.sh:168
+             SC2329 (info): This function is never invoked. Check usage (or ignored if invoked indirectly).
+  ok    Desktop entries                  11 entries (2 session, 9 launcher)
+  ok    XML and SVG                      10 XML/SVG assets parsed
+  ok    Licence headers                  921 declarations over 1161 files, all within ['Apache-2.0', 'GPL-3.0-or-later']
+  ok    Workflow YAML                    6 workflows parsed
+  ok    Committed evidence consistency   26 record(s) agree on candidate 79bb99ddb39d
+  ok    GNOME extension syntax           52 modules parsed by node --check, imports resolved
+  skip  systemd units                    requires BUNNY_VERIFY_SYSTEMD=1 and systemd-analyze on an installed Fedora fixture
+  ok    systemd unit programs            24 units, 2 recorded gap(s)
+  ok    Shell layout                     7 required shell directories
+  ok    Capability manifests             14 manifests, 5 essential, 28 MiB essential floor
+wrote build/out/qualification/repository-validation.json
+repository validation failed: ShellCheck
+
+
+======================================================================
+FAIL: test_shellcheck_accepts_every_shell_script (tests.portability.test_shellcheck_portability.ShellCheckPassesTests.test_shellcheck_accepts_every_shell_script)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/bunny/bunny-os/tests/portability/test_shellcheck_portability.py", line 81, in test_shellcheck_accepts_every_shell_script
+    self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 1 != 0 : 
+In /home/bunny/bunny-os/build/scripts/vm-install-story.sh line 114:
+net_args=(-netdev user,id=net0 -device virtio-net-pci,netdev=net0)
+         ^-- SC2054 (warning): Use spaces, not commas, to separate array elements.
+
+
+In /home/bunny/bunny-os/build/scripts/vm-install-story.sh line 137:
+cleanup() {
+^-- SC2329 (info): This function is never invoked. Check usage (or ignored if invoked indirectly).
+
+
+In /home/bunny/bunny-os/build/scripts/vm-live-boot-checkpoints.sh line 168:
+cleanup() { kill "${qemu_pid}" 2>/dev/null; wait "${qemu_pid}" 2>/dev/null; }
+^-- SC2329 (info): This function is never invoked. Check usage (or ignored if invoked indirectly).
+
+For more information:
+  https://www.shellcheck.net/wiki/SC2054 -- Use spaces, not commas, to separa...
+  https://www.shellcheck.net/wiki/SC2329 -- This function is never invoked. C...
+
+
+----------------------------------------------------------------------
+Ran 5727 tests in 195.802s
+
+FAILED (failures=8, skipped=22)
+bunny-image-tool: wrote holiday-resized.png at 100x50
+bunny-image-tool: wrote out.png at 100x50
+bunny-image-tool: wrote a.png at 120x60
+bunny-image-tool: wrote b.png at 120x60
+bunny-config-dir: /tmp/tmpjjiwpbi5/.config/bunny-os: created
+bunny-config-dir: /tmp/tmpjjiwpbi5/.config/systemd/user: created
+bunny-config-dir: /tmp/tmp2xq4_u56/.config/bunny-os: created
+bunny-config-dir: /tmp/tmp2xq4_u56/.config/systemd/user: created
+bunny-config-dir: /tmp/tmp0gthav2d/.config/bunny-os: created
+bunny-config-dir: /tmp/tmp0gthav2d/.config/systemd/user: created
+bunny-config-dir: /tmp/tmpubj0la3n/.config/bunny-os: mode 0777 -> 0700
+bunny-config-dir: /tmp/tmpubj0la3n/.config/systemd/user: created
+bunny-config-dir: /tmp/tmpkist43ta/.config/bunny-os: created
+bunny-config-dir: /tmp/tmpkist43ta/.config/systemd/user: created
+bunny-config-dir: /tmp/tmpkist43ta/.config/bunny-os: verified
+bunny-config-dir: /tmp/tmpkist43ta/.config/systemd/user: verified
+bunny-config-dir: /tmp/tmpk6ipzaf8/.config/systemd/user: created
+bunny-config-dir: /tmp/tmpk6ipzaf8/.config/bunny-os: verified
+bunny-config-dir: /tmp/tmpk6ipzaf8/.config/systemd/user: verified
+bunny-config-dir: /tmp/tmpr264crv3/.config/systemd/user: created
+bunny-config-dir: /tmp/tmpr264crv3/.config/bunny-os: verified
+bunny-config-dir: /tmp/tmpr264crv3/.config/systemd/user: verified
+bunny-config-dir: /tmp/tmpao2i10yp/.config/systemd/user: created
+bunny-config-dir: /tmp/tmpao2i10yp/.config/systemd/user: verified
+bunny-config-dir: /tmp/tmphx6e8nl6/.config/systemd/user: created
+bunny-config-dir: /tmp/tmpn5klaf8j/.config/systemd/user: created
+bunny-config-dir: /tmp/tmp89vlyjry/.config/systemd/user: created
+bunny-config-dir: /tmp/tmp6o7ekicf/.config/systemd/user: created
+bunny-config-dir: /tmp/tmpvzfdkede/.config/systemd/user: created
+bunny-config-dir: /tmp/tmpsrco5biq/.config/bunny-os: created
+bunny-config-dir: /tmp/tmpsrco5biq/.config/systemd/user: created
+bunny-config-dir: /tmp/tmpm_nsgmgs/.config/bunny-os: created
+bunny-config-dir: /tmp/tmpm_nsgmgs/.config/systemd/user: created
+Verified explicit non-functional Bunny placeholder
+make: *** [Makefile:34: test] Error 1

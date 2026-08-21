@@ -1,0 +1,44 @@
+# SPDX-FileCopyrightText: 2026 ComradeArt
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# The engineering-proof run. Thirty-five synthetic conversations and the
+# smallest instruct model that is a real one, so the whole path -- validate,
+# preflight, plan, train, save, reload, evaluate -- can be executed end to end
+# on a developer machine in a few minutes.
+#
+# This is not a recipe for a useful assistant. Thirty-five examples cannot teach
+# one; they can demonstrate that the machinery works and that the adapter it
+# produced is measurably different from no adapter at all.
+
+model:
+  base: HuggingFaceTB/SmolLM2-135M-Instruct
+  revision: main
+
+training:
+  method: lora
+  epochs: 3
+  batch_size: auto
+  learning_rate: 0.0002
+  max_length: 512
+  gradient_checkpointing: true
+  precision: auto
+  seed: 20260813
+  warmup_steps: 2
+
+quantization:
+  enabled: false
+
+lora:
+  rank: 16
+  alpha: 32
+  dropout: 0.05
+
+dataset:
+  path: ./bunny-companion-demo.jsonl
+  format: chat
+  validation_split: 0.2
+
+output:
+  directory: ../../build/out/model-studio/bunny-demo
+  name: bunny-demo
+  overwrite: true

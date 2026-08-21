@@ -1,0 +1,23 @@
+{
+ "schemaVersion": 1,
+ "policy": "Alpha evidence sufficiency is a measurable policy, not a guess. Every threshold below is owner-defined; while any required threshold is null the determination is SUFFICIENCY_UNDETERMINED, and the machinery distinguishes that from both no-evidence and sufficient-with-unresolved-blockers. No minimum tester count is invented here: null means the owner has not defined one, and nothing substitutes a default.",
+ "owner": "the release decision authority (the project owner, for the Alpha class)",
+ "requiredEvidenceDimensions": {
+  "journeys": ["A", "B", "C", "D", "E"],
+  "renderModes": ["companion-prerendered", "companion-2d", "companion-3d-native", "companion-3d-fallback"],
+  "artifactCoverage": "every report counted toward sufficiency must be BOUND to the subject artifact",
+  "negativeFeedbackHandling": "sufficiency is never reached while a release-blocking finding is open; negative reports count toward coverage exactly as positive ones do"
+ },
+ "thresholds": {
+  "minimumBoundReports": null,
+  "minimumDistinctTesters": null,
+  "minimumJourneysCovered": null,
+  "minimumDistinctEnvironments": null,
+  "minimumPhysicalMachineReports": null,
+  "minimumRenderModesObserved": null
+ },
+ "determinationVocabulary": ["SUFFICIENCY_UNDETERMINED", "INSUFFICIENT_EVIDENCE", "SUFFICIENT_WITH_UNRESOLVED_BLOCKERS", "SUFFICIENT"],
+ "evidenceLevelVocabulary": ["NO_EVIDENCE", "EVIDENCE_PRESENT"],
+ "note": "All thresholds null: the owner has not defined them, so the determination is SUFFICIENCY_UNDETERMINED whatever arrives. Zero evidence is additionally reported as NO_EVIDENCE - 'no evidence' and 'insufficient evidence' are different facts and are never collapsed.",
+ "evaluationAuthority": "qualification/phase12/tools/alpha_ops.py evaluate_sufficiency"
+}

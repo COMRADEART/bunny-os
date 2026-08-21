@@ -33,7 +33,9 @@ import hashlib
 import io
 import importlib.util
 import json
+import os
 from pathlib import Path
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -720,6 +722,69 @@ class ThePredicateItself(unittest.TestCase):
         self.assertNotIn(
             "speech-synthesis-models", routes,
             "the combined route is gone; a build that still names it installs nothing")
+
+
+class CopyPrimitiveTests(unittest.TestCase):
+    """`copy_file` must not write through a hardlink it lands on.
+
+    Found on the first release candidate. Fedora's `accountsservice` ships
+    `/usr/share/accountsservice/user-templates/{standard,administrator}` as
+    hardlinks to each other; installing Bunny's two templates over them left
+    both paths holding whichever route ran last, sharing one inode. The
+    session behaviour survived it — both templates carry the same `[User]`
+    block — so only a check that looks at the *bytes* catches this.
+    """
+
+    def _hardlinked_pair(self, directory: Path) -> tuple[Path, Path]:
+        first = directory / "standard"
+        second = directory / "administrator"
+        first.write_text("shipped by the distribution\n", encoding="utf-8")
+        os.link(first, second)
+        self.assertEqual(first.stat().st_nlink, 2, "the fixture is not hardlinked")
+        return first, second
+
+    def test_installing_over_a_hardlink_does_not_rewrite_its_sibling(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            destination_dir = root / "dest"
+            destination_dir.mkdir()
+            first, second = self._hardlinked_pair(destination_dir)
+
+            source_a = root / "a.txt"
+            source_b = root / "b.txt"
+            source_a.write_text("the standard template\n", encoding="utf-8")
+            source_b.write_text("the administrator template\n", encoding="utf-8")
+
+            INSTALLER.copy_file(source_a, first, 0o644)
+            INSTALLER.copy_file(source_b, second, 0o644)
+
+            self.assertEqual(first.read_text(encoding="utf-8"), "the standard template\n",
+                             "the second install wrote through the hardlink and "
+                             "replaced the first file's content")
+            self.assertEqual(second.read_text(encoding="utf-8"),
+                             "the administrator template\n")
+            self.assertEqual(first.stat().st_nlink, 1,
+                             "the installed file still shares an inode with its sibling")
+            self.assertEqual(second.stat().st_nlink, 1)
+
+    def test_the_check_would_fail_without_the_unlink(self) -> None:
+        """The negative control: `shutil.copyfile` alone reproduces the defect,
+        so the assertion above is testing the fix and not the filesystem."""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            destination_dir = root / "dest"
+            destination_dir.mkdir()
+            first, second = self._hardlinked_pair(destination_dir)
+            source = root / "b.txt"
+            source.write_text("the administrator template\n", encoding="utf-8")
+
+            shutil.copyfile(source, second)
+
+            self.assertEqual(first.read_text(encoding="utf-8"),
+                             "the administrator template\n",
+                             "copyfile no longer writes through a hardlink; the "
+                             "defect this guards against cannot happen and the "
+                             "guard should be re-justified")
 
 
 if __name__ == "__main__":  # pragma: no cover

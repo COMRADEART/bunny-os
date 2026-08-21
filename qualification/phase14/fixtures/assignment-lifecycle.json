@@ -1,0 +1,13 @@
+{
+ "fixture": true,
+ "fixtureClass": "TEST_FIXTURE_ONLY",
+ "purpose": "Drives the authority-lifecycle rehearsals: a revocation of one fixture assignment (AUTH-KEY, ASSIGNMENT-003). There is no real assignment-revocation registry; introducing one is an owner decision, so this record evaluates only inside isolated fixture universes.",
+ "assignmentRevocation": {
+  "revocationId": "ASSIGN-REVOKE-001",
+  "targetAssignment": "ASSIGNMENT-003",
+  "reason": "constructed fixture: the key authority role was rotated to a new custodian",
+  "authority": "Constructed Fixture Organization",
+  "timestamp": "2026-09-15"
+ },
+ "test_fixture_only": true
+}

@@ -1,0 +1,15 @@
+[
+ {"command": "settings", "action": "set", "section": "character",
+  "field": "render_mode", "value": "3d", "label": "select-3d"},
+ {"command": "settings", "action": "show", "label": "settings-3d"},
+ {"command": "renderer", "label": "renderer-3d"},
+ {"command": "character-policy", "dryRun": true, "label": "policy-before-loss"},
+ {"command": "character-policy", "dryRun": false, "eligible": "static-image",
+  "label": "capability-loss-applied"},
+ {"command": "renderer", "label": "renderer-under-loss"},
+ {"command": "settings", "action": "show", "label": "settings-under-loss"},
+ {"command": "character-policy", "dryRun": false, "restore": true,
+  "label": "capability-restored"},
+ {"command": "renderer", "label": "renderer-after-restore"},
+ {"command": "settings", "action": "show", "label": "settings-after-restore"}
+]

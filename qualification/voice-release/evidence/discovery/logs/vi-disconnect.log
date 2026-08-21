@@ -1,0 +1,11 @@
+--- unloading the source out from under the capture ---
+--- events ---
+{"event": "voice_started", "requestId": "speechreq-cdc95cbfa45f4d54b4eeb208c6a39680", "sessionId": "ses-7d6c0d7f24fe4e0ebb6a123a73871959", "cancellationToken": "speechtok-2bbd2a61b9f8425c89e467db9fcf58ac", "maxCaptureMs": 30000}
+{"event": "microphone", "active": true, "requestId": "speechreq-cdc95cbfa45f4d54b4eeb208c6a39680"}
+{"event": "voice_phase", "phase": "listening", "statusText": "Listening...", "requestId": "speechreq-cdc95cbfa45f4d54b4eeb208c6a39680"}
+{"event": "microphone", "active": false, "requestId": "speechreq-cdc95cbfa45f4d54b4eeb208c6a39680"}
+{"event": "microphone", "active": false, "requestId": "speechreq-cdc95cbfa45f4d54b4eeb208c6a39680"}
+{"event": "microphone", "active": false, "requestId": "speechreq-cdc95cbfa45f4d54b4eeb208c6a39680"}
+{"event": "microphone", "active": false, "requestId": "speechreq-cdc95cbfa45f4d54b4eeb208c6a39680"}
+{"event": "error", "reason": "the input device was lost; no transcript could be preserved; typed input remains available and no task was created", "requestId": "speechreq-cdc95cbfa45f4d54b4eeb208c6a39680"}
+--- stderr ---

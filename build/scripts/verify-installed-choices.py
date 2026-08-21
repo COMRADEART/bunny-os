@@ -1,0 +1,422 @@
+#!/usr/bin/env python3
+# SPDX-FileCopyrightText: 2026 ComradeArt
+# SPDX-License-Identifier: GPL-3.0-or-later
+"""Read the installed system and check that setup's choices actually took.
+
+§45 is precise about the thing this must not do: *"Do not infer from installer
+state. Read the installed system."* So nothing here trusts
+``/var/lib/bunny-setup/choices.json``. That document is read for one purpose
+only — to learn what to *expect* — and every expectation is then checked against
+a different file that a different program wrote.
+
+That distinction is the whole value of the check. Three things exist and they are
+not the same:
+
+*what was chosen*   — `choices.json`, written by the setup surface;
+*what was applied*  — `~/.local/state/bunny-os/applied.json`, written by first run;
+*what is true*      — `/etc/locale.conf`, `/etc/passwd`, the LUKS header.
+
+A run that compared the first against the second would pass while the system was
+configured differently from both.
+
+## Offline, through the disk image
+
+`guestfish` reads the installed filesystem without booting it, which matters for
+two reasons: an unbootable system can still be inspected, so a failure is
+diagnosable rather than merely a black screen; and nothing in the guest can
+influence the answer.
+
+The bootc layout puts the real root inside an ostree deployment, so paths resolve
+under ``/ostree/deploy/*/deploy/*/`` rather than at ``/``.
+
+## Partitions are found, not counted
+
+An earlier version hardcoded ``/dev/sda3`` for boot and ``/dev/sda4`` for root.
+This installer's kickstart creates exactly three partitions — EFI, boot, root —
+so root is the third, and every per-setting check would have failed to mount and
+reported "unreadable" on a perfectly good installation.
+
+The offset was not the mistake; hardcoding was. A layout is a property of the
+plan, and a plan that grows a swap partition renumbers everything after it. So
+each filesystem is mounted and identified by what is *on* it: ``/ostree`` marks
+the root, ``/loader`` marks the boot filesystem.
+
+    python3 build/scripts/verify-installed-choices.py --disk target.qcow2
+
+Encrypted installs need ``--passphrase``; without one the root cannot be read and
+the check says so rather than skipping quietly — an unreadable root is itself
+evidence that encryption happened.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+from pathlib import Path
+import re
+import shutil
+import subprocess
+import sys
+from typing import Any
+
+CHECKS = {
+    # The values may be quoted: Anaconda's LanguageInstallationTask writes
+    # LANG="en_GB.UTF-8" with quotes, the executor's placement writes it
+    # bare, and both are valid to every reader. The first version of this
+    # pattern could not match the quoted form, so a correctly-written locale
+    # would still have read back as null — a verifier defect that would have
+    # marked a working system unproven.
+    "language": ("/etc/locale.conf", r"LANG=\"?([\w.@-]+)\"?"),
+    "keyboard": ("/etc/vconsole.conf", r"KEYMAP=\"?([\w-]+)\"?"),
+    "hostname": ("/etc/hostname", r"(.+)"),
+}
+
+
+def guestfish(disk: Path, script: str, *, passphrase: str | None = None,
+              luks_devices: tuple[str, ...] = ()) -> str:
+    """Run a guestfish script against the image, read-only.
+
+    Encrypted disks taught this function three things on run 19b, each
+    measured against a real LUKS2/argon2id root:
+
+    * ``--key all:key:…`` does not open the container — ``list-filesystems``
+      silently *drops* the LUKS device instead, so the disk appears to have
+      no encrypted volume at all.
+    * The working mechanism is ``--keys-from-stdin`` with the passphrase as
+      the only thing on stdin (one line per container) and an explicit
+      ``luks-open-ro`` per container — which is why the script travels as
+      **argv commands**: a script fed to stdin becomes cryptsetup's
+      passphrase one line at a time, and ``-f file`` both loses the key the
+      same way ("No key available" on the right passphrase, measured) *and*
+      exits 0 with the error only on stderr, which would turn every failed
+      command into a silent partial success here.
+    * argon2id here costs 1 GiB of memory and the default appliance does not
+      have it, so the appliance is grown; without this the failure reads
+      "No key available with this passphrase" on the right passphrase.
+    """
+    import os
+
+    # No --ro: the caller hands this function a throwaway overlay (see
+    # main()), and the device must be writable inside the appliance so a
+    # dirty ext4 journal REPLAYS on mount. Run 27's disk carried its last
+    # writes — the user account among them — committed in the journal but
+    # not checkpointed; a strictly read-only reader mounted the past and
+    # reported the account missing from a disk that boots with it present.
+    # The replay lands in the overlay; the evidence disk is never written.
+    command = ["guestfish", "-a", str(disk)]
+    lines = script.splitlines()
+    # luks-open, not luks-open-ro: a read-only *mapping* blocks the journal
+    # replay even over a writable device — mount-ro then fails, the noload
+    # fallback serves the pre-replay past, and run 27's account was reported
+    # missing three-for-three from a disk that has it. The mapping's writes
+    # land in the same throwaway overlay as everything else.
+    opens = [f"luks-open {device} luks{index}"
+             for index, device in enumerate(luks_devices)]
+
+    keys = ""
+    environment = None
+    if luks_devices:
+        command.insert(1, "--keys-from-stdin")
+        keys = "".join((passphrase or "") + "\n" for _ in luks_devices)
+        # argon2id on these disks costs 1 GiB per unlock. 2048 was measured
+        # to work and then measured to work *intermittently* — the same
+        # verifier run found the root through LUKS once and lost it on the
+        # next invocation, because a marginal appliance fails the KDF as
+        # "No key available with this passphrase" whenever memory luck runs
+        # out. 3072 gives the margin, and the retry below covers the rest.
+        environment = {**os.environ, "LIBGUESTFS_MEMSIZE": "3072"}
+
+    for line in lines[:1] + opens + lines[1:]:
+        command += line.split() + [":"]
+    command = command[:-1]
+
+    for attempt in (1, 2):
+        try:
+            completed = subprocess.run(command, input=keys, capture_output=True,
+                                       text=True, timeout=900, env=environment)
+        except (OSError, subprocess.SubprocessError) as error:
+            return f"__ERROR__ {type(error).__name__}: {error}"
+        if completed.returncode == 0:
+            return completed.stdout
+        if attempt == 1 and "No key available" in completed.stderr:
+            continue
+        break
+    return f"__ERROR__ {completed.stderr.strip()[:400]}"
+
+
+def _script(*lines: str) -> str:
+    return "\n".join(("run",) + lines) + "\n"
+
+
+def find_luks_devices(disk: Path) -> tuple[str, ...]:
+    """The LUKS containers on the disk, found by asking each partition.
+
+    `list-filesystems` cannot be the source: on the libguestfs this ran
+    against it omits crypto_LUKS devices from the listing entirely — with a
+    key registered *and* without one (both measured on run 19b's disk, whose
+    sda3 only ever surfaced through mount's own "unknown filesystem type
+    'crypto_LUKS'" complaint). `vfs-type` answers for one device at a time
+    and does not editorialise.
+    """
+    listing = guestfish(disk, _script("list-partitions"))
+    if listing.startswith("__ERROR__"):
+        return ()
+    found = []
+    for device in listing.split():
+        kind = guestfish(disk, _script(f"vfs-type {device}")).strip()
+        if kind == "crypto_LUKS":
+            found.append(device)
+    return tuple(found)
+
+
+def mounted(disk: Path, device: str, *lines: str, passphrase: str | None = None,
+            luks_devices: tuple[str, ...] = ()) -> str:
+    """Run script lines with ``device`` mounted read-only at /.
+
+    A filesystem interrupted mid-write has a dirty journal, and a read-only
+    mount cannot replay one — the kernel refuses, which turned run 19b's
+    half-written root into "no filesystem carrying an ostree deployment"
+    while the deployment sat right there. ``noload`` skips the replay and
+    reads the last checkpoint: the honest available view of a disk whose
+    install died. A completed install unmounts cleanly, so on the disks this
+    gate passes the fallback never runs.
+    """
+    result = guestfish(disk, _script(f"mount-ro {device} /", *lines),
+                       passphrase=passphrase, luks_devices=luks_devices)
+    if result.startswith("__ERROR__") and "mount" in result:
+        result = guestfish(disk, _script(f"mount-vfs ro,noload ext4 {device} /", *lines),
+                           passphrase=passphrase, luks_devices=luks_devices)
+    return result
+
+
+def find_partitions(disk: Path, passphrase: str | None,
+                    luks_devices: tuple[str, ...] = ()) -> dict[str, str]:
+    """Which device is root and which is boot, by looking rather than counting."""
+    listing = guestfish(disk, _script("list-filesystems"), passphrase=passphrase,
+                        luks_devices=luks_devices)
+    if listing.startswith("__ERROR__"):
+        return {"error": listing}
+
+    devices = []
+    for line in listing.splitlines():
+        name, _, kind = line.partition(":")
+        name, kind = name.strip(), kind.strip()
+        if name.startswith("/dev/") and kind not in {"", "unknown", "swap", "crypto_LUKS"}:
+            devices.append(name)
+
+    found: dict[str, str] = {}
+    for device in devices:
+        if "root" in found and "boot" in found:
+            break
+        probe = mounted(disk, device, "ls /",
+                        passphrase=passphrase, luks_devices=luks_devices)
+        if probe.startswith("__ERROR__"):
+            continue
+        entries = set(probe.split())
+        # loader before ostree, and the order is load-bearing: a bootc /boot
+        # carries BOTH (its ostree/ holds the commits the loader entries
+        # name), so checking ostree first labelled the boot partition "root"
+        # on the first disk this ever ran against, and the real root — which
+        # has ostree but no loader — was never looked at.
+        if "loader" in entries and "boot" not in found:
+            found["boot"] = device
+        elif "ostree" in entries and "root" not in found:
+            found["root"] = device
+    return found
+
+
+def _read(disk: Path, device: str, path: str, passphrase: str | None,
+          luks_devices: tuple[str, ...] = ()) -> str:
+    return mounted(
+        disk, device, f"glob cat /ostree/deploy/*/deploy/*{path}",
+        passphrase=passphrase,
+        luks_devices=luks_devices,
+    )
+
+
+def inspect(disk: Path, *, passphrase: str | None, expected: dict[str, Any]) -> dict[str, Any]:
+    """Everything readable, and what it should have been."""
+    observed: dict[str, Any] = {}
+    findings: list[str] = []
+    checked: dict[str, Any] = {}
+
+    # Key-less on purpose: this is where LUKS containers are *visible* — a
+    # registered key makes list-filesystems drop them (measured on run 19b).
+    filesystems = guestfish(disk, _script("list-filesystems"))
+    observed["filesystems"] = filesystems.strip().splitlines()
+    if filesystems.startswith("__ERROR__"):
+        findings.append(f"the disk image could not be read: {filesystems[:200]}")
+        return {"observed": observed, "findings": findings, "checked": checked}
+
+    # §13: an encrypted install must actually have a LUKS header on the target.
+    wanted_encryption = bool(expected.get("encryption", {}).get("enabled"))
+    luks_devices = find_luks_devices(disk)
+    observed["luksPresent"] = bool(luks_devices)
+    if wanted_encryption and not observed["luksPresent"]:
+        findings.append("encryption was chosen but no LUKS volume exists on the disk")
+    if expected and not wanted_encryption and observed["luksPresent"]:
+        findings.append("encryption was not chosen but a LUKS volume exists")
+    if not passphrase:
+        luks_devices = ()
+
+    partitions = find_partitions(disk, passphrase, luks_devices)
+    observed["partitions"] = partitions
+    boot_device = partitions.get("boot")
+    root_device = partitions.get("root")
+
+    # The bootloader: an installation that cannot boot is not an installation,
+    # and this is the check that separates a real completion from a claimed one.
+    entries = mounted(disk, boot_device, "ls /loader/entries",
+                      passphrase=passphrase, luks_devices=luks_devices) \
+        if boot_device else "__ERROR__ no boot filesystem"
+    observed["bootEntries"] = [] if entries.startswith("__ERROR__") else \
+        [line for line in entries.split() if line.endswith(".conf")]
+    if not observed["bootEntries"]:
+        findings.append("no bootloader entry was written; the system would not boot")
+
+    if observed["luksPresent"] and not passphrase:
+        observed["rootFilesystem"] = "unreadable (encrypted, no passphrase supplied)"
+        findings.append("the root filesystem is encrypted and no passphrase was given, "
+                        "so the per-setting checks could not run")
+        return {"observed": observed, "findings": findings, "checked": checked}
+
+    if not root_device:
+        findings.append("no filesystem carrying an ostree deployment was found; "
+                        "the installation did not complete")
+        return {"observed": observed, "findings": findings, "checked": checked}
+
+    deployment = mounted(
+        disk, root_device, "glob ls /ostree/deploy/*/deploy/",
+        passphrase=passphrase, luks_devices=luks_devices)
+    observed["deployment"] = deployment.strip().splitlines()[:3]
+
+    for name, (path, pattern) in CHECKS.items():
+        body = _read(disk, root_device, path, passphrase, luks_devices)
+        if body.startswith("__ERROR__"):
+            checked[name] = {"read": False, "detail": body[:160]}
+            continue
+        match = re.search(pattern, body)
+        checked[name] = {"read": True,
+                         "value": match.group(1).strip() if match else None}
+
+    # The account: read from /etc/passwd on the installed system, never from the
+    # document that asked for it.
+    passwd = _read(disk, root_device, "/etc/passwd", passphrase, luks_devices)
+    username = expected.get("account", {}).get("username", "")
+    checked["account"] = {
+        "read": not passwd.startswith("__ERROR__"),
+        "present": bool(username) and ("\n" + passwd).find("\n" + username + ":") >= 0,
+        "username": username,
+    }
+    if username and not checked["account"]["present"]:
+        findings.append(f"the account {username!r} does not exist on the installed system")
+
+    # Root must be locked: `rootpw --lock` in the kickstart, verified in shadow.
+    shadow = _read(disk, root_device, "/etc/shadow", passphrase, luks_devices)
+    root_line = next((line for line in shadow.splitlines() if line.startswith("root:")), "")
+    locked = root_line.split(":")[1].startswith(("!", "*")) if root_line else None
+    checked["rootLocked"] = {"read": bool(root_line), "locked": locked}
+    if root_line and not locked:
+        findings.append("the root account is not locked on the installed system")
+
+    # §45: what setup wrote, present on the target so first boot can apply it.
+    choices = mounted(
+        disk, root_device, "glob ls /ostree/deploy/*/var/lib/bunny-setup/",
+        passphrase=passphrase, luks_devices=luks_devices)
+    checked["choicesOnTarget"] = {
+        "read": not choices.startswith("__ERROR__"),
+        "files": [] if choices.startswith("__ERROR__") else choices.split(),
+    }
+
+    # Compare what is true against what was chosen. When the expectation
+    # carries a value, an unreadable or unmatched file is itself a finding:
+    # "we could not read it" was how the locale gap hid for five journeys.
+    locale = expected.get("locale", {})
+    if locale.get("language"):
+        want = locale["language"].replace("-", "_")
+        got = checked.get("language", {}).get("value")
+        if not got or not got.startswith(want):
+            findings.append(f"language: chose {want}, the system has {got!r}")
+    if locale.get("keyboardLayout"):
+        got = checked.get("keyboard", {}).get("value")
+        if got != locale["keyboardLayout"]:
+            findings.append(f"keyboard: chose {locale['keyboardLayout']}, "
+                            f"the system has {got!r}")
+    device_name = expected.get("account", {}).get("deviceName", "")
+    if device_name:
+        got = checked.get("hostname", {}).get("value")
+        if got != device_name:
+            findings.append(f"hostname: chose {device_name}, the system has {got!r}")
+
+    # §45: when the expectation is the full setup document (it carries a
+    # companion section only setup writes), the document itself must have
+    # crossed to the target. Reduced expectations from earlier journeys did
+    # not promise this and are not judged on it.
+    if isinstance(expected.get("companion"), dict):
+        if "choices.json" not in checked["choicesOnTarget"].get("files", []):
+            findings.append("choices.json is not on the installed system; "
+                            "the first-run handoff did not cross the reboot")
+
+    return {"observed": observed, "findings": findings, "checked": checked}
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--disk", type=Path, required=True)
+    parser.add_argument("--passphrase")
+    parser.add_argument("--expected", type=Path,
+                        help="the choices.json setup wrote, read only to learn "
+                             "what to expect")
+    parser.add_argument("--output", type=Path)
+    arguments = parser.parse_args()
+
+    if not shutil.which("guestfish"):
+        sys.stderr.write("guestfish is required to read the installed system\n")
+        return 3
+    if not arguments.disk.is_file():
+        sys.stderr.write(f"no such disk image: {arguments.disk}\n")
+        return 2
+
+    expected: dict[str, Any] = {}
+    if arguments.expected and arguments.expected.is_file():
+        expected = json.loads(arguments.expected.read_text(encoding="utf-8"))
+
+    # Every read goes through a throwaway qcow2 overlay: the guest that made
+    # the disk may have died with a dirty journal, and only a writable
+    # device lets the kernel replay it — into the overlay, never into the
+    # evidence. This is what the disk will look like the moment it boots.
+    import os
+    import tempfile
+    with tempfile.TemporaryDirectory(prefix="bunny-verify-") as scratch:
+        overlay = Path(scratch) / "read.qcow2"
+        created = subprocess.run(
+            ["qemu-img", "create", "-f", "qcow2",
+             "-b", str(arguments.disk.resolve()), "-F", "qcow2", str(overlay)],
+            capture_output=True, text=True)
+        if created.returncode != 0:
+            sys.stderr.write(f"could not build a read overlay: {created.stderr}\n")
+            return 3
+        # libguestfs runs its appliance through libvirt as its own user, and
+        # a 0700 scratch directory shuts that user out of the overlay it is
+        # supposed to write the journal replay into.
+        os.chmod(scratch, 0o755)
+        os.chmod(overlay, 0o666)
+        result = inspect(overlay, passphrase=arguments.passphrase, expected=expected)
+    report = {
+        "schemaVersion": 1,
+        "note": "Read from the installed filesystem. `expected` is used only to know "
+                "what to look for; every value below came from a file on the target.",
+        "disk": str(arguments.disk),
+        "expectedFrom": str(arguments.expected) if arguments.expected else None,
+        **result,
+    }
+    document = json.dumps(report, indent=1, ensure_ascii=False) + "\n"
+    if arguments.output:
+        arguments.output.parent.mkdir(parents=True, exist_ok=True)
+        arguments.output.write_text(document, encoding="utf-8", newline="\n")
+    sys.stdout.write(document)
+    return 0 if not result["findings"] else 4
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

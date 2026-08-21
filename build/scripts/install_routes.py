@@ -98,6 +98,7 @@ PACKAGE_SUFFIXES = (".py",)
 #: than noticed: the unit shipped, finalisation removes ``/etc/brlapi.key`` from
 #: the archive, and nothing installed the program that mints it on first boot.
 SYSTEM_SCRIPTS: tuple[str, ...] = (
+    "bunny-anaconda-bus-ready",
     "bunny-health-check",
     "bunny-first-boot",
     "bunny-config-dir",
@@ -488,6 +489,43 @@ INSTALL_ROUTES: tuple[InstallRoute, ...] = (
         "wayland-safe-session", "shell/session/bunny-safe.desktop",
         "/usr/share/wayland-sessions/bunny-safe.desktop", 0o644, profiles=DESKTOP_PROFILES,
     ),
+    # A session that ships is not a session anyone gets: GDM starts plain
+    # GNOME for a user with no AccountsService record, where the Bunny
+    # extension is inert (extension.js requires BUNNY_SHELL_MODE, which only
+    # bunny-shell-session sets). The first attempted fix put
+    # DefaultSession=bunny.desktop in /etc/gdm/custom.conf — and login-8b
+    # measured GDM starting session "gnome" with that key in place, because
+    # GDM's own schema (gdm.schemas) has no such key. There is no route for a
+    # gdm default here any more: the mechanism GDM actually reads is the
+    # per-user AccountsService record, which the installer now writes for the
+    # account it creates (installer/backend/anaconda.py, _place_handoff).
+    #
+    # That write reaches exactly one account. An account added later through
+    # the Users panel or created by gnome-initial-setup on an OEM device used
+    # to land in stock GNOME — the same defect wearing a different user.
+    # accounts-daemon's user templates are the mechanism for those: applied
+    # when the *daemon* creates the account (the D-Bus CreateUser both of
+    # those surfaces call), one template per account type. Measured on
+    # accountsservice 23.13.9/fc44, because the obvious spellings are wrong
+    # twice over: the filename is the bare account type — `standard`, not
+    # `standard.template` — and a template never reaches an account that
+    # already exists (useradd from a shell stays untemplated; the greeter
+    # still offers Bunny to it). /usr/share/accountsservice/user-templates
+    # is the vendor half of the search path and was verified to apply;
+    # /etc/accountsservice/user-templates is the admin override. Desktop
+    # profiles only, like the session the templates name.
+    _file_route(
+        "accountsservice-standard-template",
+        "config/accountsservice/standard.template",
+        "/usr/share/accountsservice/user-templates/standard", 0o644,
+        profiles=DESKTOP_PROFILES,
+    ),
+    _file_route(
+        "accountsservice-administrator-template",
+        "config/accountsservice/administrator.template",
+        "/usr/share/accountsservice/user-templates/administrator", 0o644,
+        profiles=DESKTOP_PROFILES,
+    ),
     InstallRoute(
         "gnome-shell-extension", "tree", "shell/components/gnome-shell-extension",
         "/usr/share/gnome-shell/extensions/bunny-shell@bunny-os.org", 0o644,
@@ -567,6 +605,15 @@ INSTALL_ROUTES: tuple[InstallRoute, ...] = (
         "anaconda-profile", "installer/config/bunny-os.conf",
         "/etc/anaconda/profile.d/bunny-os.conf", 0o444, profiles=LIVE_PROFILES,
     ),
+    # The initramfs modules image-builder requires of a bootc installer medium.
+    # Placing the file is necessary and not sufficient: the initramfs has to be
+    # regenerated afterwards, which build/Containerfile does for the live
+    # profile. See the file's own comment for what happens without it.
+    _file_route(
+        "live-dracut-modules", "installer/config/bunny-live-dracut.conf",
+        "/usr/lib/dracut/dracut.conf.d/95-bunny-live.conf", 0o444,
+        profiles=LIVE_PROFILES,
+    ),
     _file_route(
         "anaconda-defaults", "installer/config/interactive-defaults.ks",
         "/usr/share/anaconda/interactive-defaults.ks", 0o444, profiles=LIVE_PROFILES,
@@ -583,6 +630,75 @@ INSTALL_ROUTES: tuple[InstallRoute, ...] = (
         "live-installer-autostart",
         "installer/frontend/art.comrade.BunnyInstaller-autostart.desktop",
         "/etc/xdg/autostart/art.comrade.BunnyInstaller.desktop", 0o644, profiles=LIVE_PROFILES,
+    ),
+    # The §42 driver. Almost every other harness in build/scripts stays on the
+    # host and is injected into a disk image with guestfish, which an ISO cannot
+    # be — it is read-only and there is nothing to inject into. So this one
+    # ships, and the thing that drives the installer is the thing the installer
+    # carries. It does nothing unless a kernel argument asks for it.
+    _file_route(
+        "live-setup-driver", "build/scripts/setup-drive.py",
+        "/usr/libexec/bunny-setup-drive", 0o555, profiles=LIVE_PROFILES,
+    ),
+    _file_route(
+        "live-setup-driver-autostart",
+        "installer/frontend/art.comrade.BunnySetupDrive-autostart.desktop",
+        "/etc/xdg/autostart/art.comrade.BunnySetupDrive.desktop", 0o644,
+        profiles=LIVE_PROFILES,
+    ),
+    _file_route(
+        "live-medium-kickstart",
+        "installer/config/medium.ks",
+        "/usr/share/bunny-os/medium.ks", 0o444, profiles=LIVE_PROFILES,
+    ),
+    _file_route(
+        "live-tmpfiles",
+        "installer/config/tmpfiles-live.conf",
+        "/usr/lib/tmpfiles.d/bunny-live.conf", 0o644, profiles=LIVE_PROFILES,
+    ),
+    # The medium runs permissive, the way Fedora's own installer media do;
+    # the installed system keeps the payload's enforcing config. Run 21: the
+    # services-configuration step's `systemctl enable --root` was denied
+    # under the medium's enforcing policy and the install died after the
+    # disk was erased. The file carries the full reasoning.
+    _file_route(
+        "live-selinux-permissive",
+        "installer/config/selinux-live.conf",
+        "/etc/selinux/config", 0o644, profiles=LIVE_PROFILES,
+    ),
+    # /mnt is a symlink on a bootc medium and systemd's enable --root
+    # re-roots it inside the target (runs 18-23). Anaconda gets real paths.
+    _file_route(
+        "live-anaconda-target",
+        "installer/config/anaconda-target-live.conf",
+        "/etc/anaconda/conf.d/95-bunny-target.conf", 0o644, profiles=LIVE_PROFILES,
+    ),
+    # A medium-only overlay of one anaconda file: enable_service keeps
+    # systemctl's words (module processes drop helper output at birth) and
+    # tolerates a failed enable exactly when the unit is already wanted on
+    # the target's own filesystem — runs 18-24 died at a preset-enabled
+    # chronyd's redundant enable. The overlay file carries the reasoning.
+    _file_route(
+        "live-pyanaconda-service",
+        "installer/overlays/pyanaconda-core-service.py",
+        "/usr/lib64/python3.14/site-packages/pyanaconda/core/service.py",
+        0o644, profiles=LIVE_PROFILES,
+    ),
+    InstallRoute(
+        id="live-installer-payload",
+        kind="tree",
+        source="build/payload-oci",
+        destination="/usr/share/bunny-os/payload-oci",
+        mode=0o644,
+        profiles=LIVE_PROFILES,
+        note=(
+            "The offline installation payload as an OCI layout, exported by "
+            "build-live-image.sh from the exact payload image this medium is "
+            "built beside. Run 13 of Journey A opened the ISO and found "
+            "neither payload nor kickstart - a LiveOS medium embeds nothing "
+            "by itself - so the install source rides in the live filesystem "
+            "and medium.ks points anaconda at it."
+        ),
     ),
 
     # -- unconditional, and last ---------------------------------------------

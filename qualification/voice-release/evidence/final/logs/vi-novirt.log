@@ -1,0 +1,17 @@
+===== speaking: /tmp/utt-memory.raw =====
+microphone open at 06:47:24.948
+utterance queued at 06:47:25.352
+
+===== events =====
+voice_started            {}
+microphone               {"active": true}
+voice_phase              {"phase": "listening", "statusText": "Listening..."}
+microphone               {"active": false}
+microphone               {"active": false}
+microphone               {"active": false}
+microphone               {"active": false}
+error                    {"reason": "the input device was lost; no transcript could be preserved; typed input remains available and no task was created"}
+--- stderr ---
+--- mic daemon ---
+mic-daemon: speaking restored.raw (5.87s)
+mic-daemon: speaking offline.raw (3.89s)

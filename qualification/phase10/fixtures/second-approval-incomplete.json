@@ -1,0 +1,20 @@
+{
+ "fixtureClass": "TEST_FIXTURE_ONLY",
+ "purpose": "Drives the incomplete-approval dry run: an approval naming a commit but no recomputed artifact digest. Must earn INCOMPLETE; approval of a branch is not approval of bytes.",
+ "record": {
+  "scope": "constructed fixture: distribute the ISO to the controlled Alpha cohort",
+  "commit": "e906a48793d74544b39c14cc3e35e0654f5311e2",
+  "firstApprover": {
+   "name": "Constructed Fixture Approver A",
+   "role": "owner",
+   "date": "2026-08-18",
+   "decision": "APPROVE"
+  },
+  "secondApprover": {
+   "name": "Constructed Fixture Approver B",
+   "role": "second approver",
+   "date": "2026-08-18",
+   "decision": "APPROVE"
+  }
+ }
+}

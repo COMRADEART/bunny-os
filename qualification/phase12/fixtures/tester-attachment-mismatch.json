@@ -1,0 +1,30 @@
+{
+ "fixtureClass": "TEST_FIXTURE_ONLY",
+ "purpose": "Drives the attachment-integrity dry run: the record claims a sha256 for its screenshot that does not match the ingested bytes. Phase 9 records UNVERIFIABLE; a modified attachment can never pass silently.",
+ "record": {
+  "schema": "bunny-os/alpha-tester-report/1",
+  "tester_id": "T-012",
+  "testerId": "T-012",
+  "report_type": "BUG",
+  "submitted_at": "2026-08-18",
+  "date": "2026-08-18",
+  "journey": "B",
+  "artifact_claimed_by_tester": "bunny-os-0.3.0-live.e906a48793d7-x86_64.iso (constructed fixture)",
+  "artifact_digest_observed": "823d50caba35afe72452768affd5f6fa0ac8cfc13c164f0e1bc909fa887ab421",
+  "artifact_digest_verified": true,
+  "artifact_identity_status": "VERIFIED",
+  "environment_summary": "constructed fixture: QEMU/KVM 9.1, q35, UEFI, 4 vCPU / 6 GB, llvmpipe",
+  "environment": "constructed fixture: QEMU/KVM 9.1, q35, UEFI, 4 vCPU / 6 GB, llvmpipe",
+  "steps": [],
+  "user_observation": "constructed fixture: screenshot attached showing the error dialog",
+  "expected_behavior": "no error dialog",
+  "actual_behavior": "error dialog on first login",
+  "additional_context": "TEST_FIXTURE_ONLY dry run material",
+  "artifactDigest": "823d50caba35afe72452768affd5f6fa0ac8cfc13c164f0e1bc909fa887ab421",
+  "attachmentDigests": {
+   "screenshot.png": "0000000000000000000000000000000000000000000000000000000000000000"
+  }
+ },
+ "attachmentName": "screenshot.png",
+ "attachmentContent": "constructed fixture: not a real PNG, just attachment bytes\n"
+}

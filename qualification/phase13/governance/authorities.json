@@ -1,0 +1,58 @@
+{
+ "actedByIntakeSource": {
+  "AUTH-HARDWARE": "hardware",
+  "AUTH-KEY": "signing",
+  "AUTH-SECOND-APPROVER": "second-approval",
+  "AUTH-SECURITY-REVIEWER": "security-review"
+ },
+ "authorities": [
+  {
+   "authorityId": "AUTH-SECURITY-REVIEWER",
+   "responsibility": "Produces independent review evidence",
+   "role": "SECURITY_REVIEWER"
+  },
+  {
+   "authorityId": "AUTH-SECURITY-OWNER",
+   "responsibility": "Resolves security disposition and accepted risk",
+   "role": "SECURITY_OWNER"
+  },
+  {
+   "authorityId": "AUTH-ALPHA-PROGRAM",
+   "responsibility": "Defines Alpha sufficiency thresholds",
+   "role": "ALPHA_PROGRAM_OWNER"
+  },
+  {
+   "authorityId": "AUTH-RELEASE",
+   "responsibility": "Makes final artifact authorization decision",
+   "role": "RELEASE_AUTHORITY"
+  },
+  {
+   "authorityId": "AUTH-KEY",
+   "responsibility": "Controls production signing",
+   "role": "KEY_AUTHORITY"
+  },
+  {
+   "authorityId": "AUTH-SECOND-APPROVER",
+   "responsibility": "Independently verifies and approves",
+   "role": "SECOND_APPROVER"
+  },
+  {
+   "authorityId": "AUTH-HARDWARE",
+   "responsibility": "Owns interpretation of physical hardware evidence",
+   "role": "HARDWARE_VALIDATION_OWNER"
+  }
+ ],
+ "levelSemantics": {
+  "AUTHORITY_ACTED": "the authority's act exists: gate-eligible ACCEPTED intake evidence for the evidence-producing roles, a validated sealed decision for the decision-making roles",
+  "AUTHORITY_ASSIGNED": "a sealed assignment record names an identity; the identity has not acted",
+  "ROLE_DEFINED": "the role exists in this model; nobody holds it"
+ },
+ "levels": [
+  "ROLE_DEFINED",
+  "AUTHORITY_ASSIGNED",
+  "AUTHORITY_ACTED"
+ ],
+ "note": "The repository may evaluate whether authorization requirements are satisfied. It may never create the authority that satisfies them.",
+ "purpose": "The canonical authority model: seven roles with stable identifiers. A role existing here is ROLE_DEFINED and nothing more - it is not an assignment and not an act. Assignment is a sealed record in assignments.json; an act is accepted intake evidence or a sealed Phase 13 decision. No real person is named in this file by design.",
+ "schemaVersion": 1
+}

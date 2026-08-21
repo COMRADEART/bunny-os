@@ -1,0 +1,10 @@
+{
+ "blsEntry": "ostree-1.conf",
+ "bogusChecksumDir": "0000000000000000000000000000000000000000000000000000000000000bad",
+ "brokenBootReachedTarget": false,
+ "brokenDisk": "/home/bunny/p7-work/recovery/broken.qcow2",
+ "note": "options/ostree= left intact; only linux and initrd paths corrupted",
+ "realChecksumDir": "dd33960330844f1ec11b6e93710464634d03be77bbcb9580480b16cfa08c892d",
+ "subjectDisk": "/root/bunny-build-archive/beta-phase4-rc-e906a48793d7-20260818T014208Z/bootc-fedora-44-qcow2-x86_64/bootc-fedora-44-qcow2-x86_64.qcow2",
+ "subjectSha256": "497add9a77db2db02bf2541e85b04b0e285c1833d2c8220d193d0d413a6ce867"
+}

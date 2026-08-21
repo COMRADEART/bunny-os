@@ -2,3 +2,15 @@
 automount=false
 automount-open=false
 autorun-never=true
+
+# The medium must not blank or lock mid-install. A person watching an
+# installation sees the screen go dark and cannot tell power saving from a
+# hang - and the live account's password is locked, so a GNOME lock screen
+# here would be one nobody can ever unlock. Journey A's first run also blanked
+# at five minutes idle and photographed "Display output is not active".
+[org/gnome/desktop/session]
+idle-delay=uint32 0
+
+[org/gnome/desktop/screensaver]
+lock-enabled=false
+idle-activation-enabled=false

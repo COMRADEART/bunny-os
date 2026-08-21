@@ -1,0 +1,93 @@
+suite at: 04e294f5a5fbed67091af1eba3587921e17435e3
+Cloning into '/home/bunny/bunny-os-suite'...
+done.
+Note: switching to '04e294f5a5fbed67091af1eba3587921e17435e3'.
+
+You are in 'detached HEAD' state. You can look around, make experimental
+changes and commit them, and you can discard any commits you make in this
+state without impacting any branches by switching back to a branch.
+
+If you want to create a new branch to retain commits you create, you may
+do so (now or later) by using -c with the switch command. Example:
+
+  git switch -c <new-branch-name>
+
+Or undo this operation with:
+
+  git switch -
+
+Turn off this advice by setting config variable advice.detachedHead to false
+
+Updating files:  41% (3197/7736)Updating files:  42% (3250/7736)Updating files:  43% (3327/7736)Updating files:  44% (3404/7736)Updating files:  45% (3482/7736)Updating files:  46% (3559/7736)Updating files:  47% (3636/7736)Updating files:  48% (3714/7736)Updating files:  49% (3791/7736)Updating files:  50% (3868/7736)Updating files:  51% (3946/7736)Updating files:  52% (4023/7736)Updating files:  53% (4101/7736)Updating files:  53% (4112/7736)Updating files:  54% (4178/7736)Updating files:  55% (4255/7736)Updating files:  56% (4333/7736)Updating files:  57% (4410/7736)Updating files:  58% (4487/7736)Updating files:  59% (4565/7736)Updating files:  60% (4642/7736)Updating files:  61% (4719/7736)Updating files:  62% (4797/7736)Updating files:  63% (4874/7736)Updating files:  64% (4952/7736)Updating files:  65% (5029/7736)Updating files:  66% (5106/7736)Updating files:  67% (5184/7736)Updating files:  68% (5261/7736)Updating files:  69% (5338/7736)Updating files:  69% (5352/7736)Updating files:  70% (5416/7736)Updating files:  71% (5493/7736)Updating files:  72% (5570/7736)Updating files:  73% (5648/7736)Updating files:  74% (5725/7736)Updating files:  75% (5802/7736)Updating files:  76% (5880/7736)Updating files:  77% (5957/7736)Updating files:  78% (6035/7736)Updating files:  79% (6112/7736)Updating files:  80% (6189/7736)Updating files:  81% (6267/7736)Updating files:  82% (6344/7736)Updating files:  83% (6421/7736)Updating files:  84% (6499/7736)Updating files:  85% (6576/7736)Updating files:  86% (6653/7736)Updating files:  87% (6731/7736)Updating files:  88% (6808/7736)Updating files:  89% (6886/7736)Updating files:  90% (6963/7736)Updating files:  91% (7040/7736)Updating files:  92% (7118/7736)Updating files:  93% (7195/7736)Updating files:  94% (7272/7736)Updating files:  95% (7350/7736)Updating files:  96% (7427/7736)Updating files:  97% (7504/7736)Updating files:  98% (7582/7736)Updating files:  99% (7659/7736)Updating files: 100% (7736/7736)Updating files: 100% (7736/7736), done.
++ /usr/sbin/python3 -m unittest discover -s tests -t /home/bunny/bunny-os-suite
+..............................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................bunny-image-tool: the input path is outside this app's own space
+.................................................................................................................................................................................................................................................................................................................................s....................................................................................................................s.......................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................s....................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................bunny-config-dir: /tmp/tmp6ck4kq0m/.config/bunny-os: exists and is not a directory (-rw-r--r--). Refused rather than replaced: this program does not delete user data.
+.sbunny-config-dir: /tmp/tmpj7jjrhyl/.config/bunny-os: is a symbolic link to '/tmp/tmpj7jjrhyl/elsewhere'. Refused: following it would place Bunny configuration, and a bind mount writable by this service, wherever the link points. Remove the link and let the directory be created.
+.bunny-config-dir: /tmp/tmppcmm516r/.config/bunny-os: exists and is not a directory (-rw-r--r--). Refused rather than replaced: this program does not delete user data.
+bunny-config-dir: /tmp/tmppcmm516r/.config/bunny-os: exists and is not a directory (-rw-r--r--). Refused rather than replaced: this program does not delete user data.
+.bunny-config-dir: /tmp/tmpzhnd5p93/.config/bunny-os: is a symbolic link to '/tmp/tmpzhnd5p93/nowhere-at-all'. Refused: following it would place Bunny configuration, and a bind mount writable by this service, wherever the link points. Remove the link and let the directory be created.
+.sbunny-config-dir: /tmp/tmptigz2oaz/.config/bunny-os: parent directory is not accessible ([Errno 13] Permission denied: '/tmp/tmptigz2oaz/.config/bunny-os')
+bunny-config-dir: /tmp/tmptigz2oaz/.config/systemd/user: parent directory is not accessible ([Errno 13] Permission denied: '/tmp/tmptigz2oaz/.config/systemd/user')
+.bunny-config-dir: /tmp/tmpwstoe9og/.config/bunny-os: exists and is not a directory (-rw-r--r--). Refused rather than replaced: this program does not delete user data.
+.bunny-config-dir: /tmp/tmp604jo74x/.config/bunny-os: exists and is not a directory (-rw-r--r--). Refused rather than replaced: this program does not delete user data.
+.bunny-config-dir: /tmp/tmpj_agdduy/.config/bunny-os: is a symbolic link to '/tmp/tmprg8khpi8'. Refused: following it would place Bunny configuration, and a bind mount writable by this service, wherever the link points. Remove the link and let the directory be created.
+.bunny-config-dir: /tmp/tmpt6ywnats/.config/bunny-os: is a symbolic link to '/tmp/tmpt6ywnats/elsewhere'. Refused: following it would place Bunny configuration, and a bind mount writable by this service, wherever the link points. Remove the link and let the directory be created.
+......................................................................................................................................................................................................................................................................................check-copy-size: /nonexistent/tree is not a directory
+..check-copy-size: refusing — 3 MB exceeds the 1 MB limit for a source copy.
+  largest directories:
+    assets                                3 MB
+  exclude the generated ones, or raise --limit-mb if this is genuinely source.
+.....................................................................................BLOCKED: capture /tmp/tmpperzr5hy/guest.pcap does not exist. A capture that never started is not evidence of silence.
+.BLOCKED: file is 10 bytes; a pcap global header is 24
+......BLOCKED: /tmp/tmpjx_8ll62/expected.json entry 0 must be {kind: dns|tcp|udp, pattern: <glob>, reason: <non-empty>}
+.........................................................................................................................................................ssssssssss............................................................................................................................................................................................................................................sssss.............................................................................................s..s................................................................................................................................................................................................s......................................................................................................................................................................................s.............................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................
+----------------------------------------------------------------------
+Ran 5737 tests in 178.811s
+
+OK (skipped=24)
+bunny-image-tool: wrote holiday-resized.png at 100x50
+bunny-image-tool: wrote out.png at 100x50
+bunny-image-tool: wrote a.png at 120x60
+bunny-image-tool: wrote b.png at 120x60
+bunny-config-dir: /tmp/tmphzm_h9fn/.config/bunny-os: created
+bunny-config-dir: /tmp/tmphzm_h9fn/.config/systemd/user: created
+bunny-config-dir: /tmp/tmp_alq8qtv/.config/bunny-os: created
+bunny-config-dir: /tmp/tmp_alq8qtv/.config/systemd/user: created
+bunny-config-dir: /tmp/tmp4ff6i1j_/.config/bunny-os: created
+bunny-config-dir: /tmp/tmp4ff6i1j_/.config/systemd/user: created
+bunny-config-dir: /tmp/tmp_jh9wvqb/.config/bunny-os: mode 0777 -> 0700
+bunny-config-dir: /tmp/tmp_jh9wvqb/.config/systemd/user: created
+bunny-config-dir: /tmp/tmptnycor4t/.config/bunny-os: created
+bunny-config-dir: /tmp/tmptnycor4t/.config/systemd/user: created
+bunny-config-dir: /tmp/tmptnycor4t/.config/bunny-os: verified
+bunny-config-dir: /tmp/tmptnycor4t/.config/systemd/user: verified
+bunny-config-dir: /tmp/tmp6ck4kq0m/.config/systemd/user: created
+bunny-config-dir: /tmp/tmp6ck4kq0m/.config/bunny-os: verified
+bunny-config-dir: /tmp/tmp6ck4kq0m/.config/systemd/user: verified
+bunny-config-dir: /tmp/tmpj7jjrhyl/.config/systemd/user: created
+bunny-config-dir: /tmp/tmpj7jjrhyl/.config/bunny-os: verified
+bunny-config-dir: /tmp/tmpj7jjrhyl/.config/systemd/user: verified
+bunny-config-dir: /tmp/tmppcmm516r/.config/systemd/user: created
+bunny-config-dir: /tmp/tmppcmm516r/.config/systemd/user: verified
+bunny-config-dir: /tmp/tmpzhnd5p93/.config/systemd/user: created
+bunny-config-dir: /tmp/tmpwstoe9og/.config/systemd/user: created
+bunny-config-dir: /tmp/tmp604jo74x/.config/systemd/user: created
+bunny-config-dir: /tmp/tmpj_agdduy/.config/systemd/user: created
+bunny-config-dir: /tmp/tmpt6ywnats/.config/systemd/user: created
+bunny-config-dir: /tmp/tmp6fai2pv_/.config/bunny-os: created
+bunny-config-dir: /tmp/tmp6fai2pv_/.config/systemd/user: created
+bunny-config-dir: /tmp/tmpgjjbf4wr/.config/bunny-os: created
+bunny-config-dir: /tmp/tmpgjjbf4wr/.config/systemd/user: created
+Verified explicit non-functional Bunny placeholder
++ /usr/sbin/python3 -m unittest discover -s /home/bunny/bunny-os-suite/tests/installer
+......../usr/lib64/python3.14/site-packages/gi/overrides/__init__.py:159: PyGIDeprecationWarning: GLib.unix_signal_add_full is deprecated; use GLibUnix.signal_add_full instead
+  value = getattr(proxy, attr)
+.........................................................................................................................
+(process:9929): Gdk-WARNING **: 09:15:34.539: Cannot get portal org.freedesktop.portal.Settings version: GDBus.Error:org.freedesktop.DBus.Error.NameHasNoOwner: Could not activate remote peer 'org.freedesktop.portal.Desktop': startup job failed
+...........................................
+----------------------------------------------------------------------
+Ran 172 tests in 0.541s
+
+OK
+linux-suite exit=0
+LINUX-SUITE-DONE

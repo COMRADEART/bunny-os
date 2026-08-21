@@ -18,6 +18,16 @@ btrfs-progs
 dosfstools
 cryptsetup
 
+# category: locale data
+# The setup surface offers exactly two languages, en-GB and en-US, and the
+# base image carries only glibc-minimal-langpack — so Anaconda's language
+# task measured both choices as unsupported ("The 'en_GB.UTF-8' locale is
+# unsupported. Using the 'C.UTF-8' locale as a fallback", journey E's
+# install journal) and every installed system fell back to C.UTF-8 at the
+# glibc level regardless of what the person chose. One langpack covers both
+# offered locales. Widening the language list means widening this line.
+glibc-langpack-en
+
 # category: base userspace and diagnostics
 python3
 openssl

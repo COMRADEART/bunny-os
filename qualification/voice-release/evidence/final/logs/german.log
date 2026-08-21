@@ -1,0 +1,43 @@
+===== speaking: /tmp/utt-german.raw =====
+microphone open at 06:54:16.653
+utterance queued at 06:54:17.059
+
+===== events =====
+voice_started            {}
+microphone               {"active": true}
+voice_phase              {"phase": "listening", "statusText": "Listening..."}
+partial                  {"text": "do"}
+partial                  {"text": "to the bottom"}
+partial                  {"text": "two and modern media"}
+partial                  {"text": "two and modern media is"}
+partial                  {"text": "to the bottom me get this before"}
+partial                  {"text": "to the bottom me get this before that"}
+partial                  {"text": "two and modern media is the point that it"}
+partial                  {"text": "two and modern media is the point that it's basically"}
+partial                  {"text": "two and modern media is the point that if you're kind"}
+partial                  {"text": "two and modern media is the point that if you're kind english"}
+partial                  {"text": "to and modern media is the point that if you're kind english"}
+microphone               {"active": false}
+voice_phase              {"phase": "transcribing", "statusText": "Transcribing..."}
+microphone               {"active": false}
+microphone               {"active": false}
+microphone               {"active": false}
+transcript               {"text": "to and modern media is the point that if you're kind english", "confidence": 0.6014436666666666, "providerId": "vosk"}
+accepted                 {"taskId": "task-7066f521c0874f1bb4dd7041a44b2e19"}
+phase                    {"phase": "starting", "statusText": "Starting...", "taskId": "task-7066f521c0874f1bb4dd7041a44b2e19"}
+phase                    {"phase": "understanding", "statusText": "Understanding...", "taskId": "task-7066f521c0874f1bb4dd7041a44b2e19"}
+phase                    {"phase": "planning", "statusText": "Planning...", "taskId": "task-7066f521c0874f1bb4dd7041a44b2e19"}
+phase                    {"phase": "working", "statusText": "Working...", "taskId": "task-7066f521c0874f1bb4dd7041a44b2e19"}
+phase                    {"phase": "planning", "statusText": "Planning...", "taskId": "task-7066f521c0874f1bb4dd7041a44b2e19"}
+phase                    {"phase": "working", "statusText": "Working...", "taskId": "task-7066f521c0874f1bb4dd7041a44b2e19"}
+phase                    {"phase": "presenting_result", "statusText": "Preparing the response...", "taskId": "task-7066f521c0874f1bb4dd7041a44b2e19"}
+reply                    {"text": "I can resize an image, open applications and folders, search approved user folders, read current system metrics, and control an active media player \u2014 try \u201cResize this to 1024 pixels wide\u201d, \u201cOpen Files\u201d or \u201cHow much memory am I using?\u201d. I d\u2026", "taskId": "task-7066f521c08
+speech_started           {"taskId": "task-7066f521c0874f1bb4dd7041a44b2e19", "providerId": "pocket", "deviceId": "alsa_output.pci-0000_00_04.0.analog-stereo"}
+phase                    {"phase": "speaking", "statusText": "Speaking...", "taskId": "task-7066f521c0874f1bb4dd7041a44b2e19"}
+speech_finished          {"taskId": "task-7066f521c0874f1bb4dd7041a44b2e19"}
+phase                    {"phase": "success", "statusText": "Done", "taskId": "task-7066f521c0874f1bb4dd7041a44b2e19"}
+finished                 {"phase": "success", "taskId": "task-7066f521c0874f1bb4dd7041a44b2e19"}
+--- stderr ---
+--- mic daemon ---
+mic-daemon: speaking restored.raw (5.87s)
+mic-daemon: speaking offline.raw (3.89s)

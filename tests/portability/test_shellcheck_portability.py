@@ -24,10 +24,47 @@ COLLECTOR = ROOT / "scripts/reproducibility/collect-builder-record.sh"
 
 
 def shell_scripts() -> list[Path]:
+    """Every shell script *in the repository*, asked of git.
+
+    It used to walk the filesystem, and the filesystem answers a different
+    question: it reports every ``.sh`` that is *present*, including the ones no
+    commit contains. On a builder where somebody has been working that is
+    dozens of untracked operational scripts — this repository's own
+    ``.gitignore`` carries ``.ops-*`` for exactly them — and three of them
+    failed the gate here on ``SC2012``, a finding in a file that is not part of
+    the repository and that CI would never see.
+
+    The effect was a gate that passed in CI and on a fresh clone, and failed on
+    the machine where the work happens. That is the wrong way round: a check
+    should be strictest where the code is written.
+
+    The same repair, for the same reason, as
+    ``test_no_file_was_added_to_an_earlier_phase_tree``: *added means
+    committed, so the question is asked of git.*
+
+    ``qualification/*/evidence/`` is excluded for the reason
+    ``release/validation.py``'s ``_shell_paths`` excludes it: those scripts are
+    records of what ran, pinned byte-for-byte by the preservation tests, and a
+    lint finding there is unfixable without editing evidence.
+    """
+    try:
+        listed = subprocess.run(
+            ["git", "ls-files", "-z", "--", "*.sh"],
+            cwd=ROOT, capture_output=True, text=True, check=True,
+        ).stdout
+    except (OSError, subprocess.CalledProcessError):
+        # No git: fall back to the filesystem rather than skipping. A gate that
+        # silently checks nothing is worse than one that checks too much.
+        candidates = ROOT.rglob("*.sh")
+    else:
+        candidates = (ROOT / name for name in listed.split("\0") if name)
+
     return sorted(
         path
-        for path in ROOT.rglob("*.sh")
-        if "node_modules" not in path.parts and ".git" not in path.parts
+        for path in candidates
+        if path.is_file()
+        and "node_modules" not in path.parts and ".git" not in path.parts
+        and not ("qualification" in path.parts and "evidence" in path.parts)
     )
 
 

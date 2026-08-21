@@ -1,0 +1,120 @@
+{
+  "tag": "uistop",
+  "utterance": "/tmp/utt-capabilities.raw",
+  "transitions": [
+    {
+      "state": "listening",
+      "at": 1786856163.465,
+      "sinceClick": 0.65
+    },
+    {
+      "state": "thinking",
+      "at": 1786856169.317,
+      "sinceClick": 6.5
+    },
+    {
+      "state": "talking",
+      "at": 1786856176.233,
+      "sinceClick": 13.42
+    },
+    {
+      "state": "idle",
+      "at": 1786856177.749,
+      "sinceClick": 14.93
+    }
+  ],
+  "steps": [
+    {
+      "step": "watcher-started",
+      "at": 1786856162.335,
+      "samples": 1
+    },
+    {
+      "step": "microphone-button",
+      "at": {
+        "x": 1830,
+        "y": 684,
+        "width": 24,
+        "height": 24
+      },
+      "found": true
+    },
+    {
+      "step": "clicked-microphone",
+      "at": {
+        "x": 1842,
+        "y": 696
+      }
+    },
+    {
+      "step": "listening",
+      "at": 1786856163.123,
+      "microphoneIndicator": true
+    },
+    {
+      "step": "allowed",
+      "at": 1786856163.731,
+      "detail": "none"
+    },
+    {
+      "step": "spoke",
+      "at": 1786856164.332,
+      "utterance": "/tmp/utt-capabilities.raw"
+    },
+    {
+      "step": "allowed",
+      "at": 1786856165.245,
+      "detail": "none"
+    },
+    {
+      "step": "allowed",
+      "at": 1786856170.059,
+      "detail": "none"
+    },
+    {
+      "step": "allowed",
+      "at": 1786856170.971,
+      "detail": "none"
+    },
+    {
+      "step": "allowed",
+      "at": 1786856171.881,
+      "detail": "none"
+    },
+    {
+      "step": "talking",
+      "at": 1786856175.791,
+      "says": "Bunny says: I can resize an image, open applications and folders, search approved user folders, read current system metrics, and control an active media player "
+    },
+    {
+      "step": "allowed",
+      "at": 1786856176.699,
+      "detail": "none"
+    },
+    {
+      "step": "clicked-stop",
+      "at": {
+        "x": 1842,
+        "y": 696
+      }
+    },
+    {
+      "step": "allowed",
+      "at": 1786856178.391,
+      "detail": "none"
+    }
+  ],
+  "screens": {
+    "00-idle": "/root/bunny-ops/e2e/runs/s2/screens/uistop-00-idle.ppm",
+    "01-listening": "/root/bunny-ops/e2e/runs/s2/screens/uistop-01-listening.ppm",
+    "03-approval": "/root/bunny-ops/e2e/runs/s2/screens/uistop-03-approval.ppm",
+    "02-talking": "/root/bunny-ops/e2e/runs/s2/screens/uistop-02-talking.ppm",
+    "04-after": "/root/bunny-ops/e2e/runs/s2/screens/uistop-04-after.ppm"
+  },
+  "stopRequestedAt": 1786856177.172,
+  "listeningSeen": true,
+  "talkingSeen": true,
+  "approved": false,
+  "finalState": "idle",
+  "says": "Bunny says: I can resize an image, open applications and folders, search approved user folders, read current system metrics, and control an active media player \u2014 try \u201cResize this to 1024 pixels wide\u201d, \u201cOpen Files\u201d or \u201cHow much memory am I using?\u201d. I d\u2026"
+}

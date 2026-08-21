@@ -1,0 +1,1 @@
+Independent security review submissions land here as INTAKE-NNN/ directories, registered only through qualification/phase9/tools/intake.py. Input package for the reviewer: qualification/phase8/security-review/. Empty = no review has arrived = the gate is NOT_RUN.

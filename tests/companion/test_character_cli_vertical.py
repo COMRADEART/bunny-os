@@ -21,6 +21,57 @@ from companion.character.performance import measure_renderer_performance
 from companion.character.package import validate_package_directory
 
 
+def diagnose(document: dict) -> str:
+    """Everything the report knows about why the slice failed, in the message.
+
+    ``self.assertTrue(report.passed, report.failures)`` prints the step names
+    and nothing else, and the step names for this failure have read
+
+        ['step 17 (trigger controlled presentation pressure)',
+         'step 21 (recover only after hysteresis)']
+
+    on and off for four phases without anybody being able to say why. The
+    answer was in the report the whole time: step 17 carries
+    ``incidentalRendererFault``, ``retryCleanOfFaults`` and the renderer events
+    with the *exception text* on them. Nothing printed it, so every
+    investigation started from a step number.
+
+    The Phase 4 rule this applies: make the thing that failed report what it
+    saw. That diagnosis would have been one field long.
+    """
+    steps = {item["step"]: item for item in document.get("steps", [])}
+    lines = [f"slice failures: {document.get('failures')}"]
+    seventeen = steps.get(17, {})
+    lines.append(
+        "step 17: presentation={presentation!r} incidentalRendererFault={fault!r} "
+        "retryCleanOfFaults={retry!r}".format(
+            presentation=seventeen.get("presentation"),
+            fault=seventeen.get("incidentalRendererFault"),
+            retry=seventeen.get("retryCleanOfFaults"),
+        )
+    )
+    for reason in seventeen.get("reasons", []):
+        lines.append(f"  reason: {reason}")
+    lines.append(
+        "step 17 extra: heldByHysteresis={h!r} rendererHealthy={r!r}".format(
+            h=seventeen.get("heldByHysteresis"), r=seventeen.get("rendererHealthy")
+        )
+    )
+    for event in seventeen.get("rendererEvents", []):
+        lines.append(f"  event: {event}")
+    twenty_one = steps.get(21, {})
+    lines.append(
+        "step 21: presentation={presentation!r} samplesBeforeRecovery={samples!r}".format(
+            presentation=twenty_one.get("presentation"),
+            samples=twenty_one.get("samplesBeforeRecovery"),
+        )
+    )
+    for number in (18, 19, 20):
+        step = steps.get(number, {})
+        lines.append(f"step {number}: presentation={step.get('presentation')!r} ok={step.get('ok')!r}")
+    return "\n".join(lines)
+
+
 def parse(*argv: str, root: Path) -> argparse.Namespace:
     parser = argparse.ArgumentParser(prog="bunny-os")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -143,6 +194,11 @@ class CharacterCommandTests(unittest.TestCase):
         self.assertTrue(result["passed"], result["failures"])
         self.assertEqual(len(result["steps"]), 23)
         self.assertEqual(result["commercialProvider"], "none")
+        three_d = result["threeDimensionalRenderer"]
+        self.assertIsInstance(three_d, dict)
+        self.assertTrue(three_d["shipped"])
+        self.assertFalse(three_d["exercisedInThisSlice"])
+        self.assertNotIn("not implemented", json.dumps(result))
 
 
 class VerticalSliceAndPerformanceTests(unittest.TestCase):
@@ -164,14 +220,14 @@ class VerticalSliceAndPerformanceTests(unittest.TestCase):
         than through a helper that re-read the store — the helper this replaces
         was the second interpretation of the record that §2 forbids.
         """
-        self.assertTrue(self.report.passed, self.report.failures)
+        self.assertTrue(self.report.passed, diagnose(self.report.to_json()))
         steps = {item["step"]: item for item in self.report.to_json()["steps"]}
         self.assertEqual(steps[16]["characterState"], "success")
         self.assertEqual(steps[24]["after"]["state"], "completed")
 
     def test_the_installed_slice_exercises_the_required_renderer_story(self) -> None:
         document = self.report.to_json()
-        self.assertTrue(document["passed"], document["failures"])
+        self.assertTrue(document["passed"], diagnose(document))
         names = [step["name"] for step in document["steps"]]
         for required in (
             "load the validated default character package",
@@ -189,6 +245,20 @@ class VerticalSliceAndPerformanceTests(unittest.TestCase):
         self.assertFalse(document["gtkWidgetsExercised"])
         for step in document["steps"]:
             self.assertIn(step.get("ok"), (True, None))
+
+    def test_the_slice_reports_the_shipped_3d_renderer_truthfully(self) -> None:
+        """The 3D renderer ships; a slice that does not exercise it says so.
+
+        This field read "not implemented" for two phases after the renderer
+        landed — evidence emitters must claim the rung they exercised, never
+        deny a capability that ships.
+        """
+        document = self.report.to_json()
+        three_d = document["threeDimensionalRenderer"]
+        self.assertIsInstance(three_d, dict)
+        self.assertTrue(three_d["shipped"])
+        self.assertFalse(three_d["exercisedInThisSlice"])
+        self.assertNotIn("not implemented", json.dumps(document))
 
     def test_performance_measurement_has_every_required_dimension_and_scope(self) -> None:
         package = validate_package_directory(default_character_path())
@@ -213,6 +283,63 @@ class VerticalSliceAndPerformanceTests(unittest.TestCase):
         self.assertEqual(decisions["static-ceiling"], "static-image")
         self.assertEqual(decisions["animation-fits"], "animated-2d")
         self.assertEqual(decisions["runtime-memory-pressure"], "static-image")
+
+
+class IncidentalRendererFaultTests(unittest.TestCase):
+    """The load flake, pinned: one transient renderer fault must not read as
+    a selector defect.
+
+    Steps 17 and 21 flipped ~2-in-12 on a loaded host across three phases,
+    and the pair reproduces deterministically from a single injected fault:
+    the fault parks the presenter unhealthy for 15 renderer-seconds, the
+    slice advances ~11 synthetic seconds for its whole remainder, and the
+    report blamed the pressure/hysteresis steps without naming the fault.
+    """
+
+    def _run_with_faults(self, fail_calls: set[int] | None, persistent_from: int | None = None):
+        import companion.character.controller as controller_module
+
+        calls = {"n": 0}
+        original = controller_module.CharacterRendererController.apply
+
+        def flaky(inner_self, *args, **kwargs):
+            calls["n"] += 1
+            if fail_calls and calls["n"] in fail_calls:
+                raise RuntimeError("injected transient renderer fault")
+            # Every third call from the threshold, not every call: one update
+            # may retry apply() up to three times on its internal fallback
+            # ladder, and a fault on all of them would break the ladder's own
+            # "text-only cannot fail" contract — a different defect than the
+            # recurring-fault this control simulates.
+            if persistent_from is not None and calls["n"] >= persistent_from \
+                    and (calls["n"] - persistent_from) % 3 == 0:
+                raise RuntimeError("injected recurring renderer fault")
+            return original(inner_self, *args, **kwargs)
+
+        controller_module.CharacterRendererController.apply = flaky
+        self.addCleanup(
+            setattr, controller_module.CharacterRendererController, "apply", original
+        )
+        with tempfile.TemporaryDirectory(prefix="bunny-fault-slice-") as root:
+            return run_character_slice(Path(root))
+
+    def test_one_transient_fault_recovers_and_is_named_in_evidence(self) -> None:
+        report = self._run_with_faults({10})
+        document = report.to_json()
+        self.assertTrue(document["passed"], diagnose(document))
+        step_17 = next(s for s in document["steps"] if s["step"] == 17)
+        self.assertTrue(step_17.get("incidentalRendererFault"),
+                        "the fault recovered silently; evidence must name it")
+        self.assertTrue(step_17.get("retryCleanOfFaults"))
+
+    def test_a_persistent_fault_still_fails_and_names_itself(self) -> None:
+        """The negative control: the retry must not absorb a real defect."""
+        report = self._run_with_faults(None, persistent_from=40)
+        document = report.to_json()
+        self.assertFalse(document["passed"])
+        step_17 = next(s for s in document["steps"] if s["step"] == 17)
+        self.assertTrue(step_17.get("incidentalRendererFault"))
+        self.assertFalse(step_17.get("retryCleanOfFaults", True))
 
 
 class BuildAndBoundaryTests(unittest.TestCase):
@@ -298,10 +425,11 @@ class BuildAndBoundaryTests(unittest.TestCase):
             with self.subTest(forbidden=forbidden):
                 self.assertNotIn(forbidden, source)
 
-    def test_no_3d_renderer_is_claimed_or_implemented(self) -> None:
+    def test_the_3d_renderer_lives_in_its_package_not_a_top_level_module(self) -> None:
         files = "\n".join(path.name for path in Path("companion/character").glob("*.py"))
         self.assertNotIn("3d_renderer", files.casefold())
         self.assertFalse(Path("companion/character/three_d_renderer.py").exists())
+        self.assertTrue(Path("companion/character/three_d/renderer.py").exists())
 
 
 if __name__ == "__main__":

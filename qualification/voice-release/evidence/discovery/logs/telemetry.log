@@ -1,0 +1,7 @@
+=== what the kernel says, right now ===
+MemTotal: 5.77 GiB
+MemAvailable: 3.84 GiB
+used 1.93 GiB of 5.77 GiB (34%)
+
+=== what the packaged telemetry reader returns ===
+--- exit 1 ---

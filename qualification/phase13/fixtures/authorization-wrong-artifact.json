@@ -1,0 +1,32 @@
+{
+ "fixture": true,
+ "fixtureClass": "TEST_FIXTURE_ONLY",
+ "purpose": "Drives the wrong-artifact control: a valid-shaped authority record naming different bytes. Expected: DOES_NOT_APPLY - an authorization for other bytes decides nothing here and never transfers.",
+ "record": {
+  "accepted_risks": [],
+  "alpha_status": "SUFFICIENT",
+  "artifact_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "artifact_identity": "e906a48793d7",
+  "authority": "Constructed Fixture Release Authority",
+  "authority_role": "RELEASE_AUTHORITY",
+  "authorization_id": "AUTHORIZATION-002",
+  "blocking_conditions": [],
+  "decision": "AUTHORIZED",
+  "decision_timestamp": "2026-08-19",
+  "evidence_cut": {
+   "intakeIds": [],
+   "ledgerEntries": 0,
+   "ledgerSha256": "0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "expires_at": "2026-11-19",
+  "hardware_status": "ACCEPTED",
+  "issued_at": "2026-08-19",
+  "policy_versions": [
+   "SUFFICIENCY-POLICY-001"
+  ],
+  "second_approval_status": "ACCEPTED",
+  "security_status": "SATISFIED",
+  "signing_status": "ACCEPTED"
+ },
+ "test_fixture_only": true
+}

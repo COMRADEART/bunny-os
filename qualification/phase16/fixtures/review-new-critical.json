@@ -1,0 +1,47 @@
+{
+ "fixtureClass": "TEST_FIXTURE_ONLY",
+ "fixture": true,
+ "test_fixture_only": true,
+ "warning": [
+  "TEST_FIXTURE_ONLY",
+  "NOT EXTERNAL EVIDENCE",
+  "NOT APPLICABLE TO THE SUBJECT ARTIFACT"
+ ],
+ "purpose": "Approving assessment plus a new Critical outside the baseline. It executes the inherited None-versus-string regression branch in an isolated universe.",
+ "record": {
+  "schema": "bunny-os/security-review-submission/1",
+  "reviewer_id": "REVIEWER-P16-C",
+  "reviewer": "REVIEWER-P16-C",
+  "independence": {
+   "declaration": "constructed scenario: the reviewer did not produce the artifact and has no interest in its approval",
+   "relationship_to_project": "none",
+   "is_release_decision_authority": false,
+   "policy_exception": null
+  },
+  "artifact_digest": "sha256:c87a6616008ce34f97840f63814e08fdb33574b52202fbb4841b7f5aa7f8562d",
+  "artifactDigest": "sha256:c87a6616008ce34f97840f63814e08fdb33574b52202fbb4841b7f5aa7f8562d",
+  "independently_computed_digest": "sha256:c87a6616008ce34f97840f63814e08fdb33574b52202fbb4841b7f5aa7f8562d",
+  "digest_basis": "qcow2",
+  "digest_computation": "constructed scenario: sha256sum bunny-alpha.qcow2",
+  "review_scope_version": "SCOPE-1",
+  "scope": "constructed scenario: independent security review of e906a48793d7 under SCOPE-1",
+  "review_start": "2026-08-18",
+  "review_end": "2026-08-19",
+  "date": "2026-08-19",
+  "findings": [
+   {
+    "reviewer_finding_id": "P16-C-NEW-1",
+    "title": "constructed scenario: new Critical outside the baseline",
+    "severity": "Critical",
+    "affected_component": "bunny-session-helper",
+    "applicability": "APPLICABLE",
+    "evidence": "constructed scenario: a credential-bearing file was observed with world-readable mode",
+    "rationale": "constructed scenario: an unprivileged local process can read another session's material",
+    "recommended_disposition": "FIX_BEFORE_ALPHA",
+    "baseline_advisory": null
+   }
+  ],
+  "overall_assessment": "APPROVED",
+  "disposition": "APPROVED"
+ }
+}

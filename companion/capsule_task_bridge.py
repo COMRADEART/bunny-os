@@ -491,6 +491,12 @@ class CapsuleSupport:
             operation_name=operation.name,
             off_device=False,
             destination_declaration=prepared.material,
+            # The same facts, structured, for a surface that can lay them out.
+            # `reason` above stays exactly as it was: it is what a text-only
+            # surface reads aloud and what the recovery shell prints, and a
+            # graphical surface gaining a better layout must not cost a console
+            # its sentence.
+            prompt=prepared.to_prompt_json(),
         )
 
     def prompt_for(

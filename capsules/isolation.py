@@ -56,7 +56,7 @@ from pathlib import Path
 from typing import Any, Mapping, Sequence
 
 from trust.decision import Grant
-from trust.resources import real_path
+from trust.resources import NETWORK_CLASSES, NETWORK_DECLARED_ONLY, real_path
 
 from .backends import LIMIT_CONTROLLERS, BackendDescriptor
 from .errors import CapsuleContainmentError, CapsuleIsolationError, CapsuleSchemaError
@@ -101,19 +101,22 @@ CREDENTIAL_DIRECTORIES = frozenset({
 #: Read-only, individually named, and absent entirely when the network class is
 #: ``none`` — a capsule with no network has no use for a resolver and no reason
 #: to learn the addresses of the machine's DNS servers.
-#: The network classes this build actually enforces, and the two it does not.
+#: The network classes this build actually enforces, derived from the one
+#: declaration-only list in :mod:`trust.resources` so the two cannot drift.
 #:
 #: ``none`` is a network namespace with nothing in it — a kernel boundary.
-#: ``internet`` is the absence of one. ``local-network`` and ``allowlisted`` are
-#: declared by the catalogue and mapped onto ``internet``, because nothing here
-#: filters by subnet or by name.
+#: ``internet`` is the absence of one. ``loopback``, ``local-network`` and
+#: ``allowlisted`` are declared by the catalogue and mapped onto ``internet``,
+#: because nothing here filters by subnet, by interface or by name.
 #:
 #: Measured rather than assumed: the qualification granted a capsule an
 #: allowlist naming one domain, and the capsule connected to a different one.
 #: Recorded, disclosed at every surface, and not papered over — asking the
 #: application to respect the list would be enforcement by cooperation, which is
 #: not enforcement.
-NETWORK_ENFORCED_CLASSES = ("none", "internet")
+NETWORK_ENFORCED_CLASSES = tuple(
+    network_class for network_class in NETWORK_CLASSES if network_class not in NETWORK_DECLARED_ONLY
+)
 
 NETWORK_SYSTEM_FILES = (
     "/etc/resolv.conf",
@@ -268,7 +271,8 @@ class IsolationPlan:
     #: Whether the plan restricts anything beyond resource usage.
     confining: bool
     #: Whether the granted network class is one this build can enforce. ``False``
-    #: for ``local-network`` and ``allowlisted``, which are declarations.
+    #: for ``loopback``, ``local-network`` and ``allowlisted``, which are
+    #: declarations — see :data:`trust.resources.NETWORK_DECLARED_ONLY`.
     network_enforced: bool = True
 
     def reachable_paths(self) -> tuple[str, ...]:

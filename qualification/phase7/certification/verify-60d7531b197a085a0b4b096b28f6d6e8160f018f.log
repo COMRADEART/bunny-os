@@ -1,0 +1,110 @@
+=== Phase 7 reference-suite certification ===
+started  2026-08-18T17:03:34Z
+expected commit: 60d7531b197a085a0b4b096b28f6d6e8160f018f
+user: bunny   suite: /home/bunny/p7-suite   fs: 
+cloning from the working tree
+checked out: 60d7531b197a085a0b4b096b28f6d6e8160f018f
+commit assertion: OK
+discovered tests: 6072
+test-count floor: OK (6072 >= 6030)
+
+--- run 1 of 2: full reference suite ---
+
+
+----------------------------------------------------------------------
+Ran 6072 tests in 226.368s
+
+FAILED (failures=3, skipped=24)
+bunny-image-tool: wrote holiday-resized.png at 100x50
+bunny-image-tool: wrote out.png at 100x50
+bunny-image-tool: wrote a.png at 120x60
+bunny-image-tool: wrote b.png at 120x60
+bunny-config-dir: /tmp/tmpidph5eev/.config/bunny-os: created
+bunny-config-dir: /tmp/tmpidph5eev/.config/systemd/user: created
+bunny-config-dir: /tmp/tmptsth6qpo/.config/bunny-os: created
+bunny-config-dir: /tmp/tmptsth6qpo/.config/systemd/user: created
+bunny-config-dir: /tmp/tmp9s79_gsh/.config/bunny-os: created
+bunny-config-dir: /tmp/tmp9s79_gsh/.config/systemd/user: created
+bunny-config-dir: /tmp/tmpwau97onm/.config/bunny-os: mode 0777 -> 0700
+bunny-config-dir: /tmp/tmpwau97onm/.config/systemd/user: created
+bunny-config-dir: /tmp/tmpq9i7p71p/.config/bunny-os: created
+bunny-config-dir: /tmp/tmpq9i7p71p/.config/systemd/user: created
+bunny-config-dir: /tmp/tmpq9i7p71p/.config/bunny-os: verified
+bunny-config-dir: /tmp/tmpq9i7p71p/.config/systemd/user: verified
+bunny-config-dir: /tmp/tmpfrvskja5/.config/systemd/user: created
+bunny-config-dir: /tmp/tmpfrvskja5/.config/bunny-os: verified
+bunny-config-dir: /tmp/tmpfrvskja5/.config/systemd/user: verified
+bunny-config-dir: /tmp/tmpriqde_ai/.config/systemd/user: created
+bunny-config-dir: /tmp/tmpriqde_ai/.config/bunny-os: verified
+bunny-config-dir: /tmp/tmpriqde_ai/.config/systemd/user: verified
+bunny-config-dir: /tmp/tmpk0216vwp/.config/systemd/user: created
+bunny-config-dir: /tmp/tmpk0216vwp/.config/systemd/user: verified
+bunny-config-dir: /tmp/tmptzmtspgs/.config/systemd/user: created
+bunny-config-dir: /tmp/tmp48tpgf64/.config/systemd/user: created
+bunny-config-dir: /tmp/tmpx4510_ea/.config/systemd/user: created
+bunny-config-dir: /tmp/tmp9xas_3cr/.config/systemd/user: created
+bunny-config-dir: /tmp/tmp2f_6slvi/.config/systemd/user: created
+bunny-config-dir: /tmp/tmpl3a1bak8/.config/bunny-os: created
+bunny-config-dir: /tmp/tmpl3a1bak8/.config/systemd/user: created
+bunny-config-dir: /tmp/tmpczphnco0/.config/bunny-os: created
+bunny-config-dir: /tmp/tmpczphnco0/.config/systemd/user: created
+Verified explicit non-functional Bunny placeholder
+run 1 exit: 1
+
+--- run 2 of 2: full reference suite ---
+
+
+----------------------------------------------------------------------
+Ran 6072 tests in 222.275s
+
+FAILED (failures=3, skipped=22)
+bunny-image-tool: wrote holiday-resized.png at 100x50
+bunny-image-tool: wrote out.png at 100x50
+bunny-image-tool: wrote a.png at 120x60
+bunny-image-tool: wrote b.png at 120x60
+bunny-config-dir: /tmp/tmpm_p0h166/.config/bunny-os: created
+bunny-config-dir: /tmp/tmpm_p0h166/.config/systemd/user: created
+bunny-config-dir: /tmp/tmpvpmv3l2x/.config/bunny-os: created
+bunny-config-dir: /tmp/tmpvpmv3l2x/.config/systemd/user: created
+bunny-config-dir: /tmp/tmpn4mqxf25/.config/bunny-os: created
+bunny-config-dir: /tmp/tmpn4mqxf25/.config/systemd/user: created
+bunny-config-dir: /tmp/tmp5gppfij1/.config/bunny-os: mode 0777 -> 0700
+bunny-config-dir: /tmp/tmp5gppfij1/.config/systemd/user: created
+bunny-config-dir: /tmp/tmpmwp2slu8/.config/bunny-os: created
+bunny-config-dir: /tmp/tmpmwp2slu8/.config/systemd/user: created
+bunny-config-dir: /tmp/tmpmwp2slu8/.config/bunny-os: verified
+bunny-config-dir: /tmp/tmpmwp2slu8/.config/systemd/user: verified
+bunny-config-dir: /tmp/tmpd335h88c/.config/systemd/user: created
+bunny-config-dir: /tmp/tmpd335h88c/.config/bunny-os: verified
+bunny-config-dir: /tmp/tmpd335h88c/.config/systemd/user: verified
+bunny-config-dir: /tmp/tmp0vdsd8s8/.config/systemd/user: created
+bunny-config-dir: /tmp/tmp0vdsd8s8/.config/bunny-os: verified
+bunny-config-dir: /tmp/tmp0vdsd8s8/.config/systemd/user: verified
+bunny-config-dir: /tmp/tmpel4oaumj/.config/systemd/user: created
+bunny-config-dir: /tmp/tmpel4oaumj/.config/systemd/user: verified
+bunny-config-dir: /tmp/tmpwzv0b2m0/.config/systemd/user: created
+bunny-config-dir: /tmp/tmpian5dvwx/.config/systemd/user: created
+bunny-config-dir: /tmp/tmpg1i3_ge7/.config/systemd/user: created
+bunny-config-dir: /tmp/tmpus51ofmg/.config/systemd/user: created
+bunny-config-dir: /tmp/tmppdv1b0mj/.config/systemd/user: created
+bunny-config-dir: /tmp/tmpeiw7rw3j/.config/bunny-os: created
+bunny-config-dir: /tmp/tmpeiw7rw3j/.config/systemd/user: created
+bunny-config-dir: /tmp/tmppy7lco6u/.config/bunny-os: created
+bunny-config-dir: /tmp/tmppy7lco6u/.config/systemd/user: created
+Verified explicit non-functional Bunny placeholder
+run 2 exit: 1
+
+--- installer sub-suite ---
+    ~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "/usr/lib64/python3.14/unittest/main.py", line 242, in _do_discovery
+    self.createTests(from_discovery=True, Loader=Loader)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib64/python3.14/unittest/main.py", line 149, in createTests
+    self.test = loader.discover(self.start, self.pattern, self.top)
+                ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib64/python3.14/unittest/loader.py", line 334, in discover
+    raise ImportError('Start directory is not importable: %r' % start_dir)
+ImportError: Start directory is not importable: '/home/bunny/p7-suite/tests/installer'
+
+=== finished 2026-08-18T17:11:37Z ===
+commit=60d7531b197a085a0b4b096b28f6d6e8160f018f discovered=6072 run1=1 run2=1

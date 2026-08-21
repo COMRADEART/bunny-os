@@ -1,0 +1,41 @@
+{
+ "fixtureClass": "TEST_FIXTURE_ONLY",
+ "purpose": "Drives the new-finding dry run: a Critical the baseline does not list. Reconciliation must classify NEW_FINDING; the register row awaits its triage identifier and the gate cannot be SATISFIED past it.",
+ "record": {
+  "schema": "bunny-os/security-review-submission/1",
+  "reviewer_id": "REVIEWER-002",
+  "reviewer": "REVIEWER-002",
+  "organisation": "TEST_FIXTURE_ONLY dry run",
+  "independence": {
+   "declaration": "constructed fixture: this reviewer had no role in producing artifact e906a48793d7 and no interest in its approval",
+   "relationship_to_project": "none",
+   "is_release_decision_authority": false,
+   "policy_exception": null
+  },
+  "artifact_digest": "sha256:c87a6616008ce34f97840f63814e08fdb33574b52202fbb4841b7f5aa7f8562d",
+  "artifactDigest": "sha256:c87a6616008ce34f97840f63814e08fdb33574b52202fbb4841b7f5aa7f8562d",
+  "independently_computed_digest": "sha256:c87a6616008ce34f97840f63814e08fdb33574b52202fbb4841b7f5aa7f8562d",
+  "digest_basis": "image",
+  "digest_computation": "constructed fixture: skopeo inspect --format {{.Digest}} oci-archive:bunny-alpha.tar",
+  "review_scope_version": "SCOPE-1",
+  "scope": "constructed fixture: independent review of artifact e906a48793d7 under REVIEW_SCOPE.md SCOPE-1",
+  "review_start": "2026-08-17",
+  "review_end": "2026-08-18",
+  "date": "2026-08-18",
+  "findings": [
+   {
+    "reviewer_finding_id": "R2-F1",
+    "title": "constructed fixture finding for a new issue",
+    "severity": "Critical",
+    "affected_component": "bunny-trust-agent",
+    "applicability": "APPLICABLE",
+    "evidence": "constructed fixture: the trust prompt can be pre-answered by a crafted session file; reproduction script attached",
+    "rationale": "an unlisted attack surface answers SQ-7",
+    "recommended_disposition": "FIX_BEFORE_ALPHA",
+    "baseline_advisory": null
+   }
+  ],
+  "overall_assessment": "BLOCKED",
+  "disposition": "BLOCKED"
+ }
+}

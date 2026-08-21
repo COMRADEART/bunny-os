@@ -1,0 +1,86 @@
+############ fixtures: noise, mixed, long, foreign ############
+noise: /tmp/utt-noise.raw 4.0s rms~1500
+'Please tell me how much memory I am using right now, and also tell me whether everything on this computer is healthy today.' -> /tmp/utt-long.raw: provider=kitten source_rate=24000 frames=175467 seconds=10.97 peak=26245
+mix: /tmp/utt-memory-noisy.raw 5.87s speech_gain=1.0 noise_gain=0.6
+espeak[de]: /tmp/utt-german.raw 3.67s
+/tmp/utt-noise.raw: 4.00s peak=6342 rms=1493 nonzero=63963
+/tmp/utt-memory-noisy.raw: 5.87s peak=18787 rms=3035 nonzero=93804
+/tmp/utt-german.raw: 3.67s peak=26480 rms=2804 nonzero=41446
+############ ST-3 long phrase ############
+transcript               {"text": "please tell me how much memory i am using right now and also tell me whether everything on this computer is healthy today", "confidence": 0.9910068260869566, "providerId": "vosk"}
+reply                    {"text": "I can resize an image, open applications and folders, search approved user folders, read current system metrics, and control an active media player \u2014 try \u201cResize this to 1024 pixels wide\u201d, \u201cOpen Files\u201d or \u201cHow much memory am I using?\u201d. I d\u2026", "taskId": "task-c9375a63ad5
+speech_finished          {"taskId": "task-c9375a63ad5d45fe823bf0fb3299894d"}
+finished                 {"phase": "success", "taskId": "task-c9375a63ad5d45fe823bf0fb3299894d"}
+############ ST-4 unknown speech (German) ############
+transcript               {"text": "to and modern me get this before either if you're kind english", "confidence": 0.7357210833333333, "providerId": "vosk"}
+reply                    {"text": "I can resize an image, open applications and folders, search approved user folders, read current system metrics, and control an active media player \u2014 try \u201cResize this to 1024 pixels wide\u201d, \u201cOpen Files\u201d or \u201cHow much memory am I using?\u201d. I d\u2026", "taskId": "task-1f90de48d2a
+speech_finished          {"taskId": "task-1f90de48d2ac4cd3bd118d348e01a914"}
+finished                 {"phase": "success", "taskId": "task-1f90de48d2ac4cd3bd118d348e01a914"}
+############ VI-10a noise only ############
+warning                  {"reason": "I didn't catch that. Could you say it again?"}
+finished                 {"phase": "warning"}
+############ VI-10b speech over noise ############
+transcript               {"text": "how much memory and i use", "confidence": 0.8711548333333333, "providerId": "vosk"}
+reply                    {"text": "I can resize an image, open applications and folders, search approved user folders, read current system metrics, and control an active media player \u2014 try \u201cResize this to 1024 pixels wide\u201d, \u201cOpen Files\u201d or \u201cHow much memory am I using?\u201d. I d\u2026", "taskId": "task-1e839d0e943
+speech_finished          {"taskId": "task-1e839d0e94324135bae00d403bb15ea0"}
+finished                 {"phase": "success", "taskId": "task-1e839d0e94324135bae00d403bb15ea0"}
+############ ST-7 three consecutive requests ############
+transcript               {"text": "how much memory am i using", "confidence": 1.0, "providerId": "vosk"}
+reply                    {"text": "You are using 2.0 GiB of 5.8 GiB of memory (34%).", "taskId": "task-6ba038299e0e4d1f80c5dad3b6af240c"}
+speech_finished          {"taskId": "task-6ba038299e0e4d1f80c5dad3b6af240c"}
+finished                 {"phase": "success", "taskId": "task-6ba038299e0e4d1f80c5dad3b6af240c"}
+transcript               {"text": "find pdf files in downloads", "confidence": 1.0, "providerId": "vosk"}
+reply                    {"text": "I found 2 matching files: bunny-test-one.pdf, bunny-test-two.pdf.", "taskId": "task-e55b1010793f41eaa96a88d08f478f95"}
+speech_finished          {"taskId": "task-e55b1010793f41eaa96a88d08f478f95"}
+finished                 {"phase": "success", "taskId": "task-e55b1010793f41eaa96a88d08f478f95"}
+transcript               {"text": "what can you do", "confidence": 1.0, "providerId": "vosk"}
+reply                    {"text": "I can resize an image, open applications and folders, search approved user folders, read current system metrics, and control an active media player \u2014 try \u201cResize this to 1024 pixels wide\u201d, \u201cOpen Files\u201d or \u201cHow much memory am I using?\u201d. I d\u2026", "taskId": "task-76e9c7f35e7
+speech_finished          {"taskId": "task-76e9c7f35e78470d8040193b315b046a"}
+finished                 {"phase": "success", "taskId": "task-76e9c7f35e78470d8040193b315b046a"}
+############ VI-9 silent-but-present microphone (HDA default) ############
+alsa_input.pci-0000_00_04.0.analog-stereo
+microphone open at 05:56:46.141
+microphone               {"active": true}
+microphone               {"active": false}
+microphone               {"active": false}
+microphone               {"active": false}
+microphone               {"active": false}
+error                    {"reason": "the input device was lost; no transcript could be preserved; typed input remains available and no task was created"}
+bunny-virtual-microphone
+############ VI-6 device lost mid-capture ############
+--- unloading the source out from under the capture ---
+--- events ---
+{"event": "voice_started", "requestId": "speechreq-cdc95cbfa45f4d54b4eeb208c6a39680", "sessionId": "ses-7d6c0d7f24fe4e0ebb6a123a73871959", "cancellationToken": "speechtok-2bbd2a61b9f8425c89e467db9fcf58ac", "maxCaptureMs": 30000}
+{"event": "microphone", "active": true, "requestId": "speechreq-cdc95cbfa45f4d54b4eeb208c6a39680"}
+{"event": "voice_phase", "phase": "listening", "statusText": "Listening...", "requestId": "speechreq-cdc95cbfa45f4d54b4eeb208c6a39680"}
+{"event": "microphone", "active": false, "requestId": "speechreq-cdc95cbfa45f4d54b4eeb208c6a39680"}
+{"event": "microphone", "active": false, "requestId": "speechreq-cdc95cbfa45f4d54b4eeb208c6a39680"}
+{"event": "microphone", "active": false, "requestId": "speechreq-cdc95cbfa45f4d54b4eeb208c6a39680"}
+{"event": "microphone", "active": false, "requestId": "speechreq-cdc95cbfa45f4d54b4eeb208c6a39680"}
+{"event": "error", "reason": "the input device was lost; no transcript could be preserved; typed input remains available and no task was created", "requestId": "speechreq-cdc95cbfa45f4d54b4eeb208c6a39680"}
+--- stderr ---
+############ VI-5 selected device absent at start ############
+microphone open at 05:57:00.119
+microphone               {"active": true}
+voice_phase              {"phase": "listening", "statusText": "Listening..."}
+microphone               {"active": false}
+microphone               {"active": false}
+microphone               {"active": false}
+microphone               {"active": false}
+error                    {"reason": "the input device was lost; no transcript could be preserved; typed input remains available and no task was created"}
+############ VI-7 device returns; recovery ############
+--- stderr ---
+Running as unit: bunny-mic-daemon.service; invocation ID: 7451bda94fd1471fbbfd308f116d190d
+  device pulse      bunny-virtual-microphone                         default=True monitor=False
+  device alsa       hw:0,0                                           default=True monitor=False
+
+===== utterances to speak =====
+'Open Files.' -> /tmp/utt-open-files.raw: provider=kitten source_rate=24000 frames=42267 seconds=2.64 peak=23547
+'How much memory am I using?' -> /tmp/utt-memory.raw: provider=kitten source_rate=24000 frames=69067 seconds=4.32 peak=19854
+'Open Terminal.' -> /tmp/utt-terminal.raw: provider=kitten source_rate=24000 frames=37467 seconds=2.34 peak=20982
+'Find PDF files in Downloads.' -> /tmp/utt-pdfs.raw: provider=kitten source_rate=24000 frames=70667 seconds=4.42 peak=20290
+transcript               {"text": "how much memory am i using", "confidence": 1.0, "providerId": "vosk"}
+reply                    {"text": "You are using 2.0 GiB of 5.8 GiB of memory (35%).", "taskId": "task-05339eeea79b42fc8f31c9e9b7330acb"}
+speech_finished          {"taskId": "task-05339eeea79b42fc8f31c9e9b7330acb"}
+finished                 {"phase": "success", "taskId": "task-05339eeea79b42fc8f31c9e9b7330acb"}
+############ PHASE4 DONE ############

@@ -1,0 +1,344 @@
+{
+ "ready": {
+  "controlCount": 192
+ },
+ "schemaVersion": 1,
+ "script": "build/scripts/phase3-journeys/verify-3d-set-2d.json",
+ "status": "complete",
+ "steps": [
+  {
+   "answer": {
+    "command": "system",
+    "label": "system-after-reboot",
+    "system": {
+     "appliedState": {
+      "argv": [
+       "/usr/bin/sudo",
+       "-u",
+       "alex",
+       "-H",
+       "cat",
+       "/var/home/alex/.local/state/bunny-os/applied.json"
+      ],
+      "ran": true,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "{\n \"applied\": 8,\n \"dryRun\": false,\n \"failures\": [\n  {\n   \"applied\": false,\n   \"detail\": \"No such schema \\u201cart.comrade.BunnyShell\\u201d\",\n   \"intent\": \"Bunny presentation: full\",\n   \"key\": \"companionMode\",\n   \"value\": \"full\"\n  },\n  {\n   \"applied\": false,\n   \"detail\": \"No such schema \\u201cart.comrade.BunnyShell\\u201d\",\n   \"intent\": \"captions\",\n   \"key\": \"companionCaptions\",\n   \"value\": \"true\"\n  },\n  {\n   \"applied\": false,\n   \"detail\": \"symlink absent after enable\",\n   \"intent\": \"start Bunny at login\",\n   \"key\": \"companionAtLogin\",\n   \"value\": true\n  }\n ],\n \"results\": [\n  {\n   \"applied\": true,\n   \"detail\": \"org.gnome.desktop.interface color-scheme = default\",\n   \"intent\": \"appearance: system\",\n   \"key\": \"colourScheme\",\n   \"value\": \"default\"\n  },\n  {\n   \"applied\": true,\n   \"detail\": \"org.gnome.desktop.interface gtk-theme = Adwaita\",\n   \"intent\": \"appearance: GTK theme\",\n   \"key\": \"gtkTheme\",\n   \"value\": \"Adwaita\"\n  },\n  {\n   \"applied\": true,\n   \"detail\": \"org.gnome.desktop.interface text-scaling-factor = 1.0\",\n   \"intent\": \"text size 100%\",\n   \"key\": \"textScale\",\n   \"value\": \"1.0\"\n  },\n  {\n   \"applied\": true,\n   \"detail\": \"org.gnome.desktop.a11y.interface high-contrast = false\",\n   \"intent\": \"high contrast\",\n   \"key\": \"highContrast\",\n   \"value\": \"false\"\n  },\n  {\n   \"applied\": true,\n   \"detail\": \"org.gnome.desktop.interface enable-animations = true\",\n   \"intent\": \"reduced motion\",\n   \"key\": \"reducedMotion\",\n   \"value\": \"true\"\n  },\n  {\n   \"applied\": true,\n   \"detail\": \"org.gnome.desktop.a11y.applications screen-reader-enabled = false\",\n   \"intent\": \"screen reader\",\n   \"key\": \"screenReader\",\n   \"value\": \"false\"\n  },\n  {\n   \"applied\": false,\n   \"detail\": \"No such schema \\u201cart.comrade.BunnyShell\\u201d\",\n   \"intent\": \"Bunny presentation: full\",\n   \"key\": \"companionMode\",\n   \"value\": \"full\"\n  },\n  {\n   \"applied\": false,\n   \"detail\": \"No such schema \\u201cart.comrade.BunnyShell\\u201d\",\n   \"intent\": \"captions\",\n   \"key\": \"companionCaptions\",\n   \"value\": \"true\"\n  },\n  {\n   \"applied\": true,\n   \"detail\": \"org.gnome.desktop.privacy report-technical-problems = false\",\n   \"intent\": \"crash reports\",\n   \"key\": \"crashReports\",\n   \"value\": \"false\"\n  },\n  {\n   \"applied\": true,\n   \"detail\": \"org.gnome.system.location enabled = false\",\n   \"intent\": \"location services\",\n   \"key\": \"location\",\n   \"value\": \"false\"\n  },\n  {\n   \"applied\": false,\n   \"detail\": \"symlink absent after enable\",\n   \"intent\": \"start Bunny at login\",\n   \"key\": \"companionAtLogin\",\n   \"value\": true\n  }\n ],\n \"schemaVersion\": 1,\n \"total\": 11\n}"
+     },
+     "choicesOnTarget": {
+      "argv": [
+       "cat",
+       "/var/lib/bunny-setup/choices.json"
+      ],
+      "ran": true,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "{\n \"accessibility\": {\n  \"captions\": false,\n  \"highContrast\": false,\n  \"reducedMotion\": false,\n  \"screenReader\": false,\n  \"textScale\": 1.0\n },\n \"account\": {\n  \"deviceName\": \"warren\",\n  \"displayName\": \"Alex\",\n  \"username\": \"alex\"\n },\n \"appearance\": {\n  \"accent\": \"violet\",\n  \"colourScheme\": \"system\",\n  \"wallpaper\": \"bunny-default\"\n },\n \"applications\": {\n  \"activities\": [],\n  \"selected\": []\n },\n \"companion\": {\n  \"atLogin\": true,\n  \"captions\": true,\n  \"mode\": \"full\",\n  \"voice\": false\n },\n \"encryption\": {\n  \"enabled\": true\n },\n \"locale\": {\n  \"keyboardLayout\": \"gb\",\n  \"language\": \"en-GB\",\n  \"region\": \"GB\",\n  \"timezone\": \"Europe/London\"\n },\n \"privacy\": {\n  \"camera\": false,\n  \"crashReports\": false,\n  \"diagnostics\": false,\n  \"feedback\": false,\n  \"location\": false,\n  \"microphone\": false,\n  \"onlineAI\": false,\n  \"remoteProcessing\": false\n },\n \"schemaVersion\": 1\n}"
+     },
+     "companionSettings": {
+      "argv": [
+       "/usr/bin/sudo",
+       "-u",
+       "alex",
+       "-H",
+       "cat",
+       "/var/home/alex/.local/state/bunny-os/companion/settings.json"
+      ],
+      "ran": true,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "{\n  \"accessibility\": {\n    \"captionsAlways\": true,\n    \"highContrast\": false,\n    \"noAnimation\": false,\n    \"reducedMotion\": true,\n    \"textOnly\": false,\n    \"uiScale\": 1.0\n  },\n  \"ai\": {\n    \"allowedRemoteAliases\": [],\n    \"costCeilingUnits\": 0,\n    \"preferredModelId\": \"\",\n    \"preferredProviderId\": \"\",\n    \"remoteEnabled\": false\n  },\n  \"character\": {\n    \"animation\": \"full\",\n    \"animationIntensity\": 0.6,\n    \"contextualReactions\": true,\n    \"dock\": \"top-left\",\n    \"idleAnimation\": true,\n    \"packageId\": \"\",\n    \"performance\": \"automatic\",\n    \"renderMode\": \"3d\",\n    \"scale\": 1.4,\n    \"threeD\": \"auto\",\n    \"visible\": true\n  },\n  \"containsCredentials\": false,\n  \"privacy\": {\n    \"clipboardCeiling\": \"internal\",\n    \"desktopActionApproval\": \"always\",\n    \"historyRetentionDays\": 0,\n    \"remoteTransferCeiling\": \"public\"\n  },\n  \"schemaVersion\": 1,\n  \"speechInput\": {\n    \"deviceId\": \"\",\n    \"enabled\": true,\n    \"language\": \"automatic\",\n    \"modelId\": \"\",\n    \"shortcut\": \"<Super><Alt>space\",\n    \"wakeWord\": \"disabled\"\n  },\n  \"voice\": {\n    \"enabled\": true,\n    \"modelId\": \"\",\n    \"performanceMode\": \"automatic\",\n    \"providerId\": \"pocket\",\n    \"responseMode\": \"voice-only\",\n    \"speakingRate\": 1.2,\n    \"voiceId\": \"\",\n    \"volume\": 1.0\n  }\n}"
+     },
+     "etcHostname": {
+      "argv": [
+       "cat",
+       "/etc/hostname"
+      ],
+      "ran": true,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "warren"
+     },
+     "etcLocaleConf": {
+      "argv": [
+       "cat",
+       "/etc/locale.conf"
+      ],
+      "ran": true,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "LANG=en_GB.UTF-8"
+     },
+     "etcVconsole": {
+      "argv": [
+       "cat",
+       "/etc/vconsole.conf"
+      ],
+      "ran": true,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "KEYMAP=\"gb\"\nFONT=\"eurlatgr\""
+     },
+     "hostnamectl": {
+      "argv": [
+       "hostnamectl"
+      ],
+      "ran": true,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "Static hostname: warren\n           Icon name: computer-vm\n             Chassis: vm \ud83d\uddb4\n          Machine ID: 42af842c0e00408d95c71893c6e00038\n             Boot ID: e9a3bfa3d4b64d998a846bc3ffd67ef7\n      Virtualization: kvm\n    Operating System: Bunny OS 0.1.0 (development)\n         CPE OS Name: cpe:/o:fedoraproject:fedora:44\n      OS Support End: Wed 2027-05-19\nOS Support Remaining: 9month 1d\n              Kernel: Linux 7.1.5-201.fc44.x86_64\n        Architecture: x86-64\n     Hardware Vendor: QEMU\n      Hardware Model: Standard PC _Q35 + ICH9, 2009_\n    Hardware Version: pc-q35-10.2\n    Firmware Version: edk2-20260508-6.fc44\n       Firmware Date: Fri 2026-05-08\n        Firmware Age: 3month 1w 2d"
+     },
+     "localectl": {
+      "argv": [
+       "localectl",
+       "status"
+      ],
+      "ran": true,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "System Locale: LANG=en_GB.UTF-8\n    VC Keymap: gb\n   X11 Layout: (unset)"
+     },
+     "sessions": {
+      "argv": [
+       "loginctl",
+       "list-sessions"
+      ],
+      "ran": true,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "SESSION  UID USER SEAT  LEADER CLASS   TTY  IDLE SINCE\n      2 1000 alex -     3605   manager -    no   -\n      3 1000 alex seat0 3886   user    tty2 no   -\n\n2 sessions listed."
+     },
+     "userUnits": {
+      "argv": [
+       "/usr/bin/sudo",
+       "-u",
+       "alex",
+       "-H",
+       "/usr/bin/env",
+       "XDG_RUNTIME_DIR=/run/user/1000",
+       "DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus",
+       "systemctl",
+       "--user",
+       "--no-pager",
+       "list-units",
+       "bunny-*"
+      ],
+      "ran": true,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "UNIT                     LOAD   ACTIVE     SUB     JOB   DESCRIPTION\n  bunny-companion.service  loaded active     running       Bunny Companion runtime\n  bunny-config-dir.service loaded active     exited        Establish and verify the Bunny OS per-user configuration directory\n\u25cf bunny-first-run.service  loaded activating start   start Bunny OS first-run experience\n\nLegend: LOAD   \u2192 Reflects whether the unit definition was properly loaded.\n        ACTIVE \u2192 The high-level unit activation state, i.e. generalization of SUB.\n        SUB    \u2192 The low-level unit activation state, values depend on unit type.\n        JOB    \u2192 Pending job for the unit.\n\n3 loaded units listed. Pass --all to see loaded but inactive units, too.\nTo show all installed unit files use 'systemctl list-unit-files'."
+     }
+    }
+   },
+   "request": {
+    "command": "system",
+    "label": "system-after-reboot",
+    "timeout": 240
+   }
+  },
+  {
+   "answer": {
+    "command": "settings",
+    "label": "settings-expect-3d",
+    "settings": {
+     "argv": [
+      "/usr/bin/sudo",
+      "-u",
+      "alex",
+      "-H",
+      "/usr/bin/bunny-os",
+      "companion",
+      "settings",
+      "show"
+     ],
+     "ran": true,
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "effect: READ the user settings. A setting is never a credential\nsettings: {\"accessibility\": {\"captionsAlways\": true, \"highContrast\": false, \"noAnimation\": false, \"reducedMotion\": true, \"textOnly\": false, \"uiScale\": 1.0}, \"ai\": {\"allowedRemoteAliases\": [], \"costCeilingUnits\": 0, \"preferredModelId\": \"\", \"preferredProviderId\": \"\", \"remoteEnabled\": false}, \"character\": {\"animation\": \"full\", \"animationIntensity\": 0.6, \"contextualReactions\": true, \"dock\": \"top-left\", \"idleAnimation\": true, \"packageId\": \"\", \"performance\": \"automatic\", \"renderMode\": \"3d\", \"scale\": 1.4, \"threeD\": \"auto\", \"visible\": true}, \"containsCredentials\": false, \"privacy\": {\"clipboardCeiling\": \"internal\", \"desktopActionApproval\": \"always\", \"historyRetentionDays\": 0, \"remoteTransferCeiling\": \"public\"}, \"schemaVersion\": 1, \"speechInput\": {\"deviceId\": \"\", \"enabled\": true, \"language\": \"automatic\", \"modelId\": \"\", \"shortcut\": \"<Super><Alt>space\", \"wakeWord\": \"disabled\"}, \"voice\": {\"enabled\": true, \"modelId\": \"\", \"performanceMode\": \"automatic\", \"providerId\": \"pocket\", \"responseMode\": \"voice-only\", \"speakingRate\": 1.2, \"voiceId\": \"\", \"volume\": 1.0}}"
+    }
+   },
+   "request": {
+    "action": "show",
+    "command": "settings",
+    "label": "settings-expect-3d"
+   }
+  },
+  {
+   "answer": {
+    "command": "renderer",
+    "label": "renderer-expect-3d",
+    "renderer": {
+     "argv": [
+      "/usr/bin/sudo",
+      "-u",
+      "alex",
+      "-H",
+      "/usr/bin/bunny-os",
+      "--json",
+      "companion",
+      "renderer",
+      "status"
+     ],
+     "ran": true,
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "{\n  \"bubble\": null,\n  \"capabilityPlan\": {\n    \"action\": \"start\",\n    \"ceiling\": \"full-3d\",\n    \"implementationId\": \"full-3d\",\n    \"planId\": \"plan-094eddead721e9ac\",\n    \"reasons\": []\n  },\n  \"effect\": \"read-only\",\n  \"events\": [],\n  \"frame\": {\n    \"accessibilityDescription\": \"Bunny is idle and ready.\",\n    \"animation\": \"idle\",\n    \"assetId\": \"idle-1\",\n    \"assetPath\": \"/usr/share/bunny-os/companion/characters/default-bunny/assets/idle-1.png\",\n    \"frameIndex\": 0,\n    \"height\": 96,\n    \"mouthShape\": \"neutral\",\n    \"opacity\": 1.0,\n    \"scale\": 1.0,\n    \"state\": \"idle\",\n    \"width\": 96\n  },\n  \"lipSync\": null,\n  \"mappedState\": {\n    \"accessibilityDescription\": \"Bunny is idle and ready.\",\n    \"animation\": \"idle\",\n    \"bubbleAnchor\": {\n      \"preferredSide\": \"auto\",\n      \"x\": 0.76,\n      \"y\": 0.16\n    },\n    \"bubbleVisible\": false,\n    \"characterState\": \"idle\",\n    \"degradationExplanation\": \"\",\n    \"expression\": \"neutral\",\n    \"fallbackChain\": [\n      \"idle\"\n    ],\n    \"frameRateCap\": 60,\n    \"loop\": true,\n    \"playbackPolicy\": \"loop\",\n    \"priorityReason\": \"canonical presentation phase idle\",\n    \"resolvedPackageState\": \"idle\",\n    \"transitionType\": \"interruptible\"\n  },\n  \"missingStates\": [],\n  \"mode\": \"prerendered\",\n  \"observedResourceUse\": {\n    \"decodedMemoryBytes\": 479232,\n    \"droppedFrames\": 0,\n    \"lastFrameMs\": 0.0\n  },\n  \"packageFallback\": null,\n  \"position\": null,\n  \"presentation\": {\n    \"effectivePresentation\": \"animated-2d\",\n    \"frameRateCap\": 8,\n    \"heldByHysteresis\": false,\n    \"planId\": \"plan-094eddead721e9ac\",\n    \"reasons\": [\n      \"capability plan plan-094eddead721e9ac permits at most full-3d\",\n      \"the selected character package carries no validated 3D model\"\n    ],\n    \"requestedPresentation\": \"animated-2d\"\n  },\n  \"quiescence\": null,\n  \"rendererErrors\": [],\n  \"rendererStatus\": {\n    \"droppedFrames\": 0,\n    \"failure\": null,\n    \"frameRateCap\": 8,\n    \"lastFrameMs\": 0.0,\n    \"loadedPackageDigest\": \"5494218e66c9d5cf022105213727614d9793eb2ec403e593e56ae76628a23986\",\n    \"loadedPackageId\": \"org.bunny-os.default-bunny\",\n    \"observedMemoryBytes\": 479232,\n    \"paused\": false,\n    \"reducedMotion\": false,\n    \"renderer\": \"animated-2d\",\n    \"running\": true,\n    \"visible\": true\n  },\n  \"resourceDeclaration\": {\n    \"assetCount\": 14,\n    \"frameRate\": 8.0,\n    \"height\": 96,\n    \"memoryEstimateBytes\": 479232,\n    \"width\": 96\n  },\n  \"selectedPackage\": {\n    \"characterName\": \"Bunny\",\n    \"creatorTrusted\": true,\n    \"integrityVerified\": true,\n    \"packageDigest\": \"5494218e66c9d5cf022105213727614d9793eb2ec403e593e56ae76628a23986\",\n    \"packageId\": \"org.bunny-os.default-bunny\",\n    \"packageVersion\": \"1.0.0\",\n    \"path\": \"/usr/share/bunny-os/companion/characters/default-bunny\",\n    \"presentationType\": \"animated-2d\",\n    \"trustState\": \"built-in\"\n  },\n  \"signals\": {\n    \"availableMemoryBytes\": 5029027840,\n    \"batteryPercent\": null,\n    \"displayAvailable\": true,\n    \"gpuAvailable\": true,\n    \"graphicsReady\": true,\n    \"memoryPressure\": false,\n    \"onBattery\": false,\n    \"thermalPressure\": false\n  }\n}"
+    }
+   },
+   "request": {
+    "command": "renderer",
+    "label": "renderer-expect-3d"
+   }
+  },
+  {
+   "answer": {
+    "characterPolicy": {
+     "argv": [
+      "/usr/bin/sudo",
+      "-u",
+      "alex",
+      "-H",
+      "/usr/bin/bunny-os",
+      "--json",
+      "companion",
+      "character-policy",
+      "--dry-run"
+     ],
+     "ran": true,
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "{\n  \"decision\": {\n    \"applied\": false,\n    \"eligibleRung\": \"text-only\",\n    \"error\": \"\",\n    \"packageId\": \"\",\n    \"preservedUserChoice\": false,\n    \"reasons\": [\n      \"the machine and policy permit text-only\",\n      \"no bundled package is drawn at the text-only rung\"\n    ],\n    \"rung\": \"text-only\",\n    \"schemaVersion\": 1,\n    \"selectedPackageId\": \"org.bunny-os.default-bunny\",\n    \"summary\": \"This machine draws no character; Bunny uses the text-only presentation.\",\n    \"wouldApply\": false\n  },\n  \"effect\": \"READ the default-character decision; nothing was changed\",\n  \"eligible\": \"text-only\"\n}"
+    },
+    "command": "character-policy",
+    "label": "assess-without-display"
+   },
+   "request": {
+    "command": "character-policy",
+    "dryRun": true,
+    "label": "assess-without-display"
+   }
+  },
+  {
+   "answer": {
+    "characterPolicy": {
+     "argv": [
+      "/usr/bin/sudo",
+      "-u",
+      "alex",
+      "-H",
+      "/usr/bin/env",
+      "XDG_RUNTIME_DIR=/run/user/1000",
+      "WAYLAND_DISPLAY=wayland-0",
+      "/usr/bin/bunny-os",
+      "--json",
+      "companion",
+      "character-policy",
+      "--dry-run"
+     ],
+     "ran": true,
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "{\n  \"decision\": {\n    \"applied\": false,\n    \"eligibleRung\": \"full-3d\",\n    \"error\": \"\",\n    \"packageId\": \"bunny-default-3d\",\n    \"preservedUserChoice\": false,\n    \"reasons\": [\n      \"the machine and policy permit full-3d\",\n      \"bunny-default-3d validated and declares full-3d\"\n    ],\n    \"rung\": \"full-3d\",\n    \"schemaVersion\": 1,\n    \"selectedPackageId\": \"org.bunny-os.default-bunny\",\n    \"summary\": \"Bunny is already using org.bunny-os.default-bunny.\",\n    \"wouldApply\": true\n  },\n  \"effect\": \"READ the default-character decision; nothing was changed\",\n  \"eligible\": \"full-3d\"\n}"
+    },
+    "command": "character-policy",
+    "display": {
+     "waylandSocket": "/run/user/1000/wayland-0"
+    },
+    "label": "assess-with-session-display"
+   },
+   "request": {
+    "command": "character-policy",
+    "dryRun": true,
+    "label": "assess-with-session-display",
+    "withDisplay": true
+   }
+  },
+  {
+   "answer": {
+    "command": "settings",
+    "label": "settings-after-assessments",
+    "settings": {
+     "argv": [
+      "/usr/bin/sudo",
+      "-u",
+      "alex",
+      "-H",
+      "/usr/bin/bunny-os",
+      "companion",
+      "settings",
+      "show"
+     ],
+     "ran": true,
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "effect: READ the user settings. A setting is never a credential\nsettings: {\"accessibility\": {\"captionsAlways\": true, \"highContrast\": false, \"noAnimation\": false, \"reducedMotion\": true, \"textOnly\": false, \"uiScale\": 1.0}, \"ai\": {\"allowedRemoteAliases\": [], \"costCeilingUnits\": 0, \"preferredModelId\": \"\", \"preferredProviderId\": \"\", \"remoteEnabled\": false}, \"character\": {\"animation\": \"full\", \"animationIntensity\": 0.6, \"contextualReactions\": true, \"dock\": \"top-left\", \"idleAnimation\": true, \"packageId\": \"\", \"performance\": \"automatic\", \"renderMode\": \"3d\", \"scale\": 1.4, \"threeD\": \"auto\", \"visible\": true}, \"containsCredentials\": false, \"privacy\": {\"clipboardCeiling\": \"internal\", \"desktopActionApproval\": \"always\", \"historyRetentionDays\": 0, \"remoteTransferCeiling\": \"public\"}, \"schemaVersion\": 1, \"speechInput\": {\"deviceId\": \"\", \"enabled\": true, \"language\": \"automatic\", \"modelId\": \"\", \"shortcut\": \"<Super><Alt>space\", \"wakeWord\": \"disabled\"}, \"voice\": {\"enabled\": true, \"modelId\": \"\", \"performanceMode\": \"automatic\", \"providerId\": \"pocket\", \"responseMode\": \"voice-only\", \"speakingRate\": 1.2, \"voiceId\": \"\", \"volume\": 1.0}}"
+    }
+   },
+   "request": {
+    "action": "show",
+    "command": "settings",
+    "label": "settings-after-assessments"
+   }
+  },
+  {
+   "answer": {
+    "command": "settings",
+    "label": "select-2d",
+    "settings": {
+     "argv": [
+      "/usr/bin/sudo",
+      "-u",
+      "alex",
+      "-H",
+      "/usr/bin/bunny-os",
+      "companion",
+      "settings",
+      "set",
+      "character",
+      "render_mode",
+      "2d"
+     ],
+     "ran": true,
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "effect: CHANGED character.render_mode and wrote it to disk\nsettings: {\"accessibility\": {\"captionsAlways\": true, \"highContrast\": false, \"noAnimation\": false, \"reducedMotion\": true, \"textOnly\": false, \"uiScale\": 1.0}, \"ai\": {\"allowedRemoteAliases\": [], \"costCeilingUnits\": 0, \"preferredModelId\": \"\", \"preferredProviderId\": \"\", \"remoteEnabled\": false}, \"character\": {\"animation\": \"full\", \"animationIntensity\": 0.6, \"contextualReactions\": true, \"dock\": \"top-left\", \"idleAnimation\": true, \"packageId\": \"\", \"performance\": \"automatic\", \"renderMode\": \"2d\", \"scale\": 1.4, \"threeD\": \"auto\", \"visible\": true}, \"containsCredentials\": false, \"privacy\": {\"clipboardCeiling\": \"internal\", \"desktopActionApproval\": \"always\", \"historyRetentionDays\": 0, \"remoteTransferCeiling\": \"public\"}, \"schemaVersion\": 1, \"speechInput\": {\"deviceId\": \"\", \"enabled\": true, \"language\": \"automatic\", \"modelId\": \"\", \"shortcut\": \"<Super><Alt>space\", \"wakeWord\": \"disabled\"}, \"voice\": {\"enabled\": true, \"modelId\": \"\", \"performanceMode\": \"automatic\", \"providerId\": \"pocket\", \"responseMode\": \"voice-only\", \"speakingRate\": 1.2, \"voiceId\": \"\", \"volume\": 1.0}}"
+    }
+   },
+   "request": {
+    "action": "set",
+    "command": "settings",
+    "field": "render_mode",
+    "label": "select-2d",
+    "section": "character",
+    "value": "2d"
+   }
+  },
+  {
+   "answer": {
+    "command": "settings",
+    "label": "settings-now-2d",
+    "settings": {
+     "argv": [
+      "/usr/bin/sudo",
+      "-u",
+      "alex",
+      "-H",
+      "/usr/bin/bunny-os",
+      "companion",
+      "settings",
+      "show"
+     ],
+     "ran": true,
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "effect: READ the user settings. A setting is never a credential\nsettings: {\"accessibility\": {\"captionsAlways\": true, \"highContrast\": false, \"noAnimation\": false, \"reducedMotion\": true, \"textOnly\": false, \"uiScale\": 1.0}, \"ai\": {\"allowedRemoteAliases\": [], \"costCeilingUnits\": 0, \"preferredModelId\": \"\", \"preferredProviderId\": \"\", \"remoteEnabled\": false}, \"character\": {\"animation\": \"full\", \"animationIntensity\": 0.6, \"contextualReactions\": true, \"dock\": \"top-left\", \"idleAnimation\": true, \"packageId\": \"\", \"performance\": \"automatic\", \"renderMode\": \"2d\", \"scale\": 1.4, \"threeD\": \"auto\", \"visible\": true}, \"containsCredentials\": false, \"privacy\": {\"clipboardCeiling\": \"internal\", \"desktopActionApproval\": \"always\", \"historyRetentionDays\": 0, \"remoteTransferCeiling\": \"public\"}, \"schemaVersion\": 1, \"speechInput\": {\"deviceId\": \"\", \"enabled\": true, \"language\": \"automatic\", \"modelId\": \"\", \"shortcut\": \"<Super><Alt>space\", \"wakeWord\": \"disabled\"}, \"voice\": {\"enabled\": true, \"modelId\": \"\", \"performanceMode\": \"automatic\", \"providerId\": \"pocket\", \"responseMode\": \"voice-only\", \"speakingRate\": 1.2, \"voiceId\": \"\", \"volume\": 1.0}}"
+    }
+   },
+   "request": {
+    "action": "show",
+    "command": "settings",
+    "label": "settings-now-2d"
+   }
+  }
+ ]
+}

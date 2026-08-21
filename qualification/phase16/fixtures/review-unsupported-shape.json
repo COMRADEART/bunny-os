@@ -1,0 +1,17 @@
+{
+ "fixtureClass": "TEST_FIXTURE_ONLY",
+ "fixture": true,
+ "test_fixture_only": true,
+ "warning": [
+  "TEST_FIXTURE_ONLY",
+  "NOT EXTERNAL EVIDENCE",
+  "NOT APPLICABLE TO THE SUBJECT ARTIFACT"
+ ],
+ "purpose": "Novel favorable prose with no supported evidence fingerprint. The router and security-review intake must both fail closed.",
+ "record": {
+  "kind": "novel-security-opinion",
+  "claim": "constructed scenario: looks acceptable",
+  "decision": "AUTHORIZED",
+  "date": "2026-08-19"
+ }
+}

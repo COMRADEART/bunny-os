@@ -19,6 +19,13 @@ class Placement(str, Enum):
     DOCK_RIGHT = "dock-right"
     BOTTOM_LEFT = "bottom-left"
     BOTTOM_RIGHT = "bottom-right"
+    #: The top corners. Added when the settings surface was reconciled with this
+    #: vocabulary: :class:`companion.settings.CharacterSettings` had offered
+    #: ``top-left`` and ``top-right`` since it was written, and this enum — the
+    #: thing that actually places the window — had no way to express either. A
+    #: user who set one got the bottom-right default and no explanation.
+    TOP_LEFT = "top-left"
+    TOP_RIGHT = "top-right"
     COMPACT_FLOATING = "compact-floating"
     USER_DRAGGED = "user-dragged"
 
@@ -182,6 +189,10 @@ def place_character(
         x, y = right, area.y + (area.height - height) // 2
     elif placement is Placement.BOTTOM_LEFT:
         x, y = left, bottom
+    elif placement is Placement.TOP_LEFT:
+        x, y = left, top
+    elif placement is Placement.TOP_RIGHT:
+        x, y = right, top
     elif placement in {Placement.BOTTOM_RIGHT, Placement.COMPACT_FLOATING}:
         x, y = right, bottom
     elif dragged_origin is not None:

@@ -1,0 +1,21 @@
+#!/usr/bin/python3
+# SPDX-FileCopyrightText: 2026 ComradeArt
+# SPDX-License-Identifier: GPL-3.0-or-later
+"""Entry point for the bunny-model command.
+
+Deliberately unlike `oem/bin/bunny-oem`, which prefers an installed tree over
+the checkout: there is no installed tree for Model Studio and there is not meant
+to be one. This resolves to the repository it lives in, and only that, so the
+command cannot accidentally run a different copy of the training code than the
+one being edited.
+"""
+
+from pathlib import Path
+import sys
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+
+from model_studio.cli import main  # noqa: E402
+
+if __name__ == "__main__":
+    raise SystemExit(main())

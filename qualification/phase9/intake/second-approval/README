@@ -1,0 +1,1 @@
+Second-approver records land here as INTAKE-NNN/ directories, registered only through qualification/phase9/tools/intake.py. Record shape: qualification/phase8/signing/APPROVALS.md - each approver independently recomputes and names the same artifact digest. Empty = one person = the gate is NOT_RUN.

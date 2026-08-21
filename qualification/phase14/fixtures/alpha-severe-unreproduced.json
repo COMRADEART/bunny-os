@@ -1,0 +1,50 @@
+{
+ "fixture": true,
+ "fixtureClass": "TEST_FIXTURE_ONLY",
+ "purpose": "Drives the severe-unresolved rehearsals: a bound FAILURE report whose tester classifies a RELEASE_BLOCKER with reproductionConfidence UNREPRODUCED. The derived finding must stay open through NOT_REPRODUCED attempts, cap sufficiency, and never be deleted to clear the blocker.",
+ "record": {
+  "schema": "bunny-os/alpha-tester-report/1",
+  "tester_id": "T-014",
+  "testerId": "T-014",
+  "report_type": "FAILURE",
+  "submitted_at": "2026-08-18",
+  "date": "2026-08-18",
+  "journey": "A",
+  "artifact_claimed_by_tester": "bunny-os-0.3.0-live.e906a48793d7-x86_64.iso (constructed fixture)",
+  "artifact_digest_observed": "823d50caba35afe72452768affd5f6fa0ac8cfc13c164f0e1bc909fa887ab421",
+  "artifact_digest_verified": true,
+  "artifact_identity_status": "VERIFIED",
+  "environment_summary": "constructed fixture: QEMU/KVM 9.1, q35, UEFI, 4 vCPU / 6 GB, llvmpipe",
+  "environment": "constructed fixture: QEMU/KVM 9.1, q35, UEFI, 4 vCPU / 6 GB, llvmpipe",
+  "steps": [
+   {
+    "name": "boot installer",
+    "status": "COMPLETED"
+   },
+   {
+    "name": "install to disk",
+    "status": "COMPLETED"
+   },
+   {
+    "name": "first boot to login",
+    "status": "FAILED",
+    "notes": "constructed fixture: the desktop never appeared after one retry"
+   }
+  ],
+  "user_observation": "constructed fixture: after installing, the machine reached a black screen once and I could not make it happen again",
+  "expected_behavior": "the desktop appears after first boot",
+  "actual_behavior": "a black screen appeared once; the second boot worked",
+  "additional_context": "TEST_FIXTURE_ONLY dry run material",
+  "artifactDigest": "823d50caba35afe72452768affd5f6fa0ac8cfc13c164f0e1bc909fa887ab421",
+  "machine_label": "machine-14",
+  "findings": [
+   {
+    "description": "constructed fixture: first boot reached a black screen once; not reproduced on retry",
+    "category": "RELEASE_BLOCKER",
+    "reproductionConfidence": "UNREPRODUCED",
+    "evidence": "constructed fixture: photo reference fixture-blackscreen.jpg"
+   }
+  ]
+ },
+ "test_fixture_only": true
+}

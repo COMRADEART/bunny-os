@@ -1,0 +1,15 @@
+{
+ "fixture": true,
+ "fixtureClass": "TEST_FIXTURE_ONLY",
+ "purpose": "Drives the time-semantics rehearsals: a future-dated observation (claimed later than its intake receipt) and a record stating two disagreeing dates for one act (an ambiguous time basis). Both fail closed to REQUIRES_HUMAN_DECISION - undeterminable time is never resolved favorably.",
+ "futureDated": {
+  "date": "2026-12-15",
+  "note": "claimed observation date, deliberately later than the rehearsal receipt date 2026-08-19"
+ },
+ "ambiguousSigning": {
+  "date": "2026-08-18",
+  "signingTimestamp": "2026-08-19",
+  "note": "two dates for one signing act, deliberately disagreeing"
+ },
+ "test_fixture_only": true
+}

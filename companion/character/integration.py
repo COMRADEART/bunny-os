@@ -99,6 +99,8 @@ def mapper_input_for(
     repositioning: bool = False,
     renderer_healthy: bool = True,
     degradation_explanation: str = "",
+    dormant: bool = False,
+    greeting: bool = False,
 ) -> StateMapperInput:
     """Translate the canonical projection into the mapper's input.
 
@@ -108,6 +110,13 @@ def mapper_input_for(
     be audio that reached durable storage — and ``repositioning`` and
     ``renderer_healthy`` are properties of the window and the renderer rather
     than of the task.
+
+    ``dormant`` and ``greeting`` join them for the same reason: how long this
+    person has been away from this machine, and whether this is their first
+    login, are facts about the session in front of them and not about any task.
+    Both are refinements the mapper may reject — neither can displace an
+    approval, an error or a live microphone — so passing them is safe even when
+    the caller is not certain.
     """
     # A disagreement from the *latest* review round is a current warning. One
     # from an earlier round is history, and the projection keeps it — correctly,
@@ -146,6 +155,8 @@ def mapper_input_for(
         accessibility=accessibility or AccessibilityPreferences(),
         status_text=state.status_text,
         renderer_healthy=renderer_healthy,
+        dormant=dormant,
+        greeting=greeting,
     )
 
 
