@@ -2,6 +2,21 @@ enable NetworkManager.service
 enable firewalld.service
 enable bunny-system-broker.socket
 enable bunny-health-check.service
+# Enabled, and safe to enable, because the shipped configuration is
+# observe-only: it inventories, plans and explains, and applies nothing.
+# Whether it RUNS and whether it may CHANGE anything are separate
+# switches on purpose — a control plane that only starts once an
+# operator is ready to let it act can never tell them what it would do.
+enable bunny-capability-supervisor.service
+enable bunny-brlapi-key.service
+enable greenboot-healthcheck.service
+disable bunny-update-agent.timer
+disable sshd.service
+
+enable NetworkManager.service
+enable firewalld.service
+enable bunny-system-broker.socket
+enable bunny-health-check.service
 enable bunny-brlapi-key.service
 enable greenboot-healthcheck.service
 disable bunny-update-agent.timer

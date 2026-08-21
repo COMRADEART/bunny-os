@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bunny-os.org/schemas/companion-state-1.schema.json",
+  "title": "Bunny Companion state",
+  "description": "A displayable projection of observed task events and deterministic explanations. It never contains hidden model reasoning.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion", "sessionId", "taskId", "state", "stateRevision", "startedAt",
+    "statusText", "progress", "activeTool", "activeExecutor", "activeReviewers",
+    "approvalState", "visualPresentationHint", "audioPresentationHint",
+    "privacyIndicator", "executionIndicator", "explanationReference"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "sessionId": { "$ref": "#/$defs/identifier" },
+    "taskId": { "oneOf": [{ "$ref": "#/$defs/identifier" }, { "type": "null" }] },
+    "state": {
+      "type": "string",
+      "enum": [
+        "unavailable", "starting", "idle", "greeting", "listening", "transcribing",
+        "understanding", "waiting_for_user", "waiting_for_approval", "planning", "working",
+        "reviewing", "speaking", "presenting_result", "success", "warning", "blocked",
+        "degraded", "error", "paused", "cancelled", "disconnected", "sleeping"
+      ]
+    },
+    "stateRevision": { "type": "integer", "minimum": 0 },
+    "startedAt": { "type": "string", "format": "date-time" },
+    "statusText": { "type": "string", "minLength": 1, "maxLength": 512 },
+    "progress": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+    "activeTool": { "oneOf": [{ "$ref": "#/$defs/identifier" }, { "type": "null" }] },
+    "activeExecutor": { "oneOf": [{ "$ref": "#/$defs/agent" }, { "type": "null" }] },
+    "activeReviewers": { "type": "array", "maxItems": 32, "items": { "$ref": "#/$defs/agent" } },
+    "approvalState": {
+      "type": "string",
+      "enum": ["not_required", "pending", "approved", "denied", "expired", "cancelled"]
+    },
+    "visualPresentationHint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["implementation", "placement", "reducedMotion", "highContrast", "textScale", "explanation"],
+      "properties": {
+        "implementation": { "$ref": "#/$defs/presentation" },
+        "placement": { "type": "string", "enum": ["center", "docked", "compact", "task-panel", "speech-bubble"] },
+        "reducedMotion": { "type": "boolean" },
+        "highContrast": { "type": "boolean" },
+        "textScale": { "type": "number", "minimum": 0.75, "maximum": 3 },
+        "explanation": { "type": "string", "maxLength": 512 }
+      }
+    },
+    "audioPresentationHint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["enabled", "captions", "voiceId", "speechRate", "transmitting"],
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "captions": { "type": "boolean" },
+        "voiceId": { "oneOf": [{ "$ref": "#/$defs/identifier" }, { "type": "null" }] },
+        "speechRate": { "type": "number", "minimum": 0.5, "maximum": 2 },
+        "transmitting": { "type": "boolean" }
+      }
+    },
+    "privacyIndicator": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "classification", "remoteProviderActive", "screenContextShared", "audioTransmitted",
+        "paidServiceActive", "reviewerContextShared", "systemModificationActive", "microphoneActive"
+      ],
+      "properties": {
+        "classification": { "$ref": "#/$defs/privacy" },
+        "remoteProviderActive": { "type": "boolean" },
+        "screenContextShared": { "type": "boolean" },
+        "audioTransmitted": { "type": "boolean" },
+        "paidServiceActive": { "type": "boolean" },
+        "reviewerContextShared": { "type": "boolean" },
+        "systemModificationActive": { "type": "boolean" },
+        "microphoneActive": { "type": "boolean" }
+      }
+    },
+    "executionIndicator": { "type": "string", "enum": ["none", "local", "remote", "hybrid"] },
+    "explanationReference": { "oneOf": [{ "$ref": "#/$defs/identifier" }, { "type": "null" }] }
+  },
+  "$defs": {
+    "identifier": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/@+\\-]{0,127}$" },
+    "privacy": { "type": "string", "enum": ["public", "internal", "sensitive", "restricted"] },
+    "presentation": { "type": "string", "enum": ["text-only", "audio-only", "static-image", "animated-2d", "lightweight-3d", "full-3d"] },
+    "agent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["agentId", "providerId", "modelId", "locality"],
+      "properties": {
+        "agentId": { "$ref": "#/$defs/identifier" },
+        "providerId": { "oneOf": [{ "$ref": "#/$defs/identifier" }, { "type": "null" }] },
+        "modelId": { "oneOf": [{ "$ref": "#/$defs/identifier" }, { "type": "null" }] },
+        "locality": { "type": "string", "enum": ["none", "local", "remote", "hybrid"] }
+      }
+    }
+  }
+}

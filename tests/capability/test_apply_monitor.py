@@ -161,24 +161,56 @@ class CooldownTests(unittest.TestCase):
     def test_an_emergency_event_bypasses_the_cooldown(self) -> None:
         # A cooldown that suppressed "memory is critically short" would be a
         # stability mechanism that let the machine run out of memory quietly.
+        #
+        # The recovery in the middle has to be allowed to fire, or the re-entry
+        # is not a transition at all: the monitor would still believe it was in
+        # pressure and would have nothing new to report. So the recovery happens
+        # past the cooldown window, and the re-entry immediately after it — well
+        # inside the window — is the thing being tested.
         instance = monitor(replace(PRESSURE, debounce_seconds=1.0, cooldown_seconds=1000.0))
-        feed(instance, [(0.0, 90.0), (5.0, 90.0)])
-        events = feed(instance, [(10.0, 5.0), (20.0, 5.0), (30.0, 90.0), (40.0, 90.0)])
-        self.assertIn("memory_pressure_entered", [item.event for item in events])
+        entered = feed(instance, [(0.0, 90.0), (5.0, 90.0)])
+        self.assertEqual([item.event for item in entered], ["memory_pressure_entered"])
 
-    def test_the_signal_state_still_tracks_reality_while_suppressed(self) -> None:
-        # Only the notification is suppressed; the monitor's view of the machine
-        # must stay accurate or it would have to rediscover the crossing later.
+        recovered = feed(instance, [(1100.0, 5.0), (1110.0, 5.0)])
+        self.assertEqual([item.event for item in recovered], ["memory_pressure_recovered"])
+
+        # 5s after the recovery event, far inside a 1000s cooldown.
+        reentered = feed(instance, [(1115.0, 90.0), (1125.0, 90.0)])
+        self.assertIn("memory_pressure_entered", [item.event for item in reentered])
+
+    def test_a_suppressed_event_is_delayed_and_not_discarded(self) -> None:
+        """A cooldown bounds how often we act, not whether something happened.
+
+        This replaces a test that asserted the opposite. The old behaviour
+        flipped the signal's state while suppressing the notification, on the
+        reasoning that the monitor's view should stay accurate — and measured
+        against a real kernel that silently destroyed the event. A recovery
+        arriving inside the cooldown window was suppressed, the state flipped so
+        it was no longer a transition, and the recovery could never be raised
+        again. The service stayed degraded indefinitely because nothing told the
+        engine to look.
+        """
         config = replace(
             PRESSURE, name="cpu_saturation",
             entered_event="cpu_saturation_entered", recovered_event="cpu_saturation_recovered",
-            debounce_seconds=1.0, cooldown_seconds=1000.0,
+            debounce_seconds=1.0, cooldown_seconds=100.0,
         )
         instance = monitor(config)
         feed(instance, [(0.0, 90.0), (5.0, 90.0)], signal="cpu_saturation")
-        feed(instance, [(10.0, 5.0), (20.0, 5.0)], signal="cpu_saturation")
+
+        # Recovery arrives well inside the cooldown: suppressed for now.
+        held = feed(instance, [(10.0, 5.0), (20.0, 5.0)], signal="cpu_saturation")
+        self.assertEqual(held, [])
         state = next(item for item in instance.status()["signals"] if item["signal"] == "cpu_saturation")
-        self.assertFalse(state["breached"])
+        self.assertTrue(
+            state["breached"],
+            "the announced state must not flip while the notification is held, "
+            "or the transition stops being one and is lost",
+        )
+
+        # Past the window, with the condition still true, it fires.
+        late = feed(instance, [(200.0, 5.0)], signal="cpu_saturation")
+        self.assertEqual([item.event for item in late], ["cpu_saturation_recovered"])
 
 
 class UnmeasuredSignalTests(unittest.TestCase):

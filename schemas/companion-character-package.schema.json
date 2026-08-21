@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bunny-os.org/schemas/companion-character-package-1.schema.json",
+  "title": "Bunny Companion character package",
+  "description": "A data-only character package. Executable code, provider credentials, absolute paths, and traversal paths are forbidden by the importer in addition to this structural schema.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion", "packageId", "creator", "license", "characterName", "version",
+    "supportedRenderer", "assetFiles", "thumbnail", "fallbackImage", "skeleton",
+    "animationMap", "lipSync", "facialExpressionMap", "resourceEstimates",
+    "minimumRenderingCapability"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "packageId": { "$ref": "#/$defs/identifier" },
+    "creator": { "type": "string", "minLength": 1, "maxLength": 256 },
+    "license": { "type": "string", "minLength": 1, "maxLength": 256 },
+    "characterName": { "type": "string", "minLength": 1, "maxLength": 256 },
+    "version": { "$ref": "#/$defs/identifier" },
+    "supportedRenderer": { "$ref": "#/$defs/renderer" },
+    "assetFiles": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 511,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "sha256", "sizeBytes", "mediaType"],
+        "properties": {
+          "path": { "$ref": "#/$defs/assetPath" },
+          "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "sizeBytes": { "type": "integer", "minimum": 1, "maximum": 67108864 },
+          "mediaType": { "type": "string", "minLength": 1, "maxLength": 128 }
+        }
+      }
+    },
+    "thumbnail": { "$ref": "#/$defs/assetPath" },
+    "fallbackImage": { "$ref": "#/$defs/assetPath" },
+    "skeleton": { "type": "object", "maxProperties": 256 },
+    "animationMap": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/assetPath" },
+      "required": ["idle", "greeting", "listening", "thinking", "planning", "typing", "researching", "speaking", "presenting", "success", "warning", "error", "waiting", "sleeping", "repositioning"]
+    },
+    "lipSync": { "type": "object", "maxProperties": 256 },
+    "facialExpressionMap": { "type": "object", "additionalProperties": { "$ref": "#/$defs/assetPath" }, "maxProperties": 256 },
+    "resourceEstimates": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["memoryBytes", "vramBytes"],
+      "properties": {
+        "memoryBytes": { "type": "integer", "minimum": 0, "maximum": 17179869184 },
+        "vramBytes": { "type": "integer", "minimum": 0, "maximum": 17179869184 }
+      }
+    },
+    "minimumRenderingCapability": { "$ref": "#/$defs/renderer" },
+    "promptProvenance": { "type": "object", "maxProperties": 256 },
+    "generationMetadata": { "type": "object", "maxProperties": 256 }
+  },
+  "$defs": {
+    "identifier": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/@+\\-]{0,127}$" },
+    "renderer": { "type": "string", "enum": ["static-image", "animated-2d", "lightweight-3d", "full-3d"] },
+    "assetPath": {
+      "type": "string",
+      "maxLength": 512,
+      "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\)[A-Za-z0-9._+@\\-/]+$"
+    }
+  }
+}

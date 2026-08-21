@@ -1,7 +1,7 @@
 {
   "accessibilityActivation": {
     "brlapiHelper": "d134b497103a874482e042bb9260bde97c1485ba40e3d3b91090bd4c6492961f",
-    "brlapiPreset": "6b84d0c94d6a996a2c515e12aaf792dfcbd78bbd863637c8fb568847dd0fd1a8",
+    "brlapiPreset": "2c2ef18eb3100d1f713738636590b61d19c7cae9341df76ae11884cee033453b",
     "brlapiUnit": "8a44c76b6cd925ef2cd817e27bdfea8e56ab5f55d4789eb173735fe7c1bf086f"
   },
   "architecture": "x86_64",
@@ -17,22 +17,6 @@
   ],
   "epochSourceCommit": "b573d8d16cf7a0f39ff8c4961b2d1f5776bc415a",
   "epochSourceNote": "The build epoch is the timestamp of the commit named in reproducibility-lock.json, which is this commit's ancestor rather than this commit. A lock inside a commit cannot carry that commit's own hash without changing it. Both builders read the epoch from the same file, which is what the pin requires; the asymmetry is recorded so nobody reads epochSourceCommit as the thing being built.",
-  "firstLoginCorrection": {
-    "authselectUnit": {
-      "note": "The drop-in orders chronyd after nss-user-lookup.target, which this unit declares Before=. The unit itself is base content and is pinned by the retained base digest rather than by a digest of its own.",
-      "pinnedBy": "retainedBaseDigest",
-      "provenance": "base image; not repository-owned",
-      "reference": "authselect-apply-changes.service, authselect-1.7.1-1.fc44"
-    },
-    "bunnyConfigDirProgram": "99fda098b560ed51df4cbe1b01acff4559e437fa1098f39b44867ea54be23fd5",
-    "bunnyConfigDirUnit": "496fd1f2405d0a48b07d75f58f41f35c1d9d2795b9daee3216876c51b2019944",
-    "bunnyFirstBootUnit": "d97405a77f6ee855c7fc586485c1e6d15d9421bedd045edbecc7d95a04a9bd42",
-    "chronydDropIn": "286a50c3d38424fae6754222fd2f94e218f8f979849dec15c51a664ad239301f",
-    "chronydDropInPath": "/usr/lib/systemd/system/chronyd.service.d/50-bunny-nss-order.conf",
-    "installedRulePath": "/usr/share/user-tmpfiles.d/bunny-os.conf",
-    "userTmpfilesRule": "3fc0c3bcf2a961ac3a103e2c6cf2cd11851605b2f287a4412681de30ad079caf"
-  },
-  "localArchiveDigest": "36736f369646e73a8c831578b267f72148f15e16af318677e13b870c72b84d08",
   "localRepeatability": {
     "builders": [
       "local-fedora-wsl-a2",
@@ -45,8 +29,8 @@
   "packageCount": 474,
   "packageSnapshotDigest": "b6fbf2ae637a288cc8184ccf9142e47414db5196976a9d53b2d8422df1c2949b",
   "packageSnapshotId": "fedora-44-beta-20260730",
-  "parentCommit": "1471f022eb035f749467d2302d912183ab0c5a2b",
-  "parentCommitShort": "1471f022eb03",
+  "parentCommit": "96112e99d6e1cd977845c95f88a47207e3596117",
+  "parentCommitShort": "96112e99d6e1",
   "profile": "beta",
   "publishedInputs": {
     "base": "ghcr.io/comradeart/bunny-os-base@sha256:1f08084a9a8545bd528641d4fda14e18408dfb1298acda243eaf583cd907a844",
@@ -56,10 +40,6 @@
   "retainedBaseDigest": "sha256:1f08084a9a8545bd528641d4fda14e18408dfb1298acda243eaf583cd907a844",
   "schemaVersion": 1,
   "selinuxPolicyDigest": "9ecce3654a7cc6da974749c7b988c2ae3ad8f7dd5b03360cee6022c844d9ef37",
-  "supersedes": {
-    "reason": "the immutable image changed: bunny-first-boot's sandbox is constructible and chronyd is ordered after NSS identity is resolvable",
-    "target": "Commit G \u2014 b9c317d35b85aa082904ecd40c4a54c81aded99a"
-  },
   "targetCommit": "the child of parentCommit \u2014 the commit that contains this file. Recorded in THREE_BUILDER_REPRODUCIBILITY_REPORT.md and asserted by scripts/supply-chain/assert-target-commit.py, which refuses a commit whose qualification-target.json does not name that commit's own parent.",
   "targetKind": "reproducibility-qualification",
   "toolchain": {

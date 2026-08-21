@@ -1,0 +1,123 @@
+#!/usr/bin/python3
+# SPDX-FileCopyrightText: 2026 ComradeArt
+# SPDX-License-Identifier: GPL-3.0-or-later
+"""A harmless service that exists to be started, limited, and stopped.
+
+The vertical-slice validation needs a real service to control, and every
+alternative is worse. Using an essential host service risks the developer's
+machine; using an existing Bunny OS service means a failure could be the
+service's fault rather than the applicator's; using ``/bin/sleep`` gives nothing
+to health-check and nothing to observe a memory limit against.
+
+So this does exactly three things and nothing else:
+
+* writes a readiness file, so a health check has something real to check;
+* allocates a declared, bounded amount of memory and **touches** it, so the
+  cgroup's ``memory.current`` reflects a real resident working set rather than a
+  lazily-mapped allocation the kernel never backed;
+* exits cleanly on SIGTERM, so a graceful stop can be told apart from a kill.
+
+It never forks, never writes outside its runtime directory, never opens a
+socket, and holds no privilege. Under ``--allocate-mib`` larger than its cgroup
+allows it will be OOM-killed, which is the point: that is how a memory limit is
+demonstrated to be enforced rather than merely written.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+from pathlib import Path
+import signal
+import sys
+import time
+
+_RUNNING = True
+
+
+def _stop(signum: int, frame: object) -> None:
+    global _RUNNING
+    _RUNNING = False
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(prog="bunny-capability-probe", description=__doc__.splitlines()[0])
+    parser.add_argument("--allocate-mib", type=int, default=8,
+                        help="resident memory to hold, in MiB (touched, not merely mapped)")
+    parser.add_argument("--ready-file", type=Path,
+                        default=Path(os.environ.get("RUNTIME_DIRECTORY", "/tmp")) / "probe-ready.json",
+                        help="written once the declared memory is resident")
+    parser.add_argument("--lifetime-seconds", type=float, default=0.0,
+                        help="exit after this long; 0 means run until signalled")
+    parser.add_argument("--grow-mib-per-second", type=float, default=0.0,
+                        help="keep allocating at this rate, to drive real memory pressure")
+    args = parser.parse_args(argv)
+
+    signal.signal(signal.SIGTERM, _stop)
+    signal.signal(signal.SIGINT, _stop)
+
+    started = time.monotonic()
+    block = 1024 * 1024
+
+    # Touch every page. A bytearray of zeros is not necessarily resident until
+    # written, and a limit that is never approached is a limit never tested.
+    held: list[bytearray] = []
+    for _ in range(max(0, args.allocate_mib)):
+        chunk = bytearray(block)
+        for offset in range(0, block, 4096):
+            chunk[offset] = 1
+        held.append(chunk)
+
+    payload = {
+        "schemaVersion": 1,
+        "pid": os.getpid(),
+        "allocatedMib": len(held),
+        "readyAtMonotonic": time.monotonic(),
+        "cgroup": _own_cgroup(),
+    }
+    try:
+        args.ready_file.parent.mkdir(parents=True, exist_ok=True)
+        args.ready_file.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    except OSError as exc:
+        print(f"could not write the readiness file: {exc}", file=sys.stderr)
+        return 1
+
+    print(f"ready: {len(held)} MiB resident, pid {os.getpid()}", flush=True)
+
+    grown = 0.0
+    while _RUNNING:
+        if args.lifetime_seconds and (time.monotonic() - started) >= args.lifetime_seconds:
+            break
+        if args.grow_mib_per_second > 0:
+            grown += args.grow_mib_per_second * 0.25
+            while grown >= 1.0:
+                chunk = bytearray(block)
+                for offset in range(0, block, 4096):
+                    chunk[offset] = 1
+                held.append(chunk)
+                grown -= 1.0
+        time.sleep(0.25)
+
+    try:
+        args.ready_file.unlink()
+    except OSError:
+        pass
+    print("stopped cleanly", flush=True)
+    return 0
+
+
+def _own_cgroup() -> str:
+    """The cgroup this process is actually in, so enforcement can be verified."""
+    try:
+        for line in Path("/proc/self/cgroup").read_text(encoding="utf-8").splitlines():
+            parts = line.split(":", 2)
+            if len(parts) == 3 and parts[0] == "0":
+                return parts[2]
+    except OSError:
+        pass
+    return "unknown"
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
