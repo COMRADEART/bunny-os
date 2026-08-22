@@ -7,7 +7,9 @@ Comment=See what is wrong, restart Bunny, start in Safe Mode, or export a diagno
 # moment the companion window is not there to offer it. §18: user-accessible
 # diagnostics when Bunny fails — which means not inside Bunny.
 Exec=/usr/libexec/bunny-companion-recovery
-Icon=art.comrade.BunnyCompanion
+# bunny-shell is an installed icon (shell/icons/hicolor/scalable/apps); the
+# previous name resolved to nothing and fell back to a generic icon.
+Icon=bunny-shell
 Terminal=false
 Categories=Utility;System;
 Keywords=bunny;diagnostics;recovery;safe mode;support;

@@ -1120,5 +1120,49 @@ class WaitForSpeechDispositionTests(unittest.TestCase):
         self.assertEqual(disposition, "finished")
 
 
+class ResolveSessionTests(unittest.TestCase):
+    """The desktop's session reuse, and the one state it must not reuse."""
+
+    def test_a_closed_session_with_the_desktop_title_is_not_reused(self) -> None:
+        """Regression: ``resolve_session`` matched on title alone, so the first
+        *closed* session named "Bunny Desktop" was handed to submit_task —
+        which refuses a closed session — and every later question from this
+        surface failed until the store changed under it."""
+        bridge = load_bridge()
+
+        class FakeConnection:
+            def __init__(self, sessions):
+                self._sessions = sessions
+                self.created_with = None
+
+            def list_sessions(self):
+                return {"sessions": self._sessions}
+
+            def create_session(self, **params):
+                self.created_with = params
+                return {"session": {"sessionId": "session-fresh"}}
+
+        connection = FakeConnection([
+            {"sessionId": "session-old", "title": "Bunny Desktop", "status": "closed"},
+            # An active session with a different title is also not the answer.
+            {"sessionId": "session-other", "title": "Something Else", "status": "active"},
+        ])
+        resolved = bridge.resolve_session(connection, "Bunny Desktop")
+        self.assertEqual(resolved, "session-fresh")
+        self.assertEqual(connection.created_with["title"], "Bunny Desktop")
+
+    def test_an_active_session_with_the_title_is_still_reused(self) -> None:
+        bridge = load_bridge()
+
+        class FakeConnection:
+            def list_sessions(self):
+                return {"sessions": [
+                    {"sessionId": "session-live", "title": "Bunny Desktop", "status": "active"},
+                ]}
+
+        self.assertEqual(
+            bridge.resolve_session(FakeConnection(), "Bunny Desktop"), "session-live")
+
+
 if __name__ == "__main__":
     unittest.main()

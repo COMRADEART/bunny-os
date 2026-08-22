@@ -128,6 +128,9 @@ def _signals() -> RendererSignals:
     return RendererSignals(
         display_available=True, graphics_ready=True, gpu_available=True,
         three_d_available=True, package_supports_3d=True,
+        # The harness opens a real context for the 3D mode; without declaring
+        # it the new absent-provider gate would measure the 2D renderer.
+        three_d_context_configured=True,
     )
 
 

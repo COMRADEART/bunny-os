@@ -348,7 +348,22 @@ class SpeechInputService:
         The gateway calls this, then performs the task submission itself, then
         calls :meth:`record_submitted`. Nothing here can submit — the method's
         return type is the entire path from a transcript to a task.
+
+        A confirmation of a capture that required confirmation must name the
+        digest of the text it reviewed. The ledger treats an absent digest as
+        "no comparison requested", which is right for the immediate-preference
+        path where nobody reviewed anything, but as a user-driven confirmation
+        of a review-required capture it would let words that are no longer on
+        the screen become a task — so the requirement is enforced here, where
+        the originating request's flag is known, and not in the ledger.
         """
+        with self._guard:
+            request = self._requests.get(request_id)
+        if request is not None and request.confirmation_required and not reviewed_digest:
+            return None, (
+                "this confirmation did not name the digest of the transcript it "
+                "reviewed; send the textDigest shown with the transcript"
+            )
         return self.ledger.confirm(
             request_id,
             session_id=session_id,

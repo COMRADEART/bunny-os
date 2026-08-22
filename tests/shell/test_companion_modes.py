@@ -73,9 +73,14 @@ class ModeTests(NodeBackedTestCase):
         self.assertEqual(constant("MODES"), list(MODES))
 
     def test_every_runtime_phase_maps_to_a_companion_state(self) -> None:
+        """Superset for the same reason as taskState's: the bridge's voice-only
+        `transcribing` phase must map instead of falling back to idle."""
         from companion.presentation import PRESENTATION_PHASES
 
-        self.assertEqual(set(constant("PHASE_TO_COMPANION")), set(PRESENTATION_PHASES))
+        mapping = constant("PHASE_TO_COMPANION")
+        unmapped = set(PRESENTATION_PHASES) - set(mapping)
+        self.assertEqual(unmapped, set(), f"presentation phases with no companion state: {sorted(unmapped)}")
+        self.assertIn("transcribing", mapping)
 
     def test_every_state_the_brief_requires_is_reachable_from_a_phase(self) -> None:
         reachable = set(constant("PHASE_TO_COMPANION").values())

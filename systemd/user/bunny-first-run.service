@@ -4,6 +4,14 @@ Documentation=file:///usr/share/doc/bunny-os/FIRST_RUN.md
 After=graphical-session.target
 PartOf=graphical-session.target
 ConditionPathExists=!%S/bunny-os/first-run-complete
+# The program is installed on the installer profiles only (live and beta); the
+# unit is enabled globally for every account on every profile. Without this
+# condition the unit fails 203/EXEC at every graphical login on the profiles
+# that deliberately ship no first-run program — a failing unit at every login
+# is exactly what the route policy "a unit that fails at every login cannot
+# happen" exists to prevent, so the skip is declared here rather than by
+# narrowing the global enablement.
+ConditionFileIsExecutable=/usr/bin/bunny-first-run
 # Not in the display manager's session. GDM's greeter reaches
 # graphical-session.target in its own user manager (GNOME 50 runs it as the
 # ephemeral `gdm-greeter` user; older GDM as `gdm`), and the first real login

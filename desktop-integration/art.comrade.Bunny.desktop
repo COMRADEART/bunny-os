@@ -3,7 +3,9 @@ Type=Application
 Name=Bunny
 Comment=Local-first Bunny Desktop
 Exec=/usr/libexec/bunny-desktop-launch %U
-Icon=art.comrade.Bunny
+# bunny-shell is an installed icon (shell/icons/hicolor/scalable/apps); the
+# previous name resolved to nothing and fell back to a generic icon.
+Icon=bunny-shell
 Terminal=false
 Categories=Utility;Development;
 MimeType=x-scheme-handler/bunny;

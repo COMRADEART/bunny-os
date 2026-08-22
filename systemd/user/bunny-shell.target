@@ -4,4 +4,11 @@ Documentation=file:///usr/share/doc/bunny-os/BUNNY_SHELL.md
 Wants=bunny-companion.service bunny-shell-status.service bunny-search-index.timer
 After=graphical-session-pre.target
 PartOf=graphical-session.target
-StopWhenUnneeded=yes
+# StopWhenUnneeded is deliberately absent. The target is started explicitly by
+# the session wrapper (shell/session/bunny-shell-session.py) and referenced by
+# nothing durable, so with StopWhenUnneeded=yes systemd reaped it the moment its
+# start job completed — every recorded boot shows "Reached bunny-shell.target"
+# followed the same second by "Stopped", taking bunny-shell-status.service and
+# bunny-search-index.timer down with it (they are Wanted= here). Logout teardown
+# is already guaranteed by PartOf= above; a stop must come only from the
+# session ending, never from the target having no remaining referrers.

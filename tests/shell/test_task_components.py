@@ -60,11 +60,19 @@ class TaskStatusTests(NodeBackedTestCase):
     """§21."""
 
     def test_every_runtime_phase_maps_to_a_drawable_state(self) -> None:
-        """The cross-language table, checked against the side that defines it."""
+        """The cross-language table, checked against the side that defines it.
+
+        A superset, not an equality: the voice bridge also emits phases outside
+        the presentation vocabulary (`transcribing`, bunny-shell-assistant's
+        recognition-finalising emit), and those must map rather than degrade
+        through buildTaskStatus's ?? fallback to "Waiting".
+        """
         from companion.presentation import PRESENTATION_PHASES
 
         mapping = constant("PHASE_TO_STATE")
-        self.assertEqual(set(mapping), set(PRESENTATION_PHASES))
+        unmapped = set(PRESENTATION_PHASES) - set(mapping)
+        self.assertEqual(unmapped, set(), f"presentation phases with no task state: {sorted(unmapped)}")
+        self.assertIn("transcribing", mapping)
 
     def test_every_mapped_state_is_one_the_brief_names(self) -> None:
         states = set(constant("TASK_STATES"))

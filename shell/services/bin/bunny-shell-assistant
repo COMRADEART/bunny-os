@@ -648,7 +648,11 @@ def resolve_session(connection: CompanionClient, title: str) -> str:
     """
     listing = connection.list_sessions()
     for session in listing.get("sessions", []):
-        if session.get("title") == title:
+        # Only an active session is reusable: a closed one answers every
+        # submit_task with "a closed session cannot be resumed", so matching on
+        # title alone turned the first closed session with this title into a
+        # permanent failure of every later question from this surface.
+        if session.get("title") == title and session.get("status") == "active":
             return str(session["sessionId"])
     created = connection.create_session(title=title, locality="device-only")
     session = created.get("session")

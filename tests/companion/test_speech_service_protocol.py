@@ -170,12 +170,42 @@ class EndToEnd(unittest.TestCase):
         self.assertTrue(wait_for(lambda: not self.service.speech.worker.active))
         return answer
 
+    def _digest(self, request_id: str) -> str:
+        entry = self.service.speech.ledger.get(request_id)
+        assert entry is not None
+        return entry.transcript.text_digest
+
     def test_scripted_local_stack_reports_queryable_ready_state(self) -> None:
         health = self.client.call("speech_input_health")
         self.assertEqual(health["readinessState"], "STT_READY")
         self.assertTrue(health["readiness"]["ready"])
         self.assertEqual(health["readiness"]["audioState"], "AUDIO_READY")
         self.assertEqual(health["readiness"]["sttState"], "STT_READY")
+
+    def test_a_confirmation_without_the_reviewed_digest_is_refused(self) -> None:
+        """Regression: a user confirmation of a review-required capture used to
+        be accepted with an empty ``reviewedDigest``, which made "confirm what
+        you are looking at" a hope rather than a comparison."""
+        started = self._capture()
+        answer = self.client.call("speech_input_confirm", {
+            "requestId": started["requestId"],
+            "sessionId": self.session_id,
+            "cancellationToken": started["cancellationToken"],
+        })
+        self.assertFalse(answer["confirmed"])
+        self.assertIn("textDigest", answer["reason"])
+        self.assertFalse(answer["taskCreated"])
+        # And the transcript is still waiting: a refused confirmation must not
+        # have consumed the one yes a transcript gets.
+        entry = self.service.speech.ledger.get(started["requestId"])
+        self.assertEqual(entry.state, "pending")
+        confirmed = self.client.call("speech_input_confirm", {
+            "requestId": started["requestId"],
+            "sessionId": self.session_id,
+            "cancellationToken": started["cancellationToken"],
+            "reviewedDigest": self._digest(started["requestId"]),
+        })
+        self.assertTrue(confirmed["confirmed"])
 
     def test_dictation_confirmation_and_exactly_one_task(self) -> None:
         started = self._capture()
@@ -191,6 +221,7 @@ class EndToEnd(unittest.TestCase):
             "sessionId": self.session_id,
             "text": "count the words in this short note",
             "cancellationToken": started["cancellationToken"],
+            "reviewedDigest": self._digest(request_id),
         })
         self.assertTrue(confirmed["confirmed"])
         self.assertTrue(confirmed["submitted"])
@@ -213,6 +244,7 @@ class EndToEnd(unittest.TestCase):
             "requestId": request_id,
             "sessionId": self.session_id,
             "cancellationToken": started["cancellationToken"],
+            "reviewedDigest": self._digest(request_id),
         })
         self.assertTrue(first["submitted"])
         count = len(self.client.call("list_tasks", {"sessionId": self.session_id})["tasks"])
@@ -220,6 +252,7 @@ class EndToEnd(unittest.TestCase):
             "requestId": request_id,
             "sessionId": self.session_id,
             "cancellationToken": started["cancellationToken"],
+            "reviewedDigest": self._digest(request_id),
         })
         self.assertFalse(second["confirmed"])
         self.assertIn("once", second["reason"])
@@ -235,6 +268,8 @@ class EndToEnd(unittest.TestCase):
             "requestId": started["requestId"],
             "sessionId": other,
             "cancellationToken": started["cancellationToken"],
+            # Carried so the refusal below is the *session* one.
+            "reviewedDigest": self._digest(started["requestId"]),
         })
         self.assertFalse(answer["confirmed"])
         self.assertIn("different session", answer["reason"])
@@ -242,6 +277,9 @@ class EndToEnd(unittest.TestCase):
     def test_retry_supersedes_and_the_old_transcript_cannot_be_confirmed(self) -> None:
         started = self._capture()
         old_request = started["requestId"]
+        # The digest the client read off its screen before the retry replaced
+        # the transcript — carried so the refusal below is the staleness one.
+        stale_digest = self._digest(old_request)
         # Refill the device for the second take.
         self.backend.script.push(speech_pcm(1.0))
         self.backend.script.push(silence_pcm(1.0))
@@ -256,6 +294,7 @@ class EndToEnd(unittest.TestCase):
             "requestId": old_request,
             "sessionId": self.session_id,
             "cancellationToken": started["cancellationToken"],
+            "reviewedDigest": stale_digest,
         })
         self.assertFalse(stale["confirmed"])
         self.assertIn("superseded", stale["reason"])
@@ -273,6 +312,9 @@ class EndToEnd(unittest.TestCase):
             "requestId": started["requestId"],
             "sessionId": self.session_id,
             "cancellationToken": started["cancellationToken"],
+            # Carried so this exercises the *rejection* path, not the
+            # missing-digest one.
+            "reviewedDigest": self._digest(started["requestId"]),
         })
         self.assertFalse(confirmed["confirmed"])
 

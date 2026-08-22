@@ -1348,6 +1348,15 @@ export class DesktopShell {
                 this._bubble?.setSpeaking(false);
                 this.notifications.warning(`Bunny could not speak: ${reason}`);
             },
+            // The degraded-TTS announcement, surfaced the same way the
+            // push-to-talk path surfaces it: a person who typed their question
+            // still gets told their spoken answer became captions.
+            onWarning: (reason, meta) => {
+                if (!this._owns(meta))
+                    return;
+                this._assistantPanel?.setStatus(reason, {tone: 'error'});
+                this.notifications.warning(reason);
+            },
             onFinished: (phase, meta) => {
                 if (!this._owns(meta))
                     return;

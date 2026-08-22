@@ -90,6 +90,9 @@ _VISUAL = {
     "gpu_available": True,
     "three_d_available": True,
     "package_supports_3d": True,
+    # The slice holds a real renderer context (built below), so the
+    # absent-provider gate must not degrade its requests.
+    "three_d_context_configured": True,
 }
 
 

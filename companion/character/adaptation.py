@@ -134,6 +134,12 @@ class RendererSignals:
     graphics_features_supported: bool = True
     #: Whether the selected package carries a validated model at all.
     package_supports_3d: bool = False
+    #: Whether this client was given a graphics context provider at all. A
+    #: machine may be able and the package willing, and the 3D rungs still
+    #: unreachable — a headless or pre-3D client that was handed no provider
+    #: has "nobody offered a way to draw in 3D" as its truth, and the gate
+    #: below must read that before the renderer discovers it by raising.
+    three_d_context_configured: bool = False
     #: What the validated model would hold on the GPU.
     model_gpu_bytes: int | None = None
 
@@ -235,6 +241,13 @@ class AdaptiveRendererSelector:
         if requested in THREE_D and not signals.three_d_available:
             requested = Presentation.ANIMATED_2D
             reasons.append("this machine's graphics stack cannot provide a 3D context")
+        if requested in THREE_D and not signals.three_d_context_configured:
+            # Same shape as the two checks above, and for the same reason: a
+            # client with no context provider cannot draw 3D no matter what the
+            # machine could do, and saying so here lets the 2D chain serve the
+            # request instead of the renderer discovering it by raising.
+            requested = Presentation.ANIMATED_2D
+            reasons.append("no graphics context provider is configured in this client")
         if signals.user_preference is not None and _RANK[signals.user_preference] < _RANK[requested]:
             requested = signals.user_preference
             reasons.append("the user's renderer preference is a stricter ceiling")

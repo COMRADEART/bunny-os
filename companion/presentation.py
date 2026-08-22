@@ -871,6 +871,16 @@ class PresentationProjector:
             changes["progress"] = max(state.progress, 0.9)
             status = f"Result: {summary}" if summary else status
 
+        elif kind == "speech_started":
+            # EVENT_PHASES already moved the phase; this writes the flag the
+            # character mapper reads. Folding the phase but not the flag left
+            # the two projections of one event disagreeing about whether audio
+            # was playing.
+            changes["speaking"] = True
+
+        elif kind == "speech_completed":
+            changes["speaking"] = False
+
         elif kind == "task_completed":
             changes["progress"] = 1.0
             changes["current_operation"] = ""

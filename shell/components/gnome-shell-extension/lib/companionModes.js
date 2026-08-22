@@ -72,6 +72,10 @@ export const PHASE_TO_COMPANION = {
     planning: 'understanding',
     waiting_for_approval: 'waiting-for-approval',
     listening: 'understanding',
+    // Voice-only phase (see taskState.js): capture has closed, recognition is
+    // running. Same companion state as listening — the character is still on
+    // the person's words rather than working on the system.
+    transcribing: 'understanding',
     speaking: 'working',
     working: 'working',
     reviewing: 'working',

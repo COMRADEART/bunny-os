@@ -310,7 +310,8 @@ INSTALL_ROUTES: tuple[InstallRoute, ...] = (
         "capability-supervisor-executable",
         "services/bunny-capability-supervisor/bunny_capability_supervisor.py",
         "/usr/libexec/bunny-capability-supervisor", 0o555,
-        note="the control plane's entry point; enabled by 60-bunny-os.preset",
+        note="the control plane's entry point; enabled by install_activation() "
+             "in install-root.py — presets are never applied in this build",
     ),
     _file_route(
         "capability-supervisor-configuration",
@@ -461,15 +462,13 @@ INSTALL_ROUTES: tuple[InstallRoute, ...] = (
         "desktop-entry", "desktop-integration/art.comrade.Bunny.desktop",
         "/usr/share/applications/art.comrade.Bunny.desktop", 0o644,
     ),
-    # Two entries the Public Alpha adds, both on the desktop profiles only
-    # because an applications list is a thing a desktop has. The companion
-    # entry re-opens a window the user closed; the diagnostics entry is the
-    # §18 surface, reachable when there is no companion window to reach it from.
-    _file_route(
-        "companion-desktop-entry", "desktop-integration/art.comrade.BunnyCompanion.desktop",
-        "/usr/share/applications/art.comrade.BunnyCompanion.desktop", 0o644,
-        profiles=DESKTOP_PROFILES,
-    ),
+    # One entry the Public Alpha adds on the desktop profiles only, because an
+    # applications list is a thing a desktop has. The companion entry itself is
+    # installed by the shell-applications tree (Exec=/usr/bin/bunny-companion —
+    # the tested policy); installing the desktop-integration variant here as
+    # well put two different Exec= policies at one destination and let tuple
+    # position decide which shipped. The diagnostics entry is the §18 surface,
+    # reachable when there is no companion window to reach it from.
     _file_route(
         "companion-diagnostics-desktop-entry",
         "desktop-integration/art.comrade.BunnyDiagnostics.desktop",
@@ -602,14 +601,12 @@ INSTALL_ROUTES: tuple[InstallRoute, ...] = (
             "by the operator — see assets/ai/models/PROVISIONING.md"
         ),
     ),
-    InstallRoute(
-        "speech-models", "tree", "assets/voice/models",
-        "/usr/share/bunny-os/speech-models", 0o444, profiles=DESKTOP_PROFILES,
-        note=(
-            "trusted speech-recognition model directory; no model vendored, "
-            "provisioned by the operator — see assets/voice/models/PROVISIONING.md"
-        ),
-    ),
+    # (A second route, "speech-models", installed this same tree to this same
+    # destination and was removed: two routes writing one destination is what
+    # install_all_routes' duplicate-destination guard refuses, and which bytes
+    # shipped would have depended on tuple order had they ever differed. The
+    # surviving declaration is "speech-recognition-models" above — the id the
+    # installer's completeness gate and the closure analyser name.)
     InstallRoute(
         "icons", "tree", "shell/icons/hicolor", "/usr/share/icons/hicolor", 0o444,
         profiles=DESKTOP_PROFILES,

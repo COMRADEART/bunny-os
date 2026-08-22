@@ -50,6 +50,11 @@ export const PHASE_TO_STATE = {
     planning: 'working',
     waiting_for_approval: 'approval',
     listening: 'working',
+    // A voice interaction's own phase, not a presentation one: the bridge emits
+    // `voice_phase {phase: "transcribing"}` between capture and understanding
+    // (bunny-shell-assistant, recognition finalising). Without a key here that
+    // interval drew as "Waiting" through the ?? fallback below.
+    transcribing: 'working',
     speaking: 'working',
     working: 'working',
     reviewing: 'working',

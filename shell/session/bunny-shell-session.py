@@ -20,11 +20,28 @@ def main() -> int:
         stdin=subprocess.DEVNULL,
     )
     target_action = "stop" if mode == "safe" else "start"
-    subprocess.run(
-        ["/usr/bin/systemctl", "--user", target_action, "--no-block", "bunny-shell.target"],
+    # Blocking, and its answer is recorded. --no-block here is how a dead target
+    # survived every gate: the start job was queued and never checked, so a
+    # target that failed (or was reaped a second later) looked identical to one
+    # that came up. A failure is written to the journal and the GNOME session
+    # still starts — a broken Bunny layer must never block the login — but the
+    # journal now says so instead of the desktop quietly losing its status
+    # producer and search timer.
+    target = subprocess.run(
+        ["/usr/bin/systemctl", "--user", target_action, "bunny-shell.target"],
         check=False,
         stdin=subprocess.DEVNULL,
+        capture_output=True,
+        text=True,
     )
+    if target.returncode != 0:
+        detail = (target.stderr or target.stdout or "").strip()
+        print(
+            f"bunny-shell-session: systemctl --user {target_action} "
+            f"bunny-shell.target failed ({target.returncode}): {detail}",
+            file=sys.stderr,
+            flush=True,
+        )
     os.execv("/usr/bin/gnome-session", ["/usr/bin/gnome-session", "--session=gnome"])
     return 127
 

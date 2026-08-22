@@ -92,13 +92,27 @@ def install_all_routes(
 ) -> dict[str, list[str]]:
     """Every route that applies to this profile, in declared order."""
     installed: dict[str, list[str]] = {}
+    seen_destinations: dict[str, str] = {}
     for route in routes_for_profile(profile):
         if route.id == "release-payload":
             # Its destination is computed from the artifact manifest, so it is
             # applied by install_release_payload rather than copied blind into a
             # directory literally named "*".
             continue
-        installed[route.id] = copy_route(route, source_root, root)
+        copied = copy_route(route, source_root, root)
+        # Two routes writing one destination is not an ordering detail: which
+        # file ships would depend on tuple position, and copy_file overwrites
+        # silently. The companion desktop entry once existed twice with two
+        # different Exec= policies and nobody could say which one was shipped.
+        for destination in copied:
+            previous = seen_destinations.get(destination)
+            if previous is not None and previous != route.id:
+                raise SystemExit(
+                    f"install routes {previous!r} and {route.id!r} both write "
+                    f"{destination}; declare one source"
+                )
+            seen_destinations[destination] = route.id
+        installed[route.id] = copied
     return installed
 
 
@@ -277,6 +291,13 @@ def install_activation(profile: str) -> None:
         "/usr/bin/systemctl", "enable",
         "NetworkManager.service", "firewalld.service", "bunny-system-broker.socket",
         "bunny-health-check.service", "bunny-brlapi-key.service",
+        # The observe-only capability control plane is named by the system
+        # preset, but nothing in this build applies presets (see the user-unit
+        # comment below for the measured proof). An enablement that exists only
+        # in a file nobody reads is how the companion stayed inactive on every
+        # image before the Public Alpha; the supervisor gets the same explicit
+        # treatment here, and the same symlink assertion below.
+        "bunny-capability-supervisor.service",
     ], check=True)
     subprocess.run(["/usr/bin/systemctl", "enable", "bunny-recovery-shell.service"], check=True)
     # The user units, enabled globally so every account gets them.
@@ -367,6 +388,11 @@ def install_activation(profile: str) -> None:
         ),
         "bunny-health-check.service": Path(
             "/etc/systemd/system/multi-user.target.wants/bunny-health-check.service"
+        ),
+        # Observe-only control plane: the unit wants multi-user.target, and the
+        # enable above is the only thing that ever creates this symlink.
+        "bunny-capability-supervisor.service": Path(
+            "/etc/systemd/system/multi-user.target.wants/bunny-capability-supervisor.service"
         ),
         # The two halves of the first-login correction. bunny-config-dir is what
         # makes bunny-first-boot's sandbox constructible, and bunny-first-boot

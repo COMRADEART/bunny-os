@@ -279,6 +279,37 @@ class RedactionTests(CompanionTestCase):
         self.assertIn("[redacted]", after_submission)
 
 
+class SpeechIndicatorTests(unittest.TestCase):
+    """The speaking flag moves with the events that say audio is live.
+
+    Regression: the fold moved the *phase* for ``speech_started`` and
+    ``speech_completed`` but never wrote ``speaking``, so a replaying client
+    reported phase "speaking" with ``speaking=false`` — and the character
+    mapper, which reads the flag rather than the phase, never left its resting
+    posture while the answer was being spoken.
+    """
+
+    @staticmethod
+    def _document(event_type: str, sequence: int) -> dict:
+        return {
+            "eventType": event_type, "sequence": sequence,
+            "sessionId": "ses-1", "taskId": "task-1",
+            "payload": {}, "classification": "internal", "auditReference": "",
+        }
+
+    def test_speech_started_and_completed_move_the_flag_and_the_wire_form(self) -> None:
+        projector = PresentationProjector()
+        self.assertFalse(projector.state.speaking)
+        projector.apply_document(self._document("speech_started", 1))
+        self.assertTrue(projector.state.speaking)
+        self.assertEqual(projector.state.phase, "speaking")
+        self.assertIs(projector.state.to_json()["speaking"], True)
+        projector.apply_document(self._document("speech_completed", 2))
+        self.assertFalse(projector.state.speaking)
+        self.assertEqual(projector.state.phase, "presenting_result")
+        self.assertIs(projector.state.to_json()["speaking"], False)
+
+
 class InvalidInputTests(unittest.TestCase):
     """A malformed record cannot move the surface into a state of its choosing."""
 

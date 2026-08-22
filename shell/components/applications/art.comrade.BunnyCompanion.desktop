@@ -8,4 +8,7 @@ Terminal=false
 Categories=Utility;System;Accessibility;
 Keywords=Companion;Tasks;Approvals;Reviewer;Captions;Bunny;
 StartupNotify=true
+StartupWMClass=art.comrade.BunnyCompanion
+DBusActivatable=false
+X-GNOME-UsesNotifications=true
 X-GNOME-SingleWindow=true

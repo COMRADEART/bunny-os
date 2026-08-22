@@ -180,6 +180,26 @@ class ServiceTestCase(unittest.TestCase):
 class OperationTests(ServiceTestCase):
     """§22's IPC list."""
 
+    def test_the_gateway_interface_names_every_served_operation(self) -> None:
+        """The declared wire surface and the served table are the same list.
+
+        Regression: ``RuntimeGateway`` — documented as "what the transport is
+        allowed to call" — was missing all six desktop-action operations that
+        ``OPERATIONS`` declares and the gateway serves, so a reviewer reading
+        the interface understated the surface by six. Dispatch itself is
+        unaffected (it reads the table), which is exactly why nothing else
+        would have caught the drift.
+        """
+        import inspect
+
+        from companion.protocol import RuntimeGateway
+
+        declared = {
+            name for name, _ in inspect.getmembers(RuntimeGateway, inspect.isfunction)
+            if name != "__init__"
+        }
+        self.assertEqual(declared, set(OPERATIONS))
+
     def test_health_reports_the_runtime_and_names_its_transport(self) -> None:
         health = self.client.health()
         self.assertTrue(health["ok"])

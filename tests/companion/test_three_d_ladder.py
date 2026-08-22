@@ -53,10 +53,13 @@ def _plan(ceiling: Presentation = Presentation.FULL_3D) -> CapabilityPresentatio
 
 
 def _signals(**overrides) -> RendererSignals:
+    # A client that was given a context provider: these tests exercise the
+    # ladder itself. The absent-provider gate has its own test below.
     base = dict(
         display_available=True, graphics_ready=True, gpu_available=True,
         available_memory_bytes=8 * _GIB, three_d_available=True,
         package_supports_3d=True, model_gpu_bytes=1 << 20,
+        three_d_context_configured=True,
     )
     base.update(overrides)
     return RendererSignals(**base)
@@ -80,6 +83,21 @@ class LadderShapeTests(unittest.TestCase):
         self.assertEqual(decision.effective, Presentation.ANIMATED_2D)
         self.assertTrue(
             any("graphics stack cannot provide" in reason for reason in decision.reasons)
+        )
+
+    def test_a_client_with_no_context_provider_never_reaches_the_renderer(self) -> None:
+        """Regression: 3D selection used to pass the gate on a capable machine
+        and fail inside the renderer with "no graphics context provider is
+        configured" — a degradation by crash instead of by decision."""
+        package = _package()
+        selector = AdaptiveRendererSelector()
+        decision = selector.evaluate(
+            _plan(), package,
+            _signals(three_d_context_configured=False), now=0.0,
+        )
+        self.assertEqual(decision.effective, Presentation.ANIMATED_2D)
+        self.assertTrue(
+            any("context provider" in reason for reason in decision.reasons)
         )
 
 

@@ -297,6 +297,9 @@ export class VoiceService {
         if (!this._requestId || this._cancelControlStarted)
             return;
         this._cancelControlStarted = true;
+        // No '--' before the id: it is runtime-issued (never option-shaped) and
+        // an option follows, which argparse would read as a positional if it
+        // came after the separator.
         this._control([
             'speech-cancel', this._requestId,
             '--cancellation-token', this._cancellationToken,

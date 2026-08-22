@@ -193,7 +193,11 @@ export class AssistantService {
         this._awaitingPerson = false;
         armWatchdog();
 
-        this._current = this._run(['ask', trimmed], line => {
+        // '--' before the text: the question is a positional, not an option
+        // bag. Without it, a question whose first character is '-' (someone
+        // asking about a flag) was eaten by argparse and the desktop reported
+        // the misleading "The assistant service stopped before answering."
+        this._current = this._run(['ask', '--', trimmed], line => {
             if (!stillCurrent())
                 return;
             switch (line.event) {
@@ -238,6 +242,13 @@ export class AssistantService {
             case 'speech_error':
                 this._speechActive = false;
                 handlers.onSpeechError?.(line.reason ?? 'Speech output is unavailable.', {requestId});
+                break;
+            case 'warning':
+                // The degraded-TTS announcement. VoiceService already routes
+                // this for push-to-talk; dropping it here meant a person who
+                // typed their question was never told their spoken answer had
+                // been downgraded to captions.
+                handlers.onWarning?.(line.reason ?? line.message ?? '', {requestId});
                 break;
             case 'finished':
                 this._speechActive = false;
@@ -307,6 +318,9 @@ export class AssistantService {
         if (!this._taskId)
             return false;
         const taskId = this._taskId;
+        // No '--' before the id, unlike `ask`: this one is issued by the
+        // runtime, never option-shaped, and nothing follows it for argparse
+        // to misread as a positional.
         this._run(['voice-cancel', taskId], line => {
             if (line.event === 'error')
                 logOnce('assistant-speech-cancel', line.reason ?? 'speech cancellation failed');

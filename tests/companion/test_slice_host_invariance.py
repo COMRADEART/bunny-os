@@ -169,10 +169,14 @@ class NoFutureSignalCanReopenTheHoleTests(unittest.TestCase):
         "gpu_context_lost": "requires a graphics context; the slice offers none",
         "user_preference": "the renderer mode, which the slice does not set",
         "model_gpu_bytes": "a 3D package property",
-        # Read only inside `if requested in THREE_D` (adaptation.py:229), and
+        # Read only inside `if requested in THREE_D` (adaptation.py), and
         # the slice's plan ceiling is animated-2d, so the branch is unreachable
         # here. A package property in any case, not a host reading.
         "package_supports_3d": "a package property, and only consulted for 3D rungs",
+        # Same reachability as package_supports_3d, and the same shape: derived
+        # from the graphics context the presenter passes, which is None here.
+        "three_d_context_configured": "derived from the presenter's graphics "
+                                      "context; only consulted for 3D rungs",
         "graphics_features_supported": "a 3D capability, unreachable without a context",
         "dropped_frame_ratio": "a runtime observation the slice's steps produce",
         "sustained_slow_frames": "same",

@@ -188,7 +188,10 @@ class CharacterPresenter:
             assessment = assess_current_machine()
         self.assessment = assessment
         self.base_signals = replace(
-            signals_from_assessment(assessment), **three_d_signals(package)
+            signals_from_assessment(assessment),
+            **three_d_signals(
+                package, context_provider_configured=three_d_context is not None
+            ),
         )
         #: A callable returning a graphics context, or ``None``.
         #:

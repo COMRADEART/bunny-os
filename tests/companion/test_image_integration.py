@@ -38,6 +38,15 @@ def load_route_table():
     return module
 
 
+def load_installer():
+    """Import install-root.py the same way, for the functions that are pure."""
+    spec = importlib.util.spec_from_file_location("install_root_under_test", INSTALLER)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
 class CompanionInstalledImageTests(unittest.TestCase):
     def setUp(self) -> None:
         self.table = load_route_table()
@@ -142,6 +151,100 @@ class CompanionInstalledImageTests(unittest.TestCase):
         forbidden = {"companion.sqlite3", "approvals.json", "runtime.sock"}
         found = {path.name for path in ROOT.rglob("*") if path.is_file() and path.name in forbidden}
         self.assertEqual(found, set())
+
+
+class ActivationAndRouteGuardTests(unittest.TestCase):
+    """Regressions from the runtime-path audit, at the files that carry them.
+
+    Each test names the boot it would have prevented. They read the artifacts
+    rather than re-running an image build, because the artifact is what ships.
+    """
+
+    def test_the_shell_target_is_not_reaped_when_its_start_job_completes(self) -> None:
+        """Regression: ``StopWhenUnneeded=yes`` stopped bunny-shell.target the
+        moment its start job completed — a same-second Reached/Stopped pair on
+        every recorded boot — taking its Wanted= dependents (the companion,
+        with it the whole assistant surface: "status unavailable · security
+        unknown") down with it. Logout teardown is PartOf='s job, and it was
+        already there."""
+        target = (ROOT / "systemd/user/bunny-shell.target").read_text(encoding="utf-8")
+        # The comment explaining the absence names the directive too, so match
+        # the directive itself, not the word anywhere in the file.
+        self.assertFalse(
+            [line for line in target.splitlines() if line.strip().startswith("StopWhenUnneeded")],
+            "StopWhenUnneeded is set on bunny-shell.target")
+        self.assertIn("PartOf=graphical-session.target", target)
+
+    def test_the_capability_supervisor_is_enabled_and_asserted_by_the_installer(self) -> None:
+        """Regression: presets are never applied in this build — enablement is
+        what install_activation() writes — so a unit only named in the preset
+        never ran at boot. The enable line AND the symlink assertion must both
+        name it."""
+        installer = INSTALLER.read_text(encoding="utf-8")
+        self.assertIn('"bunny-capability-supervisor.service",', installer)
+        self.assertIn('"bunny-capability-supervisor.service": Path(', installer)
+
+    def test_first_run_only_runs_where_its_program_was_installed(self) -> None:
+        """Regression: on profiles whose route set does not ship
+        /usr/bin/bunny-first-run, the enabled unit answered every boot with
+        status 203/EXEC. The condition makes absence a skip, not a failure."""
+        unit = (ROOT / "systemd/user/bunny-first-run.service").read_text(encoding="utf-8")
+        self.assertIn("ConditionFileIsExecutable=/usr/bin/bunny-first-run", unit)
+
+    def test_no_preset_line_is_declared_twice(self) -> None:
+        """Regression: 60-bunny-os.preset carried one enable block twice (and
+        two contradictory disable lines for one unit). An exact duplicate line
+        can never be intentional — last-wins means it is either dead weight or
+        a silent override of the line someone thought was in charge."""
+        preset = (ROOT / "config/systemd/60-bunny-os.preset").read_text(encoding="utf-8")
+        actions = [
+            line.strip() for line in preset.splitlines()
+            if line.strip() and not line.strip().startswith("#")
+        ]
+        duplicates = {item for item in actions if actions.count(item) > 1}
+        self.assertEqual(duplicates, set())
+
+    def test_the_desktop_entry_is_declared_exactly_once(self) -> None:
+        """Regression: art.comrade.BunnyCompanion.desktop existed twice in the
+        tree with two different Exec= policies, and both routes installed into
+        the same destination — which one shipped depended on tuple position.
+        The Applications entry under shell/components is the repo-tested policy
+        (Exec=/usr/bin/bunny-companion); nothing else may install that name."""
+        entries = [
+            path.relative_to(ROOT).as_posix()
+            for path in ROOT.rglob("art.comrade.BunnyCompanion.desktop")
+            if not any(part in (".git", "node_modules", "__pycache__") for part in path.parts)
+            and path.parts[:2] != ("build", "out")
+        ]
+        self.assertEqual(entries, ["shell/components/applications/art.comrade.BunnyCompanion.desktop"])
+        text = (ROOT / entries[0]).read_text(encoding="utf-8")
+        self.assertIn("Exec=/usr/bin/bunny-companion", text)
+
+    def test_installing_every_profile_hits_no_destination_twice(self) -> None:
+        """The duplicate-destination guard, exercised against the real table.
+
+        install_all_routes refuses two routes writing one file; this runs the
+        real installer's route pass into a throwaway root for every profile,
+        so a new route that collides fails here instead of shipping whichever
+        file tuple position favoured. Also proves no route names a source that
+        does not exist — the way a deleted tree breaks a build.
+        """
+        import tempfile
+
+        table = load_route_table()
+        installer = load_installer()
+        for profile in table.PROFILES:
+            with self.subTest(profile=profile):
+                with tempfile.TemporaryDirectory() as tmp:
+                    installed = installer.install_all_routes(
+                        ROOT, profile, root=Path(tmp),
+                    )
+                    destinations = [
+                        destination
+                        for copied in installed.values()
+                        for destination in copied
+                    ]
+                    self.assertEqual(len(destinations), len(set(destinations)))
 
 
 if __name__ == "__main__":

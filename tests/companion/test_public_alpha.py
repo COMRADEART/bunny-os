@@ -857,8 +857,16 @@ class BuildIntegrationTests(unittest.TestCase):
             )
 
     def test_the_desktop_entries_reach_the_applications_directory(self) -> None:
-        for name in ("BunnyCompanion", "BunnyDiagnostics"):
-            source = f"desktop-integration/art.comrade.{name}.desktop"
+        # The companion entry is declared once, under shell/components (the
+        # tested Exec= policy); the diagnostics entry stays in
+        # desktop-integration. The duplicate that used to sit beside it —
+        # a second Exec= policy racing for the same destination — is refused
+        # by the single-declaration guard in test_image_integration.
+        entries = {
+            "BunnyCompanion": "shell/components/applications/art.comrade.BunnyCompanion.desktop",
+            "BunnyDiagnostics": "desktop-integration/art.comrade.BunnyDiagnostics.desktop",
+        }
+        for name, source in entries.items():
             self.assertTrue((REPOSITORY / source).is_file())
             self.assertEqual(
                 self.destination("beta", source),
