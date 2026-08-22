@@ -570,6 +570,29 @@ INSTALL_ROUTES: tuple[InstallRoute, ...] = (
         "character-packages", "tree", "assets/companion/characters",
         "/usr/share/bunny-os/companion/characters", 0o444, profiles=DESKTOP_PROFILES,
     ),
+    # The trusted model directories the local.llamacli adapter and the Vosk
+    # recognizer read. No model is vendored here: the tree carries a
+    # PROVISIONING.md that documents the operator step, and the directory's
+    # existence is what makes the trusted path available by default. An
+    # operator who drops a GGUF / a vosk-model-* directory into the source
+    # tree and rebuilds has it installed read-only; the adapter auto-discovers
+    # it. 0444 matches the adapter's refusal of a writable model file.
+    InstallRoute(
+        "agent-models", "tree", "assets/ai/models",
+        "/usr/share/bunny-os/agent-models", 0o444, profiles=DESKTOP_PROFILES,
+        note=(
+            "trusted local-AI model directory; no model vendored, provisioned "
+            "by the operator — see assets/ai/models/PROVISIONING.md"
+        ),
+    ),
+    InstallRoute(
+        "speech-models", "tree", "assets/voice/models",
+        "/usr/share/bunny-os/speech-models", 0o444, profiles=DESKTOP_PROFILES,
+        note=(
+            "trusted speech-recognition model directory; no model vendored, "
+            "provisioned by the operator — see assets/voice/models/PROVISIONING.md"
+        ),
+    ),
     InstallRoute(
         "icons", "tree", "shell/icons/hicolor", "/usr/share/icons/hicolor", 0o444,
         profiles=DESKTOP_PROFILES,

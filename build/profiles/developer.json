@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "name": "developer",
   "base": "fedora-bootc-44",
-  "packageSets": ["common", "desktop", "shell", "developer"],
+  "packageSets": ["common", "desktop", "shell", "developer", "companion-runtime"],
   "desktop": "gnome-wayland",
   "imageTypes": ["qcow2"],
   "rootFilesystem": "ext4",

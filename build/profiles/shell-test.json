@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "name": "shell-test",
   "base": "fedora-bootc-44",
-  "packageSets": ["common", "desktop", "shell", "developer"],
+  "packageSets": ["common", "desktop", "shell", "developer", "companion-runtime"],
   "desktop": "bunny-gnome-wayland-test",
   "imageTypes": ["qcow2"],
   "rootFilesystem": "ext4",

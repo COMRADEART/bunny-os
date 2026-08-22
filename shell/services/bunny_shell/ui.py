@@ -18,6 +18,7 @@ from .core_state import read_snapshot, shell_status
 from .launcher import LauncherState, application_search, route_intent
 from .project import project_status
 from .search import SearchIndex
+from .search_state import SearchSnapshot, snapshot_for_query
 from .settings import SECTIONS, SettingsStore
 from .workspaces import WorkspaceStore
 
@@ -141,26 +142,90 @@ class BunnyApplication:
         search = self.Gtk.SearchEntry(placeholder_text="Search or ask Bunny…")
         search.update_property([self.Gtk.AccessibleProperty.DESCRIPTION], ["Search Bunny OS launcher domains"])
         results = self.Gtk.ListBox(selection_mode=self.Gtk.SelectionMode.SINGLE)
+        # The status line is the named-state explanation: it says "Searching…",
+        # "No results found for …", or the failure reason, so the panel is never
+        # an unexplained strip. Its accessible description names the search
+        # state so an assistive technology reads the panel's situation even
+        # when focus is on the entry.
+        status = self.Gtk.Label(xalign=0, wrap=True)
+        status.add_css_class("dim-label")
+        status.update_property([self.Gtk.AccessibleProperty.DESCRIPTION], ["Launcher search state"])
         launcher_state = LauncherState()
+        # File results come from the pre-built metadata index only. The launcher
+        # never adds a search location and never reads file contents: it calls
+        # ``SearchIndex.query`` which reads the index that the privacy dashboard
+        # and ``bunny-search rebuild`` already maintain under the approved-
+        # location model. If no index exists or no location is approved, query
+        # returns an empty list, so wiring it here adds no new authority.
+        search_index = SearchIndex()
 
-        def refresh(_entry: Any) -> None:
+        def render(snapshot: SearchSnapshot) -> None:
             while child := results.get_first_child():
                 results.remove(child)
-            query = search.get_text()
-            intent = route_intent(query)
-            intent_row = self.Gtk.ListBoxRow()
-            intent_row.set_child(self._label(f"{intent.type.replace('_', ' ').title()}  ·  {intent.confidence:.0%}"))
-            results.append(intent_row)
-            applications = application_search(query, 50)
+            phase = snapshot.phase
+            if phase == "ERROR":
+                status.set_text(f"Search is unavailable: {snapshot.error}")
+                results.append(self._state_row("Search failed. Type again to retry."))
+                return
+            if phase == "SEARCHING":
+                status.set_text("Searching…")
+                return
+            if phase == "NO_QUERY":
+                status.set_text("Type to search applications, approved files, and Bunny commands.")
+                return
+            if phase == "ZERO_RESULTS":
+                status.set_text(f'No results found for "{snapshot.query}".')
+            else:
+                status.set_text("")
+            # RESULTS and ZERO_RESULTS both show the intent row as the
+            # ask-Bunny affordance; RESULTS additionally shows the matched
+            # application and file rows.
+            intent = snapshot.intent
+            if intent is not None:
+                intent_row = self.Gtk.ListBoxRow()
+                intent_row.set_child(self._label(f"{intent.type.replace('_', ' ').title()}  ·  {intent.confidence:.0%}"))
+                results.append(intent_row)
             state = launcher_state.get()
-            priority = {desktop_id: index for index, desktop_id in enumerate([*state["pinned"], *state["recent"]])}
-            applications.sort(key=lambda item: (priority.get(item["desktop_id"], 1000), item["name"].casefold()))
-            for application in applications[:12]:
+            for application in snapshot.applications:
                 row = self.Gtk.ListBoxRow()
                 row.desktop_id = application["desktop_id"]
                 marker = "Pinned · " if application["desktop_id"] in state["pinned"] else "Recent · " if application["desktop_id"] in state["recent"] else "Application · "
                 row.set_child(self._label(f"{marker}{application['name']}\n{application['comment']}"))
                 results.append(row)
+            for entry in snapshot.files:
+                row = self.Gtk.ListBoxRow()
+                # file_path is recorded for a future open-file action; the
+                # current activate handler only launches desktop IDs, so file
+                # rows are display-only by design and safe under the approved
+                # launch-target rule.
+                row.file_path = entry["path"]
+                row.set_child(self._label(f"File · {entry['name']}\n{entry['relativePath']}"))
+                results.append(row)
+
+        def resolve(query: str) -> None:
+            try:
+                intent = route_intent(query)
+                applications = application_search(query, 50)
+                state = launcher_state.get()
+                priority = {desktop_id: index for index, desktop_id in enumerate([*state["pinned"], *state["recent"]])}
+                applications.sort(key=lambda item: (priority.get(item["desktop_id"], 1000), item["name"].casefold()))
+                files = search_index.query(query, 5)
+            except (OSError, PermissionError, ValueError) as exc:
+                render(snapshot_for_query(query, intent=None, error=str(exc)))
+                return
+            render(snapshot_for_query(query, intent=intent, applications=applications[:12], files=files))
+
+        def refresh(_entry: Any) -> None:
+            query = search.get_text()
+            # Render SEARCHING before the work so the indicator paints. The
+            # resolve runs on idle so the toolkit gets a frame between the
+            # pending snapshot and the results.
+            render(snapshot_for_query(query, intent=None, pending=True))
+
+            def _resolve() -> bool:
+                resolve(query)
+                return False  # run once, then stop
+            self.GLib.idle_add(_resolve)
 
         def activate(_list: Any, row: Any) -> None:
             desktop_id = getattr(row, "desktop_id", None)
@@ -173,11 +238,21 @@ class BunnyApplication:
         search.connect("search-changed", refresh)
         results.connect("row-activated", activate)
         box.append(search)
+        box.append(status)
         scroller = self.Gtk.ScrolledWindow(vexpand=True)
         scroller.set_child(results)
         box.append(scroller)
-        refresh(search)
+        # Initial render: an empty query is NO_QUERY, not an unexplained list.
+        # No intent is carried because the NO_QUERY panel shows a hint, not an
+        # intent row; route_intent("") is not called until the user types.
+        render(snapshot_for_query("", intent=None, pending=False))
         return box
+
+    def _state_row(self, text: str) -> Any:
+        row = self.Gtk.ListBoxRow()
+        row.set_child(self._label(text))
+        row.set_selectable(False)
+        return row
 
     def _settings(self) -> Any:
         split = self.Gtk.Paned(orientation=self.Gtk.Orientation.HORIZONTAL, wide_handle=True)
@@ -544,6 +619,7 @@ class BunnyApplication:
         for label, panel in (("Wi-Fi", "wifi"), ("Bluetooth", "bluetooth"), ("Audio and microphone", "sound"), ("Displays and brightness", "display"), ("Power", "power"), ("Accessibility", "universal-access")):
             box.append(self._button(label, lambda _b, value=panel: _fixed_spawn(["/usr/bin/gnome-control-center", value])))
         box.append(self._button("Local-only, offline, updates, and privacy", lambda _b: _fixed_spawn(["/usr/bin/bunny-settings", "--section", "Bunny"])))
+        box.append(self._button("Voice and AI", lambda _b: _fixed_spawn(["/usr/bin/bunny-settings", "--section", "Voice & AI"])))
         box.append(self._button("Pause or inspect Bunny tasks", lambda _b: _fixed_spawn(["/usr/bin/bunny-tasks"])))
         return box
 

@@ -6,6 +6,23 @@ Phase 1 selected Fedora 44 bootc, GNOME on Wayland, SELinux, firewalld, a versio
 
 The current checkout has source definitions and passing host gates, but this Windows host has no Podman, unified `image-builder`, Linux systemd, or QEMU/KVM. No Phase 1 or Phase 2 disk artifact, graphical boot, VM interaction, or hardware result is claimed. The signed upstream Bunny Linux artifact also remains unavailable, so Bunny/Core end-to-end surfaces correctly degrade to unavailable.
 
+## Artifact states
+
+Four distinct things are referenced in this repository. They are not the same and
+must not be confused with one another:
+
+| Artifact | What it is | Status |
+|---|---|---|
+| **Current development state** | The source on `main` plus feature branches | Source implemented and host-gated; `main` carries phases 1–17 of qualification-framework work |
+| **Functional Alpha candidate** | A development candidate on `functional-alpha/dev` that wires the full user-facing runtime path into the image — local AI (llama.cpp + GGUF), voice (speech → action → TTS), resource-aware model selection, Voice & AI settings, search empty states, NSS/account race sweep, preserved character architecture | Runtime steps are recorded honestly in `FUNCTIONAL_ALPHA_REPORT.md` as they are exercised on the Fedora WSL builder host (Podman, image-builder, nested KVM); any step not yet exercised reads NOT_RUN there |
+| **Historical frozen artifact `e906a48793d7`** | The Phase 4 / Phase 7 Alpha RC | Historical qualification evidence only — never modified, never re-claimed as current |
+| **Stable release** | A signed, release-qualified, pilot-approved production artifact | **NO-GO** — unchanged; see the release-state table below |
+
+The Functional Alpha candidate is a development exercise, not a release, not a
+pilot, and not production certification. Its purpose is to make the complete
+user-facing path — boot → install → desktop → character → request → understanding
+→ OS action → visible and spoken feedback — actually demonstrable.
+
 ## Release state — 2026-08-08
 
 **Bunny OS is not releasable and no pilot may begin.** Read this before anything

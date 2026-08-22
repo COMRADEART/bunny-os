@@ -43,6 +43,7 @@ from .descriptor import ProviderDescriptor, ProviderStanding, ResourceEstimate
 from .errors import AgentSchemaError
 from .health import ProviderHealthMonitor
 from .request import LOCALITY_REQUIREMENTS
+from .resources import MachineResources, model_memory_budget, model_runtime_footprint
 
 __all__ = [
     "AgentProviderRegistry",
@@ -153,10 +154,18 @@ class AgentProviderRegistry:
         adapters: Mapping[str, ProviderAdapter],
         *,
         monitor: ProviderHealthMonitor | None = None,
+        machine_resources: MachineResources | None = None,
     ) -> None:
         self._configuration = configuration
         self._adapters = dict(adapters)
         self._monitor = monitor if monitor is not None else ProviderHealthMonitor()
+        # None disables the resource guard — the backward-compatibility path
+        # every existing test takes, and the off-Linux build-host path. A
+        # measured MachineResources makes selection refuse a model whose
+        # resident footprint exceeds the current budget; see
+        # :mod:`companion.agents.resources` for why zero is "no constraint",
+        # not "no models".
+        self._machine_resources = machine_resources
         self._guard = threading.Lock()
         self._probes: dict[str, tuple[float, ProbeResult]] = {}
 
@@ -218,8 +227,19 @@ class AgentProviderRegistry:
 
     # -- descriptors ---------------------------------------------------------
 
-    def _resolved_model(self, config: ProviderConfiguration, probe: ProbeResult) -> tuple[str, str, int]:
-        """(model_id, revision, context_limit) — configured first, else discovered."""
+    def _resolved_model(self, config: ProviderConfiguration, probe: ProbeResult) -> tuple[str, str, int, int]:
+        """(model_id, revision, context_limit, size_bytes) — configured first, else discovered.
+
+        When no model is configured and more than one is discovered, the
+        choice is the largest model whose resident footprint still fits the
+        current memory budget — "small machine → smaller local model" with
+        no tier named. Where the host is unmeasured (no machine resources)
+        the choice is the first by name, preserving the deterministic
+        discovery order this method has always had. Nothing fitting is the
+        pressure case: the smallest model is bound so the eligibility gate
+        can refuse it honestly rather than the descriptor reporting a model
+        the machine cannot run.
+        """
         context = config.context_limit_tokens
         for listing in probe.models:
             if listing.context_limit_tokens > 0:
@@ -227,17 +247,32 @@ class AgentProviderRegistry:
                 break
         if config.model_id:
             revision = config.model_revision
+            size = 0
             for listing in probe.models:
-                if listing.model_id == config.model_id and listing.revision:
-                    revision = listing.revision
-            return config.model_id, revision, context
-        offered = sorted(item.model_id for item in probe.models)
-        if offered:
+                if listing.model_id == config.model_id:
+                    if listing.revision:
+                        revision = listing.revision
+                    size = listing.size_bytes
+            return config.model_id, revision, context, size
+        offered = sorted(probe.models, key=lambda item: item.model_id)
+        if not offered:
+            return "", "", context, 0
+        budget = model_memory_budget(self._machine_resources) if self._machine_resources is not None else 0
+        if budget > 0:
+            fitting = [
+                listing for listing in offered
+                if model_runtime_footprint(
+                    model_size_bytes=listing.size_bytes,
+                    context_limit_tokens=listing.context_limit_tokens or context,
+                ) <= budget
+            ]
+            if fitting:
+                chosen = max(fitting, key=lambda item: item.size_bytes)
+            else:
+                chosen = min(offered, key=lambda item: item.size_bytes)
+        else:
             chosen = offered[0]
-            for listing in probe.models:
-                if listing.model_id == chosen:
-                    return chosen, listing.revision, context
-        return "", "", context
+        return chosen.model_id, chosen.revision, context, chosen.size_bytes
 
     def descriptor(self, provider_id: str, *, monotonic: float, refresh: bool = False) -> ProviderDescriptor:
         config = self.configuration_for(provider_id)
@@ -250,6 +285,7 @@ class AgentProviderRegistry:
         availability_detail = ""
         available = False
         model_id, model_revision, context_limit = config.model_id, config.model_revision, config.context_limit_tokens
+        model_size = 0
         implementation = ""
         if not config.enabled:
             availability_detail = "not enabled in configuration"
@@ -267,7 +303,7 @@ class AgentProviderRegistry:
             available = probe.available
             availability_detail = probe.detail
             implementation = probe.implementation
-            model_id, model_revision, context_limit = self._resolved_model(config, probe)
+            model_id, model_revision, context_limit, model_size = self._resolved_model(config, probe)
         healthy = bool(available and self._monitor.healthy(provider_id))
         if available and not healthy:
             circuit = self._monitor.report(provider_id)["circuit"]
@@ -287,6 +323,20 @@ class AgentProviderRegistry:
         # adapter that exists but is not named would have been silently
         # denied a capability it implements.
         supports_structured = bool(getattr(adapter, "supports_structured_output", False))
+        # A resolved model carries a resident-footprint estimate — weights
+        # plus a context-cache allowance — so selection can weigh a provider
+        # that has not run yet. No model resolved (or a probe that could not
+        # stat the file) leaves the zero estimate, which the eligibility gate
+        # treats as "nothing to refuse on".
+        if model_id:
+            resource_estimate = ResourceEstimate(
+                memory_bytes=model_runtime_footprint(
+                    model_size_bytes=model_size,
+                    context_limit_tokens=max(0, context_limit),
+                )
+            )
+        else:
+            resource_estimate = ResourceEstimate()
         return ProviderDescriptor(
             provider_id=config.provider_id,
             adapter_id=config.adapter_id,
@@ -305,7 +355,7 @@ class AgentProviderRegistry:
             standing=standing,
             cost_class=config.cost_class,
             maximum_privacy_class=config.maximum_privacy_class,
-            resource_estimate=ResourceEstimate(),
+            resource_estimate=resource_estimate,
             supported_languages=config.supported_languages,
             license_reference=config.license_reference,
             availability_detail=availability_detail[:512],
@@ -333,6 +383,19 @@ class AgentProviderRegistry:
             reasons.append(f"not healthy: {standing.detail}")
         if not descriptor.fully_declared:
             reasons.append("not fully declared: no model is configured or discovered")
+        if (
+            self._machine_resources is not None
+            and self._machine_resources.known
+            and descriptor.resource_estimate.memory_bytes > 0
+        ):
+            budget = model_memory_budget(self._machine_resources)
+            need = descriptor.resource_estimate.memory_bytes
+            if need > budget:
+                reasons.append(
+                    f"model needs ~{need // (1024 * 1024)} MiB resident; "
+                    f"~{budget // (1024 * 1024)} MiB available under "
+                    f"{self._machine_resources.memory_pressure_level} pressure"
+                )
         if not descriptor.handles(requirement.task_class):
             reasons.append(
                 f"task class {requirement.task_class!r} is not in "

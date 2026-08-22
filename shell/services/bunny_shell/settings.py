@@ -65,6 +65,12 @@ DEFINITIONS: dict[str, dict[str, Any]] = {
     "doNotDisturb": {"default": False, "scope": "user", "owner": "bunny-shell", "validate": _boolean},
     "checkpointRetentionDays": {"default": 30, "scope": "user", "owner": "bunny-core", "validate": _bounded_int(1, 365)},
     "modelStoragePath": {"default": "default", "scope": "user", "owner": "bunny-core", "validate": _alias},
+    "voiceEnabled": {"default": True, "scope": "user", "owner": "bunny-core", "validate": _boolean},
+    "microphoneEnabled": {"default": True, "scope": "user", "owner": "bunny-core", "validate": _boolean},
+    "speechRecognizerModel": {"default": "automatic", "scope": "user", "owner": "bunny-core", "validate": _alias},
+    "ttsEngine": {"default": "automatic", "scope": "user", "owner": "bunny-core", "validate": _choice("automatic", "espeak-ng", "speech-dpatcher")},
+    "localAiEnabled": {"default": True, "scope": "user", "owner": "bunny-core", "validate": _boolean},
+    "agentModel": {"default": "automatic", "scope": "user", "owner": "bunny-core", "validate": _alias},
     "diagnosticsPolicy": {"default": "local-only", "scope": "user", "owner": "bunny-os", "validate": _choice("local-only")},
     "telemetryEnabled": {"default": False, "scope": "user", "owner": "bunny-os", "validate": _boolean},
     "clipboardHistory": {"default": False, "scope": "user", "owner": "bunny-shell", "validate": _boolean},
@@ -78,7 +84,8 @@ DEFINITIONS: dict[str, dict[str, Any]] = {
 SECTIONS = (
     "Network", "Bluetooth", "Displays", "Sound", "Power", "Keyboard", "Mouse and Touchpad",
     "Appearance", "Applications", "Notifications", "Privacy", "Users", "Date and Time", "Storage",
-    "Updates", "Recovery", "Bunny", "Voice", "Local Models", "Plugins", "Permissions", "Accessibility", "System Information",
+    "Updates", "Recovery", "Bunny", "Voice & AI", "Local Models", "Plugins", "Permissions",
+    "Accessibility", "System Information",
 )
 
 
@@ -128,6 +135,16 @@ class SettingsStore:
         The coupled invariants below mirror ``set()``: a locked ``localOnlyMode``
         must drag the provider settings with it, or the effective state would
         contradict the policy that locked it.
+
+        The Voice & AI settings (``voiceEnabled``, ``microphoneEnabled``,
+        ``speechRecognizerModel``, ``ttsEngine``, ``localAiEnabled``,
+        ``agentModel``) are deliberately *not* dragged here. They are local
+        capabilities — a local recogniser, a local TTS engine, a local agent
+        model — and ``localOnlyMode`` / ``offlineMode`` are about the remote
+        dimension. The remote voice/AI failover is already governed by
+        ``cloudFailoverPolicy``, which the existing coupling drags to ``never``.
+        Disabling local voice/AI under a local-only policy would contradict the
+        policy's intent: local-only means *use local*, not *use nothing*.
         """
         for key, managed in self.managed.settings.items():
             values[key] = deepcopy(managed.value)

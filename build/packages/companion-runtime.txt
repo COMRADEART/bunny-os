@@ -1,0 +1,30 @@
+# Companion runtime: local AI inference and offline speech I/O.
+#
+# These are the binaries the companion's adapters and voice/speech runtimes
+# resolve at runtime:
+#
+#   llama-cpp                   /usr/bin/llama-cli  — local text generation
+#                                                  (the local.llamacli adapter)
+#   vosk-api                    /usr/lib64/libvosk.so — offline speech
+#                                                  recognition (ctypes, no pip)
+#   espeak-ng                   /usr/bin/espeak-ng  — offline speech synthesis
+#   speech-dispatcher           /usr/bin/spd-say    — the TTS broker the voice
+#                                                  runtime speaks through
+#   speech-dispatcher-espeak-ng the espeak-ng output module speech-dispatcher
+#                                                  loads
+#
+# None of them auto-download a model. The trusted model directories
+# /usr/share/bunny-os/agent-models and /usr/share/bunny-os/speech-models are
+# provisioned by the operator (or by a future vendored-model install route),
+# and a missing model is reported unavailable by the adapter rather than
+# fetched — offline by construction, no world-writable model file.
+#
+# Package names verified against packages.fedoraproject.org for Fedora 44
+# (llama-cpp, espeak-ng, speech-dispatcher, speech-dispatcher-espeak-ng).
+# vosk-api was reviewed and approved for Fedora (rawhide/fc42) and provides
+# libvosk.so; its exact fc44 availability is confirmed at build time, not here.
+llama-cpp
+vosk-api
+espeak-ng
+speech-dispatcher
+speech-dispatcher-espeak-ng

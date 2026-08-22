@@ -39,6 +39,7 @@ from .errors import AgentSchemaError
 from .health import ProviderHealthMonitor
 from .journal import GenerationJournal, reconcile
 from .registry import AgentProviderRegistry, SelectionRequirement
+from .resources import MachineResources, default_machine_resources
 from .request import GenerationMessage, GenerationRequest
 from .usage import UsageLedger
 from .worker import AgentWorker
@@ -62,6 +63,11 @@ class AgentServiceOptions:
     monitor: ProviderHealthMonitor | None = None
     ledger: UsageLedger | None = None
     start_worker: bool = True
+    #: Machine resources for the §9 resource-aware selection gate. ``None``
+    #: means "probe the live host at construction" (production); a test
+    #: injects a known :class:`MachineResources` to make selection
+    #: deterministic, or an unmeasured one to disable the gate.
+    machine_resources: "MachineResources | None" = None
 
 
 class AgentProviderService:
@@ -81,6 +87,10 @@ class AgentProviderService:
         self.registry = AgentProviderRegistry(
             configuration, adapters,
             monitor=options.monitor if options.monitor is not None else ProviderHealthMonitor(),
+            machine_resources=(
+                options.machine_resources if options.machine_resources is not None
+                else default_machine_resources()
+            ),
         )
         self.ledger = options.ledger if options.ledger is not None else UsageLedger()
         self.builder = ContextBuilder()

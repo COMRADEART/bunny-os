@@ -6,7 +6,8 @@
     "common",
     "desktop",
     "shell",
-    "developer"
+    "developer",
+    "companion-runtime"
   ],
   "desktop": "bunny-gnome-wayland",
   "imageTypes": [

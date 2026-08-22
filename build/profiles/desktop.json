@@ -5,7 +5,8 @@
   "packageSets": [
     "common",
     "desktop",
-    "shell"
+    "shell",
+    "companion-runtime"
   ],
   "desktop": "gnome-wayland",
   "imageTypes": [

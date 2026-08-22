@@ -11,7 +11,7 @@
     "values": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["launchBunnyAtLogin", "defaultProviderAlias", "defaultModel", "localOnlyMode", "offlineMode", "cloudFailoverPolicy", "memoryEnabled", "approvedSearchLocations", "pluginNetworkDefault", "unattendedJobs", "notifications", "doNotDisturb", "checkpointRetentionDays", "modelStoragePath", "diagnosticsPolicy", "telemetryEnabled", "clipboardHistory", "clipboardExcludedApplications", "reducedMotion", "reducedTransparency", "theme", "textScalePercent"],
+      "required": ["launchBunnyAtLogin", "defaultProviderAlias", "defaultModel", "localOnlyMode", "offlineMode", "cloudFailoverPolicy", "memoryEnabled", "approvedSearchLocations", "pluginNetworkDefault", "unattendedJobs", "notifications", "doNotDisturb", "checkpointRetentionDays", "modelStoragePath", "voiceEnabled", "microphoneEnabled", "speechRecognizerModel", "ttsEngine", "localAiEnabled", "agentModel", "diagnosticsPolicy", "telemetryEnabled", "clipboardHistory", "clipboardExcludedApplications", "reducedMotion", "reducedTransparency", "theme", "textScalePercent"],
       "properties": {
         "launchBunnyAtLogin": {"type": "boolean", "default": false},
         "defaultProviderAlias": {"type": "string", "pattern": "^[A-Za-z0-9._:-]{1,96}$", "default": "local"},
@@ -27,6 +27,12 @@
         "doNotDisturb": {"type": "boolean", "default": false},
         "checkpointRetentionDays": {"type": "integer", "minimum": 1, "maximum": 365, "default": 30},
         "modelStoragePath": {"type": "string", "pattern": "^[A-Za-z0-9._:-]{1,96}$", "default": "default"},
+        "voiceEnabled": {"type": "boolean", "default": true},
+        "microphoneEnabled": {"type": "boolean", "default": true},
+        "speechRecognizerModel": {"type": "string", "pattern": "^[A-Za-z0-9._:-]{1,96}$", "default": "automatic"},
+        "ttsEngine": {"enum": ["automatic", "espeak-ng", "speech-dpatcher"], "default": "automatic"},
+        "localAiEnabled": {"type": "boolean", "default": true},
+        "agentModel": {"type": "string", "pattern": "^[A-Za-z0-9._:-]{1,96}$", "default": "automatic"},
         "diagnosticsPolicy": {"const": "local-only"},
         "telemetryEnabled": {"const": false},
         "clipboardHistory": {"type": "boolean", "default": false},

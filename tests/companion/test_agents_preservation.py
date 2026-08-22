@@ -79,7 +79,9 @@ class PreservedEvidence(unittest.TestCase):
                 self.assertTrue(directory.is_dir(), f"{phase} has disappeared")
                 found = {
                     item.relative_to(_ROOT).as_posix()
-                    for item in directory.rglob("*") if item.is_file()
+                    for item in directory.rglob("*")
+                    if item.is_file() and "__pycache__" not in item.parts
+                    and item.suffix != ".pyc"
                 }
                 self.assertEqual(found - preserved, set(), f"{phase} gained files")
 
