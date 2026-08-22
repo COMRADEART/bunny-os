@@ -103,6 +103,9 @@ class CoordinationTests(unittest.TestCase):
             task_id=task.task_id,
             event_type="planning_started",
             source="test.executor",
+            # planning_started carries its revision into the hashed payload;
+            # the stream refuses the type without it.
+            payload={"planRevision": 1},
         ).with_sequence(1)
 
     def test_one_executor_only(self) -> None:

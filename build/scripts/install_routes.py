@@ -300,6 +300,23 @@ INSTALL_ROUTES: tuple[InstallRoute, ...] = (
     InstallRoute(
         "capability-service-manifests", "tree",
         "capability/services", "/usr/share/bunny-os/capability/services", 0o444,
+        # The probe manifest is a validation fixture: it names an entry point
+        # under capability/testing/, which no route installs, and a fixture on a
+        # read-only root is attack surface with no user. Excluded by stem, the
+        # way the pre-table installer excluded it.
+        exclude_stems=("bunny-capability-probe",),
+    ),
+    _file_route(
+        "capability-supervisor-executable",
+        "services/bunny-capability-supervisor/bunny_capability_supervisor.py",
+        "/usr/libexec/bunny-capability-supervisor", 0o555,
+        note="the control plane's entry point; enabled by 60-bunny-os.preset",
+    ),
+    _file_route(
+        "capability-supervisor-configuration",
+        "config/bunny-os/capability-supervisor.json",
+        "/etc/bunny-os/capability/supervisor.json", 0o644,
+        note="observe-only as shipped; enabling apply is a documented operator act",
     ),
     # The Alpha speech model is immutable image data, not first-run mutable
     # state. Shipping the reviewed bytes here makes push-to-talk work offline

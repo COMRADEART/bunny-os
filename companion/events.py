@@ -1,10 +1,5 @@
 # SPDX-FileCopyrightText: 2026 ComradeArt
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Typed, bounded, replayable task events.
-
-An event says whether its payload is an observed fact or a generated
-description.  Generated text must cite the event ids it summarizes.  Neither
-form may contain hidden reasoning or unredacted credentials.
 """The task event stream: what happened, in order, provably unedited.
 
 Everything else in this package is a projection of this. A session document and
@@ -37,116 +32,38 @@ for this phase; see the report's known limitations.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, replace
+from dataclasses import dataclass
+from datetime import datetime, timezone
+import hashlib
 import json
 import re
-from typing import Any, Mapping
-from uuid import UUID, uuid4
-
-from . import EVENT_SCHEMA_VERSION
-from .model import bounded_text, redact_text, safe_identifier, utc_now, validate_timestamp
-
-EVENT_TYPES = (
-    "task_created",
-    "task_classified",
-    "executor_selected",
-    "reviewer_added",
-    "planning_started",
-    "tool_requested",
-    "approval_requested",
-    "approval_resolved",
-    "tool_started",
-    "tool_progress",
-    "tool_completed",
-    "tool_failed",
-    "reviewer_observation",
-    "reviewer_disagreement",
-    "response_drafting",
-    "speech_started",
-    "speech_completed",
-    "task_completed",
-    "task_cancelled",
-    "task_failed",
-    "capability_degraded",
-    "connection_lost",
-    "connection_restored",
-)
-
-RECORD_KINDS = ("observed_fact", "generated_description")
-MAX_EVENT_BYTES = 32 * 1024
-MAX_PAYLOAD_DEPTH = 8
-MAX_PAYLOAD_ITEMS = 256
-MAX_REPLAY_EVENTS = 1000
-
-_SENSITIVE_KEY = re.compile(
-    r"(?i)(api.?key|authorization|credential|password|private.?key|refresh.?token|secret|token)"
-)
-
-
-class EventValidationError(ValueError):
-    pass
-
-
-def _redact(value: Any, *, depth: int = 0) -> Any:
-    if depth > MAX_PAYLOAD_DEPTH:
-        return "[TRUNCATED:DEPTH]"
-    if value is None or isinstance(value, (bool, int, float)):
-        return value
-    if isinstance(value, str):
-        return redact_text(value, 4096)
-    if isinstance(value, Mapping):
-        result: dict[str, Any] = {}
-        for index, (raw_key, item) in enumerate(value.items()):
-            if index >= MAX_PAYLOAD_ITEMS:
-                result["_truncated"] = True
-                break
-            key = str(raw_key)[:128]
-            result[key] = "[REDACTED]" if _SENSITIVE_KEY.search(key) else _redact(item, depth=depth + 1)
-        return result
-    if isinstance(value, (list, tuple)):
-        items = list(value)
-        redacted = [_redact(item, depth=depth + 1) for item in items[:MAX_PAYLOAD_ITEMS]]
-        if len(items) > MAX_PAYLOAD_ITEMS:
-            redacted.append("[TRUNCATED:ITEMS]")
-        return redacted
-    return redact_text(str(value), 1024)
-
-
-def redacted_payload(value: Mapping[str, Any] | None) -> dict[str, Any]:
-    if value is None:
-        return {}
-    if not isinstance(value, Mapping):
-        raise EventValidationError("event payload must be an object")
-    result = _redact(value)
-    assert isinstance(result, dict)
-    return result
-
-
-def canonical_event_bytes(value: Mapping[str, Any]) -> bytes:
-    return json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
-from dataclasses import dataclass
-import hashlib
-import re
 from typing import Any, Mapping, Sequence
+from uuid import UUID, uuid4
 
 from capability.apply.identity import canonical_json
 
 from . import EVENT_SCHEMA_VERSION
 from .errors import IntegrityError, SchemaError, UnknownEventType
 from .ids import valid_id
+from .model import bounded_text, redact_text
 from .privacy import DATA_CLASSES, Sanitized, project, rank, sanitize
 
 __all__ = [
     "EVENT_TYPES",
     "GENESIS_HASH",
     "PRODUCER_KINDS",
+    "RECORD_KINDS",
     "SESSION_EVENT_TYPES",
+    "DescribedEvent",
+    "EventValidationError",
     "TaskEvent",
     "HASHED_FIELDS_BY_VERSION",
     "USER_CONTENT_EVENTS",
     "build_event",
     "classification_for",
     "deduplicate",
+    "generated_event",
+    "observed_event",
     "verify_chain",
 ]
 
@@ -182,6 +99,19 @@ EVENT_TYPES = (
     # Not in the brief's list. Emitted by lifecycle moves that carry no meaning
     # beyond the move itself; see companion.states.GENERIC_TRANSITION_EVENT.
     "task_state_changed",
+    # Presentation-surface types, admitted additively when the companion state
+    # projection (companion.state) was integrated with this stream. They name
+    # things the operation_* vocabulary deliberately does not: drafting and
+    # speaking are presentation facts, not operations, and losing the network
+    # is an observation about the world rather than a step in a plan. Additive
+    # only: no stream written before these existed can contain them, so no
+    # stored record changes meaning.
+    "response_drafting",
+    "speech_started",
+    "speech_completed",
+    "connection_lost",
+    "connection_restored",
+    "capability_degraded",
 )
 
 #: Events that belong to a session rather than to a task. They carry an empty
@@ -263,6 +193,14 @@ _REQUIRED_PAYLOAD: Mapping[str, frozenset[str]] = {
     "recovery_started": frozenset({"detectedState"}),
     "recovery_completed": frozenset({"decision"}),
     "task_state_changed": frozenset({"from", "to"}),
+    # The presentation types carry their meaning in the description or in
+    # self-evident payload; only losing the connection is required to say why.
+    "response_drafting": frozenset(),
+    "speech_started": frozenset(),
+    "speech_completed": frozenset(),
+    "connection_lost": frozenset({"reason"}),
+    "connection_restored": frozenset(),
+    "capability_degraded": frozenset({"reason"}),
 }
 
 
@@ -316,118 +254,6 @@ class TaskEvent:
     task_id: str
     sequence: int
     event_type: str
-    occurred_at: str
-    source: str
-    record_kind: str
-    payload: Mapping[str, Any]
-    description: str = ""
-    evidence_references: tuple[str, ...] = ()
-
-    def __post_init__(self) -> None:
-        try:
-            UUID(self.event_id)
-        except (ValueError, TypeError, AttributeError) as exc:
-            raise EventValidationError("event id must be a UUID") from exc
-        safe_identifier(self.session_id, "event session id")
-        safe_identifier(self.task_id, "event task id")
-        if self.sequence < 0:
-            raise EventValidationError("event sequence cannot be negative")
-        if self.event_type not in EVENT_TYPES:
-            raise EventValidationError(f"unsupported task event: {self.event_type!r}")
-        validate_timestamp(self.occurred_at, "event timestamp")
-        safe_identifier(self.source, "event source")
-        if self.record_kind not in RECORD_KINDS:
-            raise EventValidationError("event record kind is invalid")
-        object.__setattr__(self, "payload", redacted_payload(self.payload))
-        bounded_text(self.description, "event description", 1000, allow_empty=True)
-        if self.record_kind == "generated_description" and not self.description:
-            raise EventValidationError("generated descriptions must contain display text")
-        if self.record_kind == "generated_description" and not self.evidence_references:
-            raise EventValidationError("generated descriptions must cite observed event ids")
-        for reference in self.evidence_references:
-            try:
-                UUID(reference)
-            except (ValueError, TypeError, AttributeError) as exc:
-                raise EventValidationError("event evidence reference must be a UUID") from exc
-        if len(canonical_event_bytes(self.to_json())) > MAX_EVENT_BYTES:
-            raise EventValidationError(f"event exceeds {MAX_EVENT_BYTES} bytes")
-
-    def with_sequence(self, sequence: int) -> "TaskEvent":
-        return replace(self, sequence=sequence)
-
-    def to_json(self) -> dict[str, Any]:
-        return {
-            "schemaVersion": EVENT_SCHEMA_VERSION,
-            "eventId": self.event_id,
-            "sessionId": self.session_id,
-            "taskId": self.task_id,
-            "sequence": self.sequence,
-            "eventType": self.event_type,
-            "occurredAt": self.occurred_at,
-            "source": self.source,
-            "recordKind": self.record_kind,
-            "payload": dict(self.payload),
-            "description": redact_text(self.description, 1000),
-            "evidenceReferences": list(self.evidence_references),
-        }
-
-    @classmethod
-    def from_json(cls, value: Mapping[str, Any]) -> "TaskEvent":
-        if value.get("schemaVersion") != EVENT_SCHEMA_VERSION:
-            raise EventValidationError("unsupported event schemaVersion")
-        return cls(
-            event_id=str(value.get("eventId", "")),
-            session_id=str(value.get("sessionId", "")),
-            task_id=str(value.get("taskId", "")),
-            sequence=int(value.get("sequence", 0)),
-            event_type=str(value.get("eventType", "")),
-            occurred_at=str(value.get("occurredAt", "")),
-            source=str(value.get("source", "")),
-            record_kind=str(value.get("recordKind", "")),
-            payload=value.get("payload") if isinstance(value.get("payload"), Mapping) else {},
-            description=str(value.get("description", "")),
-            evidence_references=tuple(str(item) for item in value.get("evidenceReferences", ())),
-        )
-
-
-def observed_event(
-    *,
-    session_id: str,
-    task_id: str,
-    event_type: str,
-    source: str,
-    payload: Mapping[str, Any] | None = None,
-    event_id: str | None = None,
-    sequence: int = 0,
-    occurred_at: str | None = None,
-) -> TaskEvent:
-    return TaskEvent(
-        event_id=event_id or str(uuid4()),
-        session_id=session_id,
-        task_id=task_id,
-        sequence=sequence,
-        event_type=event_type,
-        occurred_at=occurred_at or utc_now(),
-        source=source,
-        record_kind="observed_fact",
-        payload=payload or {},
-    )
-
-
-def generated_event(
-    *,
-    session_id: str,
-    task_id: str,
-    event_type: str,
-    source: str,
-    description: str,
-    evidence_references: tuple[str, ...],
-    payload: Mapping[str, Any] | None = None,
-    event_id: str | None = None,
-    sequence: int = 0,
-) -> TaskEvent:
-    return TaskEvent(
-        event_id=event_id or str(uuid4()),
     timestamp: str
     producer: str
     payload: Mapping[str, Any]
@@ -739,13 +565,6 @@ def build_event(
         task_id=task_id,
         sequence=sequence,
         event_type=event_type,
-        occurred_at=utc_now(),
-        source=source,
-        record_kind="generated_description",
-        payload=payload or {},
-        description=description,
-        evidence_references=evidence_references,
-    )
         timestamp=timestamp,
         producer=producer,
         payload=cleaned.value,
@@ -806,3 +625,321 @@ def deduplicate(events: Sequence[TaskEvent]) -> tuple[TaskEvent, ...]:
                 f"two different events share the id {event.event_id!r}"
             )
     return tuple(kept)
+
+
+# -- Presentation-layer events ---------------------------------------------
+#
+# The companion state projection (``companion.state``) needs two things this
+# core format deliberately does not carry: *what produced the words the user
+# sees* (an observed fact versus a generated description that must cite its
+# evidence) and the display text itself. The earlier prototype carried them as
+# top-level fields of a simpler, unchained event record. This build keeps the
+# chained format and carries the presentation fields on a subclass instead:
+# they are validated here, bounded here, and serialized by :meth:`to_json`,
+# but they sit **outside** the sealed field set — ``_seal`` hashes exactly the
+# version-2 fields and nothing else, so these ride along unprotected exactly
+# as protected as they were in the prototype that never hashed anything.
+# Promoting them into the hash is a schema-version bump, deliberately not
+# taken here; see ``HASHED_FIELDS_BY_VERSION``.
+
+#: The two kinds of record a presentation event can be. An observed fact says
+#: something happened; a generated description says something about what
+#: happened and must cite the events it summarises.
+RECORD_KINDS = ("observed_fact", "generated_description")
+
+#: Bounds carried over from the prototype contract. A single event may not be
+#: arbitrarily large, and a payload may not nest without limit — a deeply
+#: nested payload is a denial-of-service against every later reader.
+MAX_EVENT_BYTES = 32 * 1024
+MAX_PAYLOAD_DEPTH = 8
+MAX_PAYLOAD_ITEMS = 256
+
+_SENSITIVE_KEY = re.compile(
+    r"(?i)(api.?key|authorization|credential|password|private.?key|refresh.?token|secret|token)"
+)
+
+
+class EventValidationError(SchemaError):
+    """A proposed event failed its own validation.
+
+    A subclass of :class:`~companion.errors.SchemaError` so existing handlers
+    that catch schema faults keep catching these; the distinct name lets the
+    presentation layer report "your text was refused" differently from "the
+    record was malformed".
+    """
+
+
+def canonical_event_bytes(value: Mapping[str, Any]) -> bytes:
+    return json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+
+
+def _redact(value: Any, *, depth: int = 0) -> Any:
+    """Mark credential-shaped keys and scrub credential shapes in free text."""
+    if depth > MAX_PAYLOAD_DEPTH:
+        return "[TRUNCATED:DEPTH]"
+    if value is None or isinstance(value, (bool, int, float)):
+        return value
+    if isinstance(value, str):
+        return redact_text(value, 4096)
+    if isinstance(value, Mapping):
+        result: dict[str, Any] = {}
+        for index, (raw_key, item) in enumerate(value.items()):
+            if index >= MAX_PAYLOAD_ITEMS:
+                result["_truncated"] = True
+                break
+            key = str(raw_key)[:128]
+            result[key] = "[REDACTED]" if _SENSITIVE_KEY.search(key) else _redact(item, depth=depth + 1)
+        return result
+    if isinstance(value, (list, tuple)):
+        items = list(value)
+        redacted = [_redact(item, depth=depth + 1) for item in items[:MAX_PAYLOAD_ITEMS]]
+        if len(items) > MAX_PAYLOAD_ITEMS:
+            redacted.append("[TRUNCATED:ITEMS]")
+        return redacted
+    return redact_text(str(value), 1024)
+
+
+def redacted_payload(value: Mapping[str, Any] | None) -> dict[str, Any]:
+    """The payload as it may be built into an event: bounded, marked, scrubbed.
+
+    Runs *before* :func:`build_event`'s own sanitization. The two layers do
+    different jobs: this one marks a secret-shaped key's value so the record
+    shows that the key existed and was withheld; ``sanitize`` removes what may
+    never be stored and records the removal in the event's ``redactions``.
+    """
+    if value is None:
+        return {}
+    if not isinstance(value, Mapping):
+        raise EventValidationError("event payload must be an object")
+    result = _redact(value)
+    assert isinstance(result, dict)
+    return result
+
+
+def _utc_now_seconds() -> str:
+    """The stream's timestamp format: ISO-8601 UTC to the second."""
+    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def _producer_from(source: str) -> str:
+    """Map a free-form source label onto the stream's producer grammar.
+
+    A source already in ``PRODUCER_KINDS[:id]`` form passes through untouched.
+    Anything else becomes a named runtime producer — ``companion.runtime``
+    arrives as ``runtime:companion.runtime`` — so attribution survives without
+    widening who may claim to be an executor or a reviewer.
+    """
+    if _PRODUCER.match(source):
+        return source
+    slug = re.sub(r"[^A-Za-z0-9._-]", "-", str(source))[:63]
+    slug = re.sub(r"^[^A-Za-z0-9]+", "", slug).rstrip("-") or "runtime"
+    return f"runtime:{slug}"
+
+
+@dataclass(frozen=True)
+class DescribedEvent(TaskEvent):
+    """A task event carrying the presentation fields the state projection reads.
+
+    ``recordKind``, ``description`` and ``evidenceReferences`` are outside the
+    sealed field set (see the block comment above); everything else — ids,
+    ordering, payload, classification, chain position — is the ordinary hashed
+    record, and the hash is unchanged from the same event built without them.
+    """
+
+    record_kind: str = "observed_fact"
+    description: str = ""
+    evidence_references: tuple[str, ...] = ()
+
+    def __post_init__(self) -> None:
+        super().__post_init__()
+        if self.record_kind not in RECORD_KINDS:
+            raise EventValidationError("event record kind is invalid")
+        bounded_text(self.description, "event description", 1000, allow_empty=True)
+        if self.record_kind == "generated_description":
+            if not self.description:
+                raise EventValidationError("generated descriptions must contain display text")
+            if not self.evidence_references:
+                raise EventValidationError("generated descriptions must cite observed event ids")
+        elif self.evidence_references:
+            raise EventValidationError("only generated descriptions cite evidence")
+        for reference in self.evidence_references:
+            try:
+                UUID(reference)
+            except (ValueError, TypeError, AttributeError) as exc:
+                raise EventValidationError("event evidence reference must be a UUID") from exc
+        if len(canonical_event_bytes(self.to_json())) > MAX_EVENT_BYTES:
+            raise EventValidationError(f"event exceeds {MAX_EVENT_BYTES} bytes")
+
+    def with_sequence(self, sequence: int) -> "DescribedEvent":
+        """Re-key this event to another stream position, resealing the hash.
+
+        Sequence is hashed material, so unlike a plain renumber this recomputes
+        the seal — an event whose sequence could be edited without breaking its
+        own hash would make replay detection worthless.
+        """
+        material = self.hashed_material()
+        material["sequence"] = sequence
+        return DescribedEvent(
+            event_id=self.event_id,
+            session_id=self.session_id,
+            task_id=self.task_id,
+            sequence=sequence,
+            event_type=self.event_type,
+            timestamp=self.timestamp,
+            producer=self.producer,
+            payload=dict(self.payload),
+            classification=self.classification,
+            audit_reference=self.audit_reference,
+            previous_hash=self.previous_hash,
+            event_hash=_seal(material, self.schema_version),
+            redactions=self.redactions,
+            internal_fields=self.internal_fields,
+            schema_version=self.schema_version,
+            record_kind=self.record_kind,
+            description=self.description,
+            evidence_references=self.evidence_references,
+        )
+
+    def to_json(self) -> dict[str, Any]:
+        value = super().to_json()
+        value["recordKind"] = self.record_kind
+        value["description"] = self.description
+        value["evidenceReferences"] = list(self.evidence_references)
+        return value
+
+    @classmethod
+    def from_json(cls, document: Mapping[str, Any]) -> "DescribedEvent":
+        if not isinstance(document, Mapping):
+            raise SchemaError("an event record must be an object")
+        references = document.get("evidenceReferences", [])
+        if not isinstance(references, (list, tuple)) or any(not isinstance(item, str) for item in references):
+            raise EventValidationError("evidenceReferences must be an array of strings")
+        return cls(
+            event_id=str(document.get("eventId", "")),
+            session_id=str(document.get("sessionId", "")),
+            task_id=str(document.get("taskId", "")),
+            sequence=_require_int(document.get("sequence"), "sequence"),
+            event_type=str(document.get("eventType", "")),
+            timestamp=str(document.get("timestamp", "")),
+            producer=str(document.get("producer", "")),
+            payload=dict(document.get("payload")) if isinstance(document.get("payload"), Mapping) else {},
+            classification=str(document.get("classification", "")),
+            audit_reference=str(document.get("auditReference", "")),
+            previous_hash=str(document.get("previousHash", "")),
+            event_hash=str(document.get("eventHash", "")),
+            redactions=tuple(str(item) for item in document.get("redactions", [])),
+            internal_fields=tuple(str(item) for item in document.get("internalFields", [])),
+            record_kind=str(document.get("recordKind", "observed_fact")),
+            description=str(document.get("description", "")),
+            evidence_references=tuple(str(item) for item in references),
+        )
+
+
+def observed_event(
+    *,
+    session_id: str,
+    task_id: str,
+    event_type: str,
+    source: str,
+    payload: Mapping[str, Any] | None = None,
+    event_id: str | None = None,
+    sequence: int = 1,
+    occurred_at: str | None = None,
+    previous_hash: str = GENESIS_HASH,
+    classification: str = "internal",
+) -> DescribedEvent:
+    """Build an observed-fact event: something happened, and this says what.
+
+    The presentation-layer constructor. Free-text values are scrubbed of
+    credential shapes before the payload is sanitized and sealed, so nothing
+    that only ever existed in a caller's scratch dictionary reaches the stream.
+    """
+    return _described(
+        build_event(
+            event_id=event_id or str(uuid4()),
+            session_id=session_id,
+            task_id=task_id,
+            sequence=int(sequence),
+            event_type=event_type,
+            timestamp=occurred_at or _utc_now_seconds(),
+            producer=_producer_from(source),
+            payload=redacted_payload(payload),
+            classification=classification,
+            previous_hash=previous_hash,
+        ),
+        record_kind="observed_fact",
+    )
+
+
+def generated_event(
+    *,
+    session_id: str,
+    task_id: str,
+    event_type: str,
+    source: str,
+    description: str,
+    evidence_references: tuple[str, ...],
+    payload: Mapping[str, Any] | None = None,
+    event_id: str | None = None,
+    sequence: int = 1,
+    occurred_at: str | None = None,
+    previous_hash: str = GENESIS_HASH,
+    classification: str = "internal",
+) -> DescribedEvent:
+    """Build a generated description that cites the events it summarises.
+
+    A description nobody can trace back to observed facts is exactly the kind
+    of text this package exists to refuse, so the citation rule is enforced
+    here rather than left to whoever renders the words later.
+    """
+    return _described(
+        build_event(
+            event_id=event_id or str(uuid4()),
+            session_id=session_id,
+            task_id=task_id,
+            sequence=int(sequence),
+            event_type=event_type,
+            timestamp=occurred_at or _utc_now_seconds(),
+            producer=_producer_from(source),
+            payload=redacted_payload(payload),
+            classification=classification,
+            previous_hash=previous_hash,
+        ),
+        record_kind="generated_description",
+        description=redact_text(description, 1000),
+        evidence=tuple(evidence_references),
+    )
+
+
+def _described(
+    base: TaskEvent,
+    *,
+    record_kind: str,
+    description: str = "",
+    evidence: tuple[str, ...] = (),
+) -> DescribedEvent:
+    """Re-present an already-sealed event as a :class:`DescribedEvent`.
+
+    The hash travels across untouched: the presentation fields sit outside the
+    sealed set, so re-presenting cannot change what the chain attests to.
+    """
+    return DescribedEvent(
+        event_id=base.event_id,
+        session_id=base.session_id,
+        task_id=base.task_id,
+        sequence=base.sequence,
+        event_type=base.event_type,
+        timestamp=base.timestamp,
+        producer=base.producer,
+        payload=dict(base.payload),
+        classification=base.classification,
+        audit_reference=base.audit_reference,
+        previous_hash=base.previous_hash,
+        event_hash=base.event_hash,
+        redactions=base.redactions,
+        internal_fields=base.internal_fields,
+        schema_version=base.schema_version,
+        record_kind=record_kind,
+        description=description,
+        evidence_references=evidence,
+    )

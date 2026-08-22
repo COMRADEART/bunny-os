@@ -140,6 +140,13 @@ PHASES_AFTER_THE_RECORD = (
     # refused the same twenty-six committed paths at feff1527 before this
     # declaration; neither historical cut-time exemption changed.
     "qualification/phase17/",
+    # The capability-integration phase's evidence tree: the companion
+    # runtime's capability-route records, whose last writer on this line was
+    # 9d3b0ade, merged through the Phase 17 external-floor pull request after
+    # this record was cut at 7db5962b. Both guards refused exactly the six
+    # committed paths before this deliberate declaration; EXEMPT_PREFIXES is
+    # unchanged and the record itself is untouched.
+    "qualification/capability-integration/",
 )
 
 MAINTAINED_TOOLING = frozenset({

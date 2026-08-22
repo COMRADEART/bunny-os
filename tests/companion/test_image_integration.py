@@ -1,40 +1,98 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
+"""The companion's place in the installed image.
+
+The install set is declared once, in ``build/scripts/install_routes.py``, and
+``install-root.py`` is driven by that table — so these tests read the same
+route objects the installer copies from. Re-parsing the installer here would
+let a test pass while the two sides disagreed, which is precisely the failure
+the shared table exists to prevent.
+"""
+
 from __future__ import annotations
 
-import ast
+import importlib.util
 from pathlib import Path
 import re
+import sys
 import unittest
 
 
 ROOT = Path(__file__).resolve().parents[2]
 INSTALLER = ROOT / "build/scripts/install-root.py"
+ROUTE_TABLE = ROOT / "build/scripts/install_routes.py"
 
 
-def install_routes() -> tuple[dict, ...]:
-    tree = ast.parse(INSTALLER.read_text(encoding="utf-8"))
-    for node in ast.walk(tree):
-        if isinstance(node, ast.Assign):
-            names = [target.id for target in node.targets if isinstance(target, ast.Name)]
-            if "INSTALL_ROUTES" in names:
-                return ast.literal_eval(node.value)
-    raise AssertionError("install-root.py does not declare INSTALL_ROUTES")
+def load_route_table():
+    """Import the declaration both consumers read.
+
+    The module is standard-library-only on purpose — it runs inside a bootc
+    container with no repository Python on its path — so importing it here is
+    safe as well as honest.
+    """
+    spec = importlib.util.spec_from_file_location("install_routes_under_test", ROUTE_TABLE)
+    module = importlib.util.module_from_spec(spec)
+    # Dataclass processing resolves string annotations through sys.modules; an
+    # unregistered module makes that lookup return None under Python 3.14.
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
 
 
 class CompanionInstalledImageTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.table = load_route_table()
+
+    def route(self, identifier: str):
+        return next(
+            item for item in self.table.INSTALL_ROUTES if item.id == identifier
+        )
+
     def test_companion_code_has_a_read_only_install_route(self) -> None:
-        route = next(item for item in install_routes() if item["id"] == "companion-code")
-        self.assertEqual(route["destination"], "/usr/lib/bunny-os/python/companion")
-        self.assertEqual(route["mode"], 0o444)
-        self.assertTrue(list(ROOT.glob(route["sourceGlob"])))
-        self.assertIn("__pycache__", route["exclude"])
+        route = self.route("companion-package")
+        self.assertEqual(route.destination, "/usr/lib/bunny-os/python/companion")
+        self.assertEqual(route.mode, 0o444)
+        # A package route installs source and only source: bytecode carries the
+        # producing machine's paths and mtimes, and fixtures are
+        # untrusted-input-shaped content.
+        self.assertIn("__pycache__", route.effective_exclude)
+        self.assertEqual(route.effective_suffixes, (".py",))
+        copied = list(self.table.route_files(route, ROOT))
+        self.assertTrue(copied, "the companion package route selects no file")
+        destinations = {destination for _, destination in copied}
+        # The whole package travels, voice and character included: this is the
+        # coverage whose absence once reported a voice-runtime change as zero
+        # build impact.
+        self.assertIn("/usr/lib/bunny-os/python/companion/store.py", destinations)
+        self.assertTrue(
+            any(item.startswith("/usr/lib/bunny-os/python/companion/voice/") for item in destinations),
+            "companion/voice/ did not travel with the package route",
+        )
+        self.assertTrue(
+            any(item.startswith("/usr/lib/bunny-os/python/companion/character/") for item in destinations),
+            "companion/character/ did not travel with the package route",
+        )
+        self.assertFalse(any(destination.endswith((".pyc", ".pyo")) for destination in destinations))
 
     def test_build_context_and_installer_include_the_runtime(self) -> None:
         containerfile = (ROOT / "build/Containerfile").read_text(encoding="utf-8")
         installer = INSTALLER.read_text(encoding="utf-8")
         self.assertIn("COPY companion /tmp/bunny-os/companion", containerfile)
-        self.assertIn("/usr/libexec/bunny-companion-service", installer)
-        self.assertIn("/usr/share/bunny-shell/companion", installer)
+        # Destinations live in the route table, not hardcoded in the installer —
+        # that duplication is exactly what the shared table replaced. Assert
+        # through the declaration both consumers read.
+        destinations = {
+            route.id: route.destination for route in self.table.INSTALL_ROUTES
+        }
+        self.assertEqual(
+            destinations["companion-service-executable"],
+            "/usr/libexec/bunny-companion-service",
+        )
+        self.assertEqual(
+            destinations["companion-shell-assets"],
+            "/usr/share/bunny-shell/companion",
+        )
+        # The activation list names the unit the preset enables: a companion
+        # shipped but never enabled is the defect "a preset is not an enablement".
         self.assertIn('"bunny-companion.service"', installer)
 
     def test_user_service_is_private_bounded_and_local_only(self) -> None:
@@ -47,7 +105,10 @@ class CompanionInstalledImageTests(unittest.TestCase):
             "NoNewPrivileges=yes",
             "ProtectSystem=strict",
             "RestrictAddressFamilies=AF_UNIX",
-            "MemoryMax=128M",
+            # Enforcement budgets sized for the resident recogniser plus the
+            # isolated TTS worker, not benchmark claims; see the unit comment.
+            "MemoryHigh=1536M",
+            "MemoryMax=2G",
         ):
             with self.subTest(directive=directive):
                 self.assertIn(directive, unit)

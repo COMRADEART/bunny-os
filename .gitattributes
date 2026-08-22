@@ -110,3 +110,10 @@ assets/voice/licenses/** -text
 # that is plainly there. Neither the `*.sh` rule nor the `installer/bin` one
 # reaches it, because this command is deliberately not installed into the image.
 model_studio/bin/** -text
+
+# Root-level qualification reports are re-derived and compared byte-for-byte by
+# their phase gates. This one is committed LF but carried no attribute, so a
+# Windows checkout under core.autocrlf=true smudged the working copy to CRLF and
+# the floor gate reported a difference nobody had made. Same hazard as
+# qualification/** above, one level outside the directory pattern that covers it.
+PHASE17_EXTERNAL_FLOOR_OPERATIONS.md -text

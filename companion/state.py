@@ -163,6 +163,18 @@ EVENT_STATES: Mapping[str, CompanionPhase] = {
     "task_failed": CompanionPhase.ERROR,
     "capability_degraded": CompanionPhase.DEGRADED,
     "connection_lost": CompanionPhase.DISCONNECTED,
+    # The chained event stream (companion.events) names execution facts
+    # operation_* rather than tool_*; the projection accepts both words for
+    # the same facts so a stream written by either vocabulary drives one
+    # character.
+    "execution_started": CompanionPhase.WORKING,
+    "operation_started": CompanionPhase.WORKING,
+    "operation_progress": CompanionPhase.WORKING,
+    "operation_completed": CompanionPhase.WORKING,
+    "operation_failed": CompanionPhase.ERROR,
+    "result_created": CompanionPhase.PRESENTING_RESULT,
+    "recovery_started": CompanionPhase.UNDERSTANDING,
+    "recovery_completed": CompanionPhase.IDLE,
 }
 
 
@@ -194,8 +206,13 @@ def _payload_text(payload: Mapping[str, Any], key: str, fallback: str) -> str:
 
 def status_for_event(event: TaskEvent) -> str:
     payload = event.payload
-    if event.record_kind == "generated_description" and event.description:
-        return redact_text(event.description, 512)
+    # Presentation fields exist only on DescribedEvent instances built through
+    # the presentation constructors; a plain chained record is an observed fact
+    # with nothing to say beyond its type.
+    if getattr(event, "record_kind", "observed_fact") == "generated_description":
+        description = getattr(event, "description", "")
+        if description:
+            return redact_text(description, 512)
     messages = {
         "task_created": "Received the task and created a private session record.",
         "task_classified": f"Classified the task as {_payload_text(payload, 'classification', 'local work')}.",
@@ -208,6 +225,14 @@ def status_for_event(event: TaskEvent) -> str:
         "tool_progress": _payload_text(payload, "status", "The tool reported progress."),
         "tool_completed": f"Completed {_payload_text(payload, 'toolId', 'the tool operation')}.",
         "tool_failed": f"The tool failed: {_payload_text(payload, 'error', 'no additional detail')}.",
+        "execution_started": "Carrying out the approved plan.",
+        "operation_started": f"Using {_payload_text(payload, 'name', _payload_text(payload, 'operationKey', 'the selected operation'))}.",
+        "operation_progress": _payload_text(payload, "status", "The operation reported progress."),
+        "operation_completed": f"Completed {_payload_text(payload, 'operationKey', 'the operation')}.",
+        "operation_failed": f"The operation failed: {_payload_text(payload, 'error', 'no additional detail')}.",
+        "result_created": "Prepared the result from recorded task events.",
+        "recovery_started": "Recovering the task from its recorded state.",
+        "recovery_completed": "Recovery finished; the runtime resumed from the stream.",
         "reviewer_observation": f"Reviewer observation: {_payload_text(payload, 'summary', 'review completed')}.",
         "reviewer_disagreement": "Reviewers materially disagree; their observations are preserved for review.",
         "response_drafting": "Preparing the result from recorded task events.",
@@ -220,8 +245,16 @@ def status_for_event(event: TaskEvent) -> str:
         "connection_lost": "The runtime connection was lost; the task may continue headlessly.",
         "connection_restored": "The runtime connection was restored and task events were replayed.",
         "approval_resolved": f"Approval was {_payload_text(payload, 'decision', 'resolved')}.",
+        "capability_checked": "Checked what this machine permits for the task.",
+        "session_created": "Opened a private session.",
+        "task_paused": "The task paused.",
+        "task_resumed": "The task resumed.",
+        "task_state_changed": f"State moved from {_payload_text(payload, 'from', 'the prior state')} to {_payload_text(payload, 'to', 'the next state')}.",
     }
-    return messages[event.event_type]
+    text = messages.get(event.event_type)
+    if text is None:
+        raise ValueError(f"no status text for event type {event.event_type!r}")
+    return text
 
 
 class CompanionStateController:
@@ -277,14 +310,14 @@ class CompanionStateController:
             else:
                 approval = ApprovalState.DENIED
                 target = CompanionPhase.BLOCKED
-        elif event.event_type in {"tool_started", "tool_progress"}:
-            tool = payload.get("toolId")
+        elif event.event_type in {"tool_started", "tool_progress", "operation_started", "operation_progress"}:
+            tool = payload.get("toolId") or payload.get("operationKey")
             active_tool = str(tool) if isinstance(tool, str) and tool else active_tool
             if payload.get("progress") is not None:
                 progress = max(0.0, min(1.0, float(payload["progress"])))
-        elif event.event_type in {"tool_completed", "tool_failed"}:
+        elif event.event_type in {"tool_completed", "tool_failed", "operation_completed", "operation_failed"}:
             active_tool = None
-            if event.event_type == "tool_completed":
+            if event.event_type in {"tool_completed", "operation_completed"}:
                 progress = 1.0
 
         if event.event_type == "connection_lost":

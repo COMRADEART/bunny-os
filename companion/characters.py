@@ -1,37 +1,6 @@
 # SPDX-FileCopyrightText: 2026 ComradeArt
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Data-only Bunny character package schema and hostile-input validation."""
-"""One static character, and the reasons it is only one.
-
-This build ships a single image: an original bunny drawn as SVG, shipped in the
-repository under the same licence as everything else, and loaded from a fixed
-path list. There is deliberately no importer, no archive reader, no manifest and
-no way for a user to install a character from anywhere — that machinery belongs
-to the character-renderer branch, where it can be reviewed as the thing it is: a
-loader for third-party content, which is one of the two or three most dangerous
-components a desktop can have.
-
-What is enforced here, on the one asset that does ship:
-
-* **fixed paths.** :func:`candidate_paths` returns a closed list. No environment
-  variable, protocol parameter or user preference can add to it. A character
-  path that came from the wire would be an arbitrary file read with a picture
-  in front of it.
-* **regular files only.** A symbolic link is refused rather than followed:
-  the installed path is under ``/usr/share`` and the source path is inside the
-  checkout, and neither should ever be a link to somewhere else.
-* **no executable bit, and a declared type.** SVG and PNG only, size-bounded,
-  and refused if the file is marked executable — the shipped asset never is, so
-  a copy that is has been through something.
-* **nothing is fetched.** There is no network code in this module and no
-  package script is ever run. A character is a file that was already on the
-  disk when the image was built.
-
-And the accessibility rule that outranks all of it: :func:`describe_phase`
-produces the state in words, derived from the phase and not from the picture. A
-user who cannot see the image, or who has turned it off, or whose machine chose
-``text-only``, is told exactly what a user looking at the bunny is told.
-"""
 
 from __future__ import annotations
 
@@ -128,65 +97,10 @@ def _no_sensitive_metadata(value: Any, *, path: str = "metadata", depth: int = 0
             _no_sensitive_metadata(item, path=f"{path}[{index}]", depth=depth + 1)
     elif isinstance(value, str) and len(value) > 4096:
         raise CharacterPackageError(f"{path} contains oversized text")
-import os
-from pathlib import Path
-from typing import Any
-
-__all__ = [
-    "CharacterAsset",
-    "CharacterError",
-    "MAX_ASSET_BYTES",
-    "PERMITTED_SUFFIXES",
-    "candidate_paths",
-    "describe_phase",
-    "load_static_character",
-]
-
-
-class CharacterError(ValueError):
-    """The shipped asset is not what it should be, and was not loaded."""
-
-
-#: What a character asset may be. Both are data formats a renderer draws; there
-#: is no entry that can carry a script. SVG can carry one in principle, which is
-#: why :func:`load_static_character` checks for it rather than trusting the
-#: suffix — see the scan in :func:`_refuse_active_content`.
-PERMITTED_SUFFIXES = frozenset({".svg", ".png"})
-
-#: A static character is a small picture. The bound is here so that a
-#: substituted file cannot make the client allocate arbitrarily.
-MAX_ASSET_BYTES = 2 * 1024 * 1024
-
-#: Markup an SVG may not contain. A static character is a drawing; a drawing
-#: with a script in it is a program the shell would run at whatever privilege
-#: the shell has. Checked on load rather than assumed from the suffix.
-_ACTIVE_CONTENT = (
-    b"<script",
-    b"javascript:",
-    b"<foreignobject",
-    b"onload=",
-    b"onclick=",
-    b"onerror=",
-    b"<!entity",
-    b"<iframe",
-)
-
-
-def candidate_paths() -> tuple[Path, ...]:
-    """Where the shipped character may be, in order. A closed list.
-
-    Installed location first, source tree second. Nothing else, and in
-    particular nothing from the environment: a ``BUNNY_CHARACTER_PATH`` would be
-    a way to point the shell at any file on the machine and have it rendered.
-    """
-    return (
-        Path("/usr/share/bunny-shell/companion/default-bunny.svg"),
-        Path(__file__).resolve().parents[1] / "shell" / "assets" / "companion" / "default-bunny.svg",
-    )
 
 
 @dataclass(frozen=True)
-class CharacterAsset:
+class PackageAsset:
     path: str
     sha256: str
     size_bytes: int
@@ -209,7 +123,7 @@ class CharacterAsset:
         }
 
     @classmethod
-    def from_json(cls, value: Mapping[str, Any]) -> "CharacterAsset":
+    def from_json(cls, value: Mapping[str, Any]) -> "PackageAsset":
         if not isinstance(value, Mapping):
             raise CharacterPackageError("character asset must be an object")
         unexpected = set(value).difference(_ASSET_FIELDS)
@@ -233,7 +147,7 @@ class CharacterPackage:
     character_name: str
     version: str
     supported_renderer: str
-    assets: tuple[CharacterAsset, ...]
+    assets: tuple[PackageAsset, ...]
     thumbnail: str
     fallback_image: str
     skeleton: Mapping[str, Any]
@@ -357,7 +271,7 @@ class CharacterPackage:
             character_name=str(value.get("characterName", "")),
             version=str(value.get("version", "")),
             supported_renderer=str(value.get("supportedRenderer", "")),
-            assets=tuple(CharacterAsset.from_json(item) for item in assets),
+            assets=tuple(PackageAsset.from_json(item) for item in assets),
             thumbnail=str(value.get("thumbnail", "")),
             fallback_image=str(value.get("fallbackImage", "")),
             skeleton=dict(value.get("skeleton") or {}),
@@ -493,6 +407,75 @@ def validate_archive(path: Path) -> CharacterPackage:
             if size != asset.size_bytes or digest != asset.sha256:
                 raise CharacterPackageError(f"asset integrity mismatch: {relative}")
         return package
+
+
+# -- Static character loader -----------------------------------------------
+# The installed character's one static picture and its phase descriptions.
+# Separate concern from the package validation above: the loader reads what
+# shipped in /usr/share, the validator governs what a creator may submit.
+# The two size limits are different limits: a submitted package asset may be
+# large (a skeleton, a texture); the loader's static image may not.
+
+from dataclasses import dataclass
+import os
+from pathlib import Path
+from typing import Any
+
+__all__ = [
+    "CharacterAsset",
+    "CharacterError",
+    "MAX_STATIC_ASSET_BYTES",
+    "PERMITTED_SUFFIXES",
+    "candidate_paths",
+    "describe_phase",
+    "load_static_character",
+]
+
+
+class CharacterError(ValueError):
+    """The shipped asset is not what it should be, and was not loaded."""
+
+
+#: What a character asset may be. Both are data formats a renderer draws; there
+#: is no entry that can carry a script. SVG can carry one in principle, which is
+#: why :func:`load_static_character` checks for it rather than trusting the
+#: suffix — see the scan in :func:`_refuse_active_content`.
+PERMITTED_SUFFIXES = frozenset({".svg", ".png"})
+
+#: A static character is a small picture. The bound is here so that a
+#: substituted file cannot make the client allocate arbitrarily.
+MAX_STATIC_ASSET_BYTES = 2 * 1024 * 1024
+
+#: Markup an SVG may not contain. A static character is a drawing; a drawing
+#: with a script in it is a program the shell would run at whatever privilege
+#: the shell has. Checked on load rather than assumed from the suffix.
+_ACTIVE_CONTENT = (
+    b"<script",
+    b"javascript:",
+    b"<foreignobject",
+    b"onload=",
+    b"onclick=",
+    b"onerror=",
+    b"<!entity",
+    b"<iframe",
+)
+
+
+def candidate_paths() -> tuple[Path, ...]:
+    """Where the shipped character may be, in order. A closed list.
+
+    Installed location first, source tree second. Nothing else, and in
+    particular nothing from the environment: a ``BUNNY_CHARACTER_PATH`` would be
+    a way to point the shell at any file on the machine and have it rendered.
+    """
+    return (
+        Path("/usr/share/bunny-shell/companion/default-bunny.svg"),
+        Path(__file__).resolve().parents[1] / "shell" / "assets" / "companion" / "default-bunny.svg",
+    )
+
+
+@dataclass(frozen=True)
+class CharacterAsset:
     """The one picture, and what may be said about it without seeing it."""
 
     path: Path
@@ -549,9 +532,9 @@ def load_static_character(paths: tuple[Path, ...] | None = None) -> CharacterAss
                 f"{candidate} is a {suffix or 'typeless'} file; a character asset is "
                 f"one of {sorted(PERMITTED_SUFFIXES)}"
             )
-        if status.st_size <= 0 or status.st_size > MAX_ASSET_BYTES:
+        if status.st_size <= 0 or status.st_size > MAX_STATIC_ASSET_BYTES:
             raise CharacterError(
-                f"{candidate} is {status.st_size} bytes against a limit of {MAX_ASSET_BYTES}"
+                f"{candidate} is {status.st_size} bytes against a limit of {MAX_STATIC_ASSET_BYTES}"
             )
         if os.name == "posix" and status.st_mode & 0o111:
             raise CharacterError(f"{candidate} is marked executable; a picture is not a program")

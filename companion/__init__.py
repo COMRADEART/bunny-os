@@ -1,20 +1,5 @@
 # SPDX-FileCopyrightText: 2026 ComradeArt
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Bunny Companion runtime contracts and provider-neutral coordination."""
-
-from __future__ import annotations
-
-COMPANION_STATE_SCHEMA_VERSION = 1
-TASK_SCHEMA_VERSION = 1
-EVENT_SCHEMA_VERSION = 1
-CHARACTER_PACKAGE_SCHEMA_VERSION = 1
-PROTOCOL_SCHEMA_VERSION = 1
-
-__all__ = [
-    "CHARACTER_PACKAGE_SCHEMA_VERSION",
-    "COMPANION_STATE_SCHEMA_VERSION",
-    "EVENT_SCHEMA_VERSION",
-    "PROTOCOL_SCHEMA_VERSION",
 """The Bunny Companion runtime core, headless.
 
 This package is the part of the companion that has to be right before anything
@@ -83,7 +68,20 @@ EVENT_SCHEMA_VERSION = 2
 #: Version of the on-disk store layout as a whole.
 STORE_SCHEMA_VERSION = 1
 
+#: Version of the projected companion state document
+#: (``schemas/companion-state.schema.json``). State is a projection of the
+#: event stream rather than an independent record, so this version moves only
+#: when the projection itself changes shape, never when an event field does.
+COMPANION_STATE_SCHEMA_VERSION = 1
+
+#: Version of the character package manifest
+#: (``schemas/companion-character-package.schema.json``), validated by
+#: :func:`companion.characters.validate_directory` / ``validate_archive``.
+CHARACTER_PACKAGE_SCHEMA_VERSION = 1
+
 __all__ = [
+    "CHARACTER_PACKAGE_SCHEMA_VERSION",
+    "COMPANION_STATE_SCHEMA_VERSION",
     "EVENT_SCHEMA_VERSION",
     "SESSION_SCHEMA_VERSION",
     "STORE_SCHEMA_VERSION",

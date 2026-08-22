@@ -7,11 +7,14 @@ because a build-impact claim was made by inspection and was wrong, so an
 analyser that is merely *usually* right would reproduce the original failure
 with more ceremony. The second is the install set: a validation fixture that
 reached an installed system would be startable on somebody's machine.
+
+Both now hang off one declaration — ``build/scripts/install_routes.py``, which
+the installer is driven by and the analyser classifies with — so the route
+tests import that table rather than re-parsing either consumer.
 """
 
 from __future__ import annotations
 
-import ast
 import importlib.util
 import json
 from pathlib import Path
@@ -21,31 +24,29 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[2]
 ANALYSER = ROOT / "build/scripts/build-input-closure.py"
-INSTALLER = ROOT / "build/scripts/install-root.py"
+ROUTE_TABLE = ROOT / "build/scripts/install_routes.py"
 CONTAINERFILE = ROOT / "build/Containerfile"
 
 
-def load_analyser():
-    """Import the analyser by path; its filename is not an identifier."""
-    spec = importlib.util.spec_from_file_location("build_input_closure", ANALYSER)
+def load_module(path: Path, name: str):
+    """Import a script by path; its filename is not an identifier."""
+    spec = importlib.util.spec_from_file_location(name, path)
     module = importlib.util.module_from_spec(spec)
+    # Dataclass processing resolves string annotations through sys.modules; an
+    # unregistered module makes that lookup return None under Python 3.14.
+    sys.modules[name] = module
     spec.loader.exec_module(module)
     return module
 
 
-def load_install_routes() -> tuple:
-    """Read INSTALL_ROUTES out of the installer without importing it.
+def load_analyser():
+    return load_module(ANALYSER, "build_input_closure")
 
-    Importing install-root.py would execute a module written to run inside a
-    container; parsing it is both safer and closer to what the analyser does.
-    """
-    tree = ast.parse(INSTALLER.read_text(encoding="utf-8"))
-    for node in ast.walk(tree):
-        if isinstance(node, ast.Assign):
-            names = [item.id for item in node.targets if isinstance(item, ast.Name)]
-            if "INSTALL_ROUTES" in names:
-                return ast.literal_eval(node.value)
-    raise AssertionError("install-root.py no longer declares INSTALL_ROUTES")
+
+def load_route_table():
+    # Standard-library-only by design — it runs inside a bootc container — so
+    # importing it here is safe as well as honest.
+    return load_module(ROUTE_TABLE, "install_routes_under_test")
 
 
 class AnalyserResolutionTests(unittest.TestCase):
@@ -56,8 +57,7 @@ class AnalyserResolutionTests(unittest.TestCase):
 
     def classify(self, path: str) -> dict:
         roots, _ = self.module.build_context_roots(CONTAINERFILE)
-        routes, _ = self.module.install_routes(INSTALLER)
-        return self.module.classify(path, roots, routes)
+        return self.module.classify(path, roots)
 
     def test_capability_code_is_recognised_as_installed(self) -> None:
         # The whole point of the integration. If this reports context-only, the
@@ -143,8 +143,7 @@ class AnalyserRegressionTests(unittest.TestCase):
         # docs/ is copied wholesale. A "docs only, surely harmless" change is
         # exactly the shape of the original error.
         roots, _ = self.module.build_context_roots(CONTAINERFILE)
-        routes, _ = self.module.install_routes(INSTALLER)
-        result = self.module.classify("docs/CAPABILITY_RUNTIME.md", roots, routes)
+        result = self.module.classify("docs/CAPABILITY_RUNTIME.md", roots)
         self.assertEqual(result["classification"], "installed")
 
     def test_the_exit_status_distinguishes_build_affecting_changes(self) -> None:
@@ -159,20 +158,22 @@ class AnalyserRegressionTests(unittest.TestCase):
                 )
                 self.assertEqual(result.returncode, expected)
 
-    def test_the_analyser_reports_its_own_unresolved_calls(self) -> None:
+    def test_the_installer_installs_nothing_the_table_does_not_model(self) -> None:
         # Honesty about incompleteness is the property that stops this tool
-        # becoming the next thing somebody trusts too far.
-        _, unresolved = self.module.install_routes(INSTALLER)
-        self.assertIsInstance(unresolved, list)
+        # becoming the next thing somebody trusts too far: an unmodelled helper
+        # fails the closure closed instead of quietly widening the install set.
+        complaints = self.module.installer_audit()
+        self.assertIsInstance(complaints, list)
+        self.assertEqual(complaints, [], f"unmodelled installer behaviour: {complaints}")
 
     def test_the_closure_is_complete_for_copy_directives(self) -> None:
         _, unresolved = self.module.build_context_roots(CONTAINERFILE)
         self.assertEqual(unresolved, [], f"unresolved COPY directives: {unresolved}")
 
-    def test_the_indirect_routes_are_declared(self) -> None:
+    def test_the_generated_routes_are_declared(self) -> None:
         # Every commit changes the OCI config digest. An analyser that did not
         # say so would let an unchanged layer digest read as an unchanged image.
-        destinations = {item["destination"] for item in self.module._INDIRECT_ROUTES}
+        destinations = {item["destination"] for item in self.module.GENERATED_ROUTES}
         self.assertTrue(any("revision" in item for item in destinations))
         self.assertIn("/usr/lib/bunny-os/release.json", destinations)
 
@@ -180,40 +181,84 @@ class AnalyserRegressionTests(unittest.TestCase):
 class InstallRouteTableTests(unittest.TestCase):
     """The declaration the installer is driven by must stay honest."""
 
+    #: Produced by a release or live-medium build step rather than committed;
+    #: these routes name where the build will find them.
+    BUILD_PRODUCED_SOURCES = frozenset({
+        "build/artifacts/bunny",
+        "build/payload-oci",
+    })
+
     def setUp(self) -> None:
-        self.routes = load_install_routes()
+        self.table = load_route_table()
+        self.routes = self.table.INSTALL_ROUTES
 
     def test_capability_code_and_manifests_are_both_declared(self) -> None:
-        identifiers = {item["id"] for item in self.routes}
-        self.assertIn("capability-code", identifiers)
-        self.assertIn("capability-manifests", identifiers)
+        identifiers = {item.id for item in self.routes}
+        self.assertIn("capability-package", identifiers)
+        self.assertIn("capability-service-manifests", identifiers)
+        self.assertIn("capability-supervisor-executable", identifiers)
+        self.assertIn("capability-supervisor-configuration", identifiers)
 
     def test_the_code_route_excludes_fixtures_and_bytecode(self) -> None:
-        route = next(item for item in self.routes if item["id"] == "capability-code")
-        self.assertIn("testing", route["exclude"])
-        self.assertIn("__pycache__", route["exclude"])
-        self.assertIn("services", route["exclude"])
+        route = next(item for item in self.routes if item.id == "capability-package")
+        self.assertIn("testing", route.effective_exclude)
+        self.assertIn("__pycache__", route.effective_exclude)
+        # A package route installs source and only source, so the manifests are
+        # refused structurally rather than by name.
+        self.assertEqual(route.effective_suffixes, (".py",))
+        self.assertIsNone(
+            self.table.installed_destination(route, "capability/services/bunny-inference-local.json"),
+        )
 
     def test_the_manifest_route_excludes_the_probe(self) -> None:
-        route = next(item for item in self.routes if item["id"] == "capability-manifests")
-        self.assertIn("bunny-capability-probe", route["excludeStems"])
+        route = next(
+            item for item in self.routes if item.id == "capability-service-manifests"
+        )
+        self.assertIn("bunny-capability-probe", route.exclude_stems)
+        self.assertIsNone(
+            self.table.installed_destination(route, "capability/services/bunny-capability-probe.json"),
+        )
+        self.assertIsNotNone(
+            self.table.installed_destination(route, "capability/services/bunny-inference-local.json"),
+        )
 
-    def test_installed_code_is_read_only(self) -> None:
+    def test_the_supervisor_ships_where_its_unit_expects_it(self) -> None:
+        executable = next(
+            item for item in self.routes if item.id == "capability-supervisor-executable"
+        )
+        configuration = next(
+            item for item in self.routes if item.id == "capability-supervisor-configuration"
+        )
+        unit = (ROOT / "systemd/bunny-capability-supervisor.service").read_text(encoding="utf-8")
+        self.assertIn(f"ExecStart={executable.destination}", unit)
+        self.assertIn(f"--config {configuration.destination}", unit)
+
+    def test_installed_python_packages_are_read_only(self) -> None:
         # Immutable code must not be writable by anything, which is half of
-        # "code cannot write into its own installation directory"; the unit's
+        # "code cannot write into its own installation directory"; the units'
         # ProtectSystem=strict is the other half.
         for route in self.routes:
-            with self.subTest(route=route["id"]):
-                self.assertEqual(route["mode"], 0o444)
+            if route.kind != "package":
+                continue
+            with self.subTest(route=route.id):
+                self.assertEqual(route.mode, 0o444)
 
-    def test_every_declared_source_glob_matches_something(self) -> None:
-        # A route matching nothing is a route that silently installs nothing.
+    def test_nothing_is_shipped_group_or_world_writable(self) -> None:
         for route in self.routes:
-            with self.subTest(route=route["id"]):
-                self.assertTrue(
-                    list(ROOT.glob(route["sourceGlob"])),
-                    f"{route['sourceGlob']} matches no file",
-                )
+            with self.subTest(route=route.id):
+                self.assertEqual(route.mode & 0o022, 0)
+
+    def test_every_declared_source_exists(self) -> None:
+        # A route naming nothing silently installs nothing.
+        for route in self.routes:
+            if route.source in self.BUILD_PRODUCED_SOURCES:
+                continue
+            with self.subTest(route=route.id, source=route.source):
+                candidate = ROOT / route.source
+                if route.kind == "file":
+                    self.assertTrue(candidate.is_file(), f"{route.source} does not exist")
+                else:
+                    self.assertTrue(candidate.is_dir(), f"{route.source} is not a directory")
 
 
 class InstalledLayoutTests(unittest.TestCase):

@@ -15,6 +15,16 @@ captures, framebuffer dumps and screenshots are excluded — they are the
 regex over a 3 GB disk image would be theatre rather than a check. The scope
 is stated here so the gap is a decision on the record and not an oversight.
 
+Also out of scope are the ``tools/`` directories under each phase's tree.
+Those hold the executable harnesses a phase runs its gates with —
+instruments, not records — and to do their job they plant credential-shaped
+fixture bytes (marked ``TEST_FIXTURE_ONLY``) as inputs to the detectors they
+exercise; phase 17's floor matrix feeds a private-key envelope to the intake
+scanner's negative control, which is exactly what such a harness should
+contain and exactly what this gate must not read as a leak. Sweeping them
+would scan test fixtures rather than evidence. They stay ordinary reviewed
+code; what this gate guards is what a run wrote down.
+
 One fixture credential is deliberately present and declared: the LUKS
 passphrase the install journeys type into throwaway VM disks. It is a harness
 constant, never a product default and never a real user's secret, and it
@@ -93,11 +103,18 @@ HARNESS_ACCOUNT_PASSWORDS = (
 )
 
 
+# Instrument directories (see the docstring): <phase>/tools/ holds the
+# harnesses, not the records.
+TOOL_DIRECTORIES = frozenset({"tools"})
+
+
 def _evidence_text_files() -> list[Path]:
     return sorted(
         path
         for path in EVIDENCE.rglob("*")
-        if path.is_file() and path.suffix.lower() in TEXT_SUFFIXES
+        if path.is_file()
+        and path.suffix.lower() in TEXT_SUFFIXES
+        and not TOOL_DIRECTORIES.intersection(path.relative_to(EVIDENCE).parts[:-1])
     )
 
 

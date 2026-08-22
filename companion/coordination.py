@@ -20,10 +20,6 @@ class CoordinationError(RuntimeError):
     pass
 
 
-class CoordinationLimitExceeded(CoordinationError):
-    pass
-
-
 @dataclass(frozen=True)
 class CoordinationLimits:
     maximum_review_rounds: int = 2
@@ -404,37 +400,14 @@ class LocalSafetyReviewer(ReviewerAdapter):
             suggested_action="Keep the scoped approval and proceed only after the user approves it.",
             evidence_references=evidence,
         )
-"""The ceilings, and the rule that only one thing may drive a task.
 
-Every limit here exists because the unbounded version of it is a way for a task
-to consume a machine that has very little to consume. A review loop with no
-round ceiling is a conversation between an executor and a critic that neither
-has a reason to end. A tool-call budget with no ceiling is a plan that can
-decide to do a thousand things. On a 64 MB board these are not theoretical.
 
-**Exactly one executor per task** is enforced by a lease rather than by
-discipline. :class:`ExecutorLeases` hands out one lease per task id and refuses
-the second, so two runtimes — or one runtime with a bug — cannot both drive the
-same task. The lease is held in memory and therefore does not survive a restart,
-which is correct: after a crash nothing is driving anything, and
-:mod:`companion.recovery` decides what happens next.
-
-**Reviewers do not talk to each other.** The round's
-:class:`companion.reviewer.ReviewContext` is built once before any of them runs
-and each reviewer receives its own **deep copy**, so a reviewer that scribbles on
-what it was handed changes nothing anybody else will see. No reviewer sees
-another's observations — not in its round and not in the next one. Observations go to the executor, which may answer them with
-a new plan revision. A reviewer that could read another reviewer's remarks would
-turn review into a debate whose length nobody bounded, and the debate would be
-happening about a user's data.
-
-**A reviewer that does not answer is left behind.** Review is advice. The
-timeout is short, the task continues without the missing observation, and the
-absence is recorded so that "no issues were raised" is never confused with "the
-reviewer never replied".
-"""
-
-from __future__ import annotations
+# -- Policy, leases and review rounds --------------------------------------
+# The second half of this module: the policy-checked task pipeline used by
+# companion.runtime (review rounds, executor leases) alongside the
+# one-executor coordinator above. Two vocabularies, one module, no shared
+# names; CoordinationLimitExceeded comes from companion.errors so every
+# raiser and every handler in the tree hold the same class.
 
 from copy import deepcopy
 from dataclasses import dataclass, field

@@ -1,8 +1,4 @@
 [Unit]
-Description=Bunny Companion task and presentation runtime
-Documentation=file:///usr/share/doc/bunny-os/COMPANION_RUNTIME.md
-PartOf=graphical-session.target bunny-shell.target
-After=graphical-session-pre.target
 # The long-lived half of the companion. It owns the sessions, the tasks and the
 # event stream; the window is a client of it and closing the window must not
 # stop a task. That is why this is a service at all rather than something the
@@ -49,14 +45,6 @@ ConditionUser=!gdm
 [Service]
 Type=simple
 ExecStart=/usr/libexec/bunny-companion-service
-Restart=on-failure
-RestartSec=3s
-TimeoutStopSec=15s
-RuntimeDirectory=bunny-companion
-RuntimeDirectoryMode=0700
-StateDirectory=bunny-companion
-StateDirectoryMode=0700
-UMask=0077
 # Bounded, not unlimited. A runtime that respawned for ever would hide a store
 # it cannot read behind a restart loop; four attempts in a minute and then a
 # failed unit is a state somebody notices.
@@ -108,13 +96,6 @@ NoNewPrivileges=yes
 PrivateTmp=yes
 ProtectSystem=strict
 ProtectHome=read-only
-RestrictAddressFamilies=AF_UNIX
-RestrictNamespaces=yes
-LockPersonality=yes
-MemoryDenyWriteExecute=yes
-MemoryMax=128M
-TasksMax=96
-SystemCallArchitectures=native
 ProtectKernelTunables=yes
 ProtectControlGroups=yes
 ProtectClock=yes

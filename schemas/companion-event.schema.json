@@ -15,10 +15,15 @@
     "eventType": {
       "type": "string",
       "enum": [
-        "task_created", "task_classified", "executor_selected", "reviewer_added", "planning_started",
-        "tool_requested", "approval_requested", "approval_resolved", "tool_started", "tool_progress",
-        "tool_completed", "tool_failed", "reviewer_observation", "reviewer_disagreement", "response_drafting",
-        "speech_started", "speech_completed", "task_completed", "task_cancelled", "task_failed",
+        "session_created", "task_created", "task_classified", "capability_checked",
+        "executor_selected", "reviewer_selected", "planning_started",
+        "approval_requested", "approval_resolved", "execution_started",
+        "operation_started", "operation_progress", "operation_completed", "operation_failed",
+        "reviewer_observation", "reviewer_disagreement", "result_created",
+        "task_paused", "task_resumed", "task_state_changed",
+        "response_drafting", "speech_started", "speech_completed",
+        "task_completed", "task_cancelled", "task_failed",
+        "recovery_started", "recovery_completed",
         "capability_degraded", "connection_lost", "connection_restored"
       ]
     },

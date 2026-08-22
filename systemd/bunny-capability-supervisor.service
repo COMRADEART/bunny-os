@@ -86,7 +86,7 @@ NoNewPrivileges=yes
 # what makes "immutable code cannot write into its own installation directory"
 # a kernel-enforced property rather than a convention.
 ProtectSystem=strict
-ReadWritePaths=/var/lib/bunny-os/capability /var/log/bunny-os /run/bunny-os
+ReadWritePaths=/var/lib/bunny-os/capability /var/log/bunny-os /run/bunny-os/capability
 ProtectHome=yes
 PrivateTmp=yes
 PrivateDevices=yes

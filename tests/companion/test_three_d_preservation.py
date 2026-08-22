@@ -155,6 +155,15 @@ _PHASES_AFTER_THE_RECORD = (
     # twenty-six Phase 17 additions; this declaration follows that measured
     # refusal and does not enlarge any historical cut-time exemption.
     "qualification/phase17/",
+    # The capability-integration phase's evidence: the vertical-slice,
+    # installed-vertical-slice, adaptation, memory, environment-and-memory
+    # and local-repeatability-comparison records of the companion runtime's
+    # capability route. The tree reached this line through the Phase 17
+    # external-floor merge (its last writer was 9d3b0ade) after both records
+    # were cut, and both standing guards refused exactly these six committed
+    # paths before this deliberate declaration. Neither historical cut-time
+    # exemption changed.
+    "qualification/capability-integration/",
     # The grader is not evidence at all — it is the instrument, extracted from
     # ``build/scripts/vm-login-story.sh`` so that it can be unit-tested against
     # recorded runs. It lives under ``qualification/`` because that directory is
