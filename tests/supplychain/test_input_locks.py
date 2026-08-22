@@ -6,6 +6,16 @@ Each test names a mistake that has either happened in this project or is one
 version of a lock away from happening. A lock that accepts an ambiguous record
 reports success for an unpinned build, which is worse than having no lock at
 all — it looks like evidence.
+
+``PackageLockConsistencyTests`` owns one that did happen: a package name was
+added to ``build/packages/companion-runtime.txt`` between resolutions, and the
+first alpha build carried it forty minutes into the image build before dnf
+refused it with ``No match for argument: vosk-api``. Nothing consults the lock
+on the non-hermetic alpha path, so nothing stood between the declaration and
+the repository except forty minutes of layer building. Binding the committed
+lock to the sets it resolved turns that into a gate-time refusal — and the
+same binding caught two names (``llama-cpp``, ``glibc-langpack-en``) that had
+drifted past the hermetic path's lock unnoticed.
 """
 
 from __future__ import annotations
@@ -403,6 +413,65 @@ class ToolchainMismatchTests(unittest.TestCase):
             classifications={"podman": "output-affecting"},
         )
         self.assertEqual(blocking, ("podman",))
+
+
+class PackageLockConsistencyTests(unittest.TestCase):
+    """The committed package lock describes the sets it was resolved from.
+
+    ``resolve-package-lock.py`` writes two things into the lock: the profile it
+    resolved for and ``namedPackages`` — the exact union it read out of that
+    profile's package-set files. Neither is a copy anyone re-derives today, so
+    an edit to a ``build/packages/*.txt`` file silently outlives the lock's
+    description of it. The alpha path resolves live and never reads the lock at
+    all; the hermetic path installs from the snapshot and fails honestly. This
+    test is the third reader, and the only one that runs between the edit and
+    either build.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.lock_path = ROOT / "build" / "inputs" / "package-lock.json"
+        if not cls.lock_path.is_file():
+            raise unittest.SkipTest("package-lock.json has not been generated in this checkout")
+        cls.lock = json.loads(cls.lock_path.read_text(encoding="utf-8"))
+
+    def _resolver(self):
+        """Load the resolver for its ``read_package_sets`` — the same function
+        that produced ``namedPackages``, so both sides of the comparison share
+        one definition of what a declaration line is."""
+        import importlib.util
+
+        path = ROOT / "scripts" / "supply-chain" / "resolve-package-lock.py"
+        spec = importlib.util.spec_from_file_location("bunny_resolve_package_lock", path)
+        module = importlib.util.module_from_spec(spec)
+        assert spec.loader is not None
+        spec.loader.exec_module(module)
+        return module
+
+    def test_the_lock_names_the_packages_its_profile_now_declares(self) -> None:
+        declared = self._resolver().read_package_sets(ROOT, self.lock["profile"])
+        self.assertEqual(
+            self.lock["namedPackages"],
+            declared,
+            "the committed package lock no longer matches the package sets it "
+            "was resolved from; re-run `make resolve-package-lock` (the only "
+            "step permitted to reach a live repository) before building",
+        )
+
+    def test_the_comparison_still_reads_real_declarations(self) -> None:
+        """A parser that quietly returned nothing would pass the test above.
+
+        Beta resolves to roughly a hundred named packages; anything far below
+        that means the recomputation stopped reading the set files, not that
+        the tree shrank.
+        """
+        declared = self._resolver().read_package_sets(ROOT, self.lock["profile"])
+        self.assertGreater(
+            len(declared), 50,
+            "read_package_sets() found almost nothing for "
+            f"profile {self.lock['profile']!r}; the consistency check above "
+            "would be comparing two empty hands",
+        )
 
 
 class CommittedLockTests(unittest.TestCase):

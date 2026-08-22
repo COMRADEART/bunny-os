@@ -99,22 +99,32 @@ are green; runtime validation is NOT_RUN/BLOCKED and is reported as such.
 
 ### STEP 6 — Complete voice path
 
-- **`build/packages/companion-runtime.txt`** — adds `vosk-api` (provides
-  `libvosk.so`), `espeak-ng`, `speech-dispatcher`, `speech-dispatcher-espeak-ng`.
-- **`build/scripts/install_routes.py`** — adds a `speech-models` tree route to
-  `/usr/share/bunny-os/speech-models` (mode `0o444`) for the offline
-  `vosk-model-small-en-us-0.15` model. No model is vendored; no boot-time
-  download.
+- **`build/packages/companion-runtime.txt`** — adds `espeak-ng`,
+  `speech-dispatcher`, `speech-dispatcher-espeak-ng`. It deliberately does
+  **not** list a vosk package: `libvosk.so` is installed by `vosk-api-devel`,
+  which `build/packages/desktop.txt` already declares (Fedora 44 ships only
+  the `-devel` subpackage; see the packaging note below).
+- **`build/scripts/install_routes.py`** — installs the offline
+  `vosk-model-small-en-us-0.15` model tree through the `speech-recognition-models`
+  route to `/usr/share/bunny-os/speech-models` (mode `0o444`). No model is
+  vendored; no boot-time download. A second route declaring this same tree
+  under the id `speech-models` was removed as a duplicate; the surviving
+  declaration is the one the tests pin.
 - **`assets/voice/models/PROVISIONING.md`** (new) — documents operator
   provisioning of the Vosk model, offline.
 - The Vosk recognizer (`MODEL_DIRECTORIES`) and TTS runtimes were already
   implemented in source; the gap was that the packages and model directory were
   never in the image.
-- **Fedora 44 packaging note:** `llama-cpp`, `espeak-ng`, `speech-dispatcher`,
-  and `speech-dispatcher-espeak-ng` are confirmed Fedora packages. `vosk-api`
-  is a Fedora package (provides `libvosk.so`; reviewed for fc42/rawhide); its
-  **fc44 availability is to be confirmed at build time** and is therefore
-  marked NOT_RUN.
+- **Fedora 44 packaging fact (confirmed by the first alpha image build):**
+  the repositories carry `vosk-api-devel` (0.3.50-3.fc44, provides
+  `/usr/lib64/libvosk.so`) and **no bare `vosk-api` package** — a build
+  listing it fails forty minutes in with dnf's ``No match for argument:
+  vosk-api``. That failure is how this file first met the fact;
+  `companion-runtime.txt` records it, and
+  `tests/supplychain/test_input_locks.py::PackageLockConsistencyTests` now
+  refuses any declared package name the resolved lock does not contain, so a
+  name Fedora does not ship becomes a gate-time refusal instead of a
+  mid-build one.
 
 ### STEP 7 — Voice & AI settings + `bunny-settings` import fix
 
@@ -221,7 +231,15 @@ _(To be filled after the gate run and commit.)_
 
 ## Known defects / open items
 
-- **`vosk-api` fc44 availability** — to be confirmed at build time (NOT_RUN).
+- **`vosk-api` fc44 availability** — RESOLVED. Fedora 44 ships only
+  `vosk-api-devel`; the first image build refused the bare name, the package
+  lists were corrected at source (`libvosk.so` arrives via `vosk-api-devel`,
+  already declared for the desktop set), and a gate-time lock-consistency test
+  now owns the defect class.
+- **Package-lock drift** — RESOLVED alongside it: `llama-cpp` and
+  `glibc-langpack-en` had been declared after the last resolution; the lock
+  was re-resolved against the retained base with the repository's own
+  resolver.
 - **Desktop polish at two resolutions** — NOT_RUN (no display host).
 - **Entire runtime path (build → boot → install → journey → spoken round-trip)**
   — NOT_RUN/BLOCKED on this host.

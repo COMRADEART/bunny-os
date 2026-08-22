@@ -30,16 +30,19 @@ the compositor process.
 | Session lifecycle | `bunny-companion.service` | Yes | Yes | Installed in `/usr/lib/systemd/user`, globally enabled for `graphical-session.target` |
 | IPC | private companion AF_UNIX socket | Yes | Yes | Socket lives in `%t/bunny-companion` with mode `0700`; no network address family is allowed |
 
-The retained hermetic Fedora package snapshot predates the voice command-package
-declarations. It must be resolved and re-signed before a future hermetic release
-build. The Public Alpha build is explicitly non-hermetic and resolves the named
-Fedora 44 packages while recording the installed RPM inventory in its artifact.
+The resolution half of that obligation is closed: `build/inputs/package-lock.json`
+was re-resolved against the retained base with `resolve-package-lock.py` (101
+named packages, 642-package transaction, every signature verified), so it now
+covers the voice command-package declarations and the Pocket/Kitten
+Python/ONNX dependencies.
+`tests/supplychain/test_input_locks.py::PackageLockConsistencyTests` binds the
+lock to the declared sets, so the two cannot drift apart silently again.
 
-For the Pocket/Kitten change, the current package lock also predates the newly
-declared Python/ONNX dependencies. The source routes are complete, but an exact
-candidate image is deliberately blocked until that lock and retained snapshot
-are resolved in the Fedora builder. Source support is not recorded as an
-installed-image PASS.
+The retained **snapshot** itself — the signed, materialised repository the
+hermetic build installs from — still predates those declarations and must be
+re-materialised and re-signed before a future hermetic release build. The
+Public Alpha build is explicitly non-hermetic and resolves the named Fedora 44
+packages while recording the installed RPM inventory in its artifact.
 
 ## TTS distribution and size accounting
 

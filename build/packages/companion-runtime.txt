@@ -5,8 +5,12 @@
 #
 #   llama-cpp                   /usr/bin/llama-cli  — local text generation
 #                                                  (the local.llamacli adapter)
-#   vosk-api                    /usr/lib64/libvosk.so — offline speech
-#                                                  recognition (ctypes, no pip)
+#   [libvosk.so]                /usr/lib64/libvosk.so — offline speech
+#                                                  recognition (ctypes, no pip);
+#                                                  installed as vosk-api-devel,
+#                                                  already declared in
+#                                                  desktop.txt — Fedora 44 ships
+#                                                  no bare vosk-api package
 #   espeak-ng                   /usr/bin/espeak-ng  — offline speech synthesis
 #   speech-dispatcher           /usr/bin/spd-say    — the TTS broker the voice
 #                                                  runtime speaks through
@@ -19,12 +23,12 @@
 # and a missing model is reported unavailable by the adapter rather than
 # fetched — offline by construction, no world-writable model file.
 #
-# Package names verified against packages.fedoraproject.org for Fedora 44
-# (llama-cpp, espeak-ng, speech-dispatcher, speech-dispatcher-espeak-ng).
-# vosk-api was reviewed and approved for Fedora (rawhide/fc42) and provides
-# libvosk.so; its exact fc44 availability is confirmed at build time, not here.
+# Package names verified against packages.fedoraproject.org and against the
+# Fedora 44 repositories at build time: llama-cpp, espeak-ng, speech-dispatcher
+# and speech-dispatcher-espeak-ng resolve as named, and the fc44 repos carry
+# vosk-api-devel only — a build listing bare `vosk-api` fails dnf with "No
+# match for argument", which is how this file first met that fact.
 llama-cpp
-vosk-api
 espeak-ng
 speech-dispatcher
 speech-dispatcher-espeak-ng
