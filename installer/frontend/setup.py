@@ -72,22 +72,85 @@ from installer.setup_view import Action, Field, Screen, Warning
 from installer import setup_view
 from installer.theme_css import ThemeUnavailable, render_gtk_css, resolve
 
-__all__ = ["SetupApplication", "build_flow", "run"]
+__all__ = ["SetupApplication", "SetupDisplayUnavailable", "build_flow", "run"]
+
+
+class SetupDisplayUnavailable(RuntimeError):
+    """GTK could not initialise against a windowing system a person can see.
+
+    Raised by :func:`_gtk` instead of handing back a Gtk module that cannot
+    draw. Callers convert it into whatever their shape of refusal is: the CLI
+    exits with a sentence, and the test fixture turns it into a SkipTest.
+    """
 
 
 def _gtk():
-    """Import GTK, or say plainly why setup cannot draw.
+    """Import and initialise GTK, or say plainly why setup cannot draw.
 
     Separated so that the flow construction below is importable and testable
-    without a display, which is what lets `tests/installer/test_setup_surface.py`
-    check the screen order and the field wiring on a machine with no GTK at all.
+    without a display, which is what lets `tests/installer` check the screen
+    order and the field wiring through ``_gtk_or_skip()`` on a machine with no
+    GTK at all — and what makes a machine *with* GTK but no usable display a
+    clean skip instead of a dead interpreter.
+
+    Importing Gtk is not the same as being able to draw with it, and this was
+    measured rather than presumed. PyGObject auto-runs ``gtk_init_check()`` at
+    import time and swallows the answer, and since GTK 4 a *successful*
+    init says nothing about a display: on a display-less machine every probe
+    still reports initialised. The suite believed all of that and constructed
+    a single ``Gtk.Box``, and libgtk-4 segfaulted the interpreter (measured,
+    Fedora 44: exit 245, ``_CompanionView.__init__``).
+
+    So this boundary owns initialisation end to end. It hands out Gtk only
+    when the library is initialised **and** a default display answers —
+    opening one, the way a mainloop start would, when nothing has yet — and
+    raises :class:`SetupDisplayUnavailable` otherwise. A caller that receives
+    a Gtk module from here can construct widgets; one that cannot draw finds
+    out through an exception instead of a dead interpreter.
     """
-    import gi  # type: ignore
+    import gi
 
     gi.require_version("Gtk", "4.0")
-    from gi.repository import Gtk  # type: ignore
+    from gi.repository import Gdk, Gtk
+
+    if not Gtk.is_initialized():
+        result = Gtk.init_check()
+        # Older bindings surface the C out-parameter pair as a tuple; current
+        # ones hand back a bare bool. Both mean "initialised".
+        initialised = result[0] if isinstance(result, tuple) else result
+        if not initialised:
+            raise SetupDisplayUnavailable(
+                "GTK initialisation failed: no windowing system is available")
+
+    if Gdk.Display.get_default() is None:
+        # Nothing has opened a display yet — the case before Gtk.Application.run()
+        # gets its turn. Ask GDK for the one it would open itself; a machine
+        # with no windowing system fails this cleanly instead of at first draw.
+        name = _display_name()
+        opened = None
+        if name:
+            try:
+                opened = Gdk.Display.open(name)
+            except Exception:                    # GLib.Error and binding drift
+                opened = None
+        if opened is None and Gdk.Display.get_default() is None:
+            raise SetupDisplayUnavailable(
+                "no usable display: GTK is initialised but no windowing "
+                "system answered")
 
     return Gtk
+
+
+def _display_name() -> str | None:
+    """The display GDK would connect to, using the same variables it reads.
+
+    Kept as its own seam so the boundary stays readable: DISPLAY for X11,
+    WAYLAND_DISPLAY under Wayland — the precedence GDK itself applies when it
+    opens a default.
+    """
+    import os
+
+    return os.environ.get("WAYLAND_DISPLAY") or os.environ.get("DISPLAY")
 
 
 # --------------------------------------------------------------------- flow
@@ -1130,6 +1193,11 @@ def run(argv: Sequence[str] | None = None) -> int:
 
     try:
         Gtk = _gtk()
+    except SetupDisplayUnavailable as error:
+        # The boundary already knows the precise reason; say it and stop
+        # rather than reaching the first widget construction unprepared.
+        sys.stderr.write(f"bunny-setup: {error}\n")
+        return 2
     except (ImportError, ValueError) as error:
         raise RuntimeError("GTK4 is required for the Bunny setup surface") from error
 
