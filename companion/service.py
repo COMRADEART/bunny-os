@@ -2115,6 +2115,50 @@ def _login_session_id() -> str:
 
 
 
+def _merge_ai_preferences(configuration, ai):
+    """Fold Settings.ai into agent configuration as preference, never authority.
+
+    The named provider gains ``user_preferred`` -- a field whose entire meaning
+    is ordering *among providers that are already eligible* (the registry
+    order_key applies it only after the local and requirement checks, so it
+    cannot override capability, privacy, cost, language or availability) -- and,
+    when given, the model file name lands on that provider (or on the llamacli
+    subprocess candidate when only a model was named; it is the one provider whose
+    model is a bare trusted-directory file name). Every downstream check keeps
+    its say: an unknown provider id is ignored, an unusable model name makes the
+    probe refuse, and that refusal is the bounded failure the product owes.
+
+    Returns ``(merged_configuration, selected_provider_id)`` where the latter is
+    ``""`` when no preference named a known provider.
+    """
+    from dataclasses import replace
+
+    providers = list(configuration.providers)
+    selected = ""
+
+    def position_of(provider_id):
+        return next(
+            (i for i, p in enumerate(providers) if p.provider_id == provider_id),
+            None,
+        )
+
+    target = position_of(ai.preferred_provider_id) if ai.preferred_provider_id else None
+    if target is not None:
+        selected = providers[target].provider_id
+        providers[target] = replace(providers[target], user_preferred=True)
+
+    model_target = target
+    if model_target is None and ai.preferred_model_id:
+        model_target = position_of("local.llamacli")
+        if model_target is not None:
+            selected = selected or providers[model_target].provider_id
+    if model_target is not None and ai.preferred_model_id:
+        providers[model_target] = replace(
+            providers[model_target], model_id=ai.preferred_model_id)
+
+    return replace(configuration, providers=tuple(providers)), selected
+
+
 class CompanionService:
     """One runtime, one worker, one socket. Started by the user unit.
 
@@ -2134,6 +2178,12 @@ class CompanionService:
         self.voice: "VoiceService | None" = None
         self.speech: "SpeechInputService | None" = None
         self.agents: "AgentProviderService | None" = None
+        #: The local AI provider the user named in Settings -> AI, or "" when
+        #: none was named or agents are disabled. Set by _build_agents from the
+        #: merged configuration; read by _build_runtime to decide whether the
+        #: deterministic executor yields the inference classes to the provider
+        #: executor. Empty means today behaviour: deterministic answers all.
+        self.user_selected_ai_provider: str = ""
         #: The desktop action broker and its bridge, when this build has one.
         #: Absent means no desktop tool is registered at all, so a plan naming
         #: one fails at the allowlist rather than somewhere deeper.
@@ -2461,18 +2511,40 @@ class CompanionService:
         The deterministic executor is unaffected and every provider operation
         reports the absence.
         """
+        from .agents.config import load_agent_configuration
         from .agents.service import AgentProviderService, AgentServiceOptions
+        from .settings import AiSettings, load_settings
 
         try:
+            configuration = self.options.agent_configuration
+            if configuration is None:
+                # Production path: the configured providers, then Settings.ai
+                # folded in as *preference*, never authority. The named
+                # provider gains ``user_preferred`` (a registry ordering flag
+                # applied only among providers that already passed every
+                # eligibility check) and, when given, the model file name lands
+                # on that provider. Nothing here can override capability,
+                # privacy, cost, health or availability: those gates live
+                # downstream and stay open. A corrupt settings document degrades
+                # to empty preferences, exactly as a broken providers.json
+                # degrades to defaults -- it never blocks startup.
+                configuration = load_agent_configuration(self.root)
+                try:
+                    ai = load_settings(self.root).ai
+                except Exception:  # noqa: BLE001 - settings never block agents
+                    ai = AiSettings()
+                configuration, selected = _merge_ai_preferences(configuration, ai)
+                self.user_selected_ai_provider = selected
             return AgentProviderService(AgentServiceOptions(
                 root=self.root,
-                configuration=self.options.agent_configuration,
+                configuration=configuration,
                 # Constructed here, started at its own step. Same split, same
                 # reason as voice: a failure between the two unwinds objects
                 # rather than chasing a running thread.
                 start_worker=False,
             ))
         except Exception:  # noqa: BLE001 - providers are never a reason not to start
+            self.user_selected_ai_provider = ""
             return None
 
     def _build_runtime(self, consent: ConsentSource) -> CompanionRuntime:
@@ -2509,7 +2581,18 @@ class CompanionService:
         # executor every existing task chose. The integration slice noticed:
         # it asserts that the deterministic executor is selected and that its
         # plan raises an approval, and both stopped being true.
-        executors: tuple[Any, ...] = (DeterministicLocalExecutor(),)
+        deterministic_executor = DeterministicLocalExecutor()
+        if getattr(self, "user_selected_ai_provider", ""):
+            # The user named a local AI provider in Settings -> AI. Ordinary
+            # inference-class requests now belong to the provider-backed
+            # executor; the deterministic one keeps exactly the work it can do
+            # without a model -- recognized OS intents (local_action) and pure
+            # arithmetic (compute). A machine where the named provider then
+            # proves unavailable refuses such tasks bounded (CapabilityRefused
+            # -> blocked) instead of answering them with a canned sentence.
+            deterministic_executor.declaration = (
+                DeterministicLocalExecutor.restricted_declaration())
+        executors: tuple[Any, ...] = (deterministic_executor,)
         reviewers: tuple[Any, ...] = (DeterministicLocalReviewer(),)
         router_destinations: tuple[Any, ...] = ()
         if self.agents is not None:
@@ -2529,9 +2612,9 @@ class CompanionService:
             # deterministic executor first, so a machine with no model behaves
             # exactly as it did before this subsystem existed.
             if agent_configuration.executor_preference == "provider":
-                executors = (provider_executor, DeterministicLocalExecutor())
+                executors = (provider_executor, deterministic_executor)
             else:
-                executors = (DeterministicLocalExecutor(), provider_executor)
+                executors = (deterministic_executor, provider_executor)
             for provider in agent_configuration.providers:
                 if provider.remote and provider.enabled:
                     try:
