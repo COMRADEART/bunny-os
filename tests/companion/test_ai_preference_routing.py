@@ -505,5 +505,106 @@ class LlamaCliStructuredOutput(unittest.TestCase):
         self.assertEqual(outcome.failure_kind, "connection")
 
 
+class _FakeStream:
+    def __init__(self, pieces):
+        self._pieces = list(pieces)
+
+    def read(self, _size):
+        if self._pieces:
+            return self._pieces.pop(0)
+        return b""
+
+
+class _FakeProcess:
+    def __init__(self, pieces):
+        self.stdout = _FakeStream(pieces)
+        self.stderr = _FakeStream([b""])
+        self.returncode = 0
+
+    def poll(self):
+        return 0
+
+    def wait(self, timeout=None):
+        return 0
+
+
+class LlamaCliStopTokenDecoration(unittest.TestCase):
+    """llama-cli prints its stop token as literal text; the adapter owns that.
+
+    Found by the first real generated run on the shipped model: under
+    ``-no-cnv --simple-io`` every completion ends "[end of text]" plus newline
+    padding. Left in the stream, the trailer made ``parse_structured`` refuse
+    well-formed plan JSON twice (invalid-json, then again on the repair round)
+    and it would have ended every user-visible answer with the engine's marker.
+    """
+
+    def test_only_a_trailing_decoration_is_stripped(self):
+        from companion.agents.adapters.llamacli import _without_stop_decoration
+
+        self.assertEqual(
+            _without_stop_decoration('{"a": 1} [end of text]\n\n\n'), '{"a": 1}')
+        self.assertEqual(_without_stop_decoration('{"a": 1}'), '{"a": 1}')
+        self.assertEqual(_without_stop_decoration("hello\n"), "hello\n")
+        # A marker the model wrote mid-text is content, not decoration.
+        self.assertEqual(
+            _without_stop_decoration("saw [end of text] once"),
+            "saw [end of text] once")
+
+    def test_a_decoration_split_across_reads_never_reaches_the_stream(self):
+        # The engine's marker is cut mid-way across read boundaries; the join
+        # of the emitted deltas must be the clean completion regardless.
+        from pathlib import Path
+        from unittest import mock
+
+        from companion.agents.adapter import CancellationSignal, StreamEventFactory
+        from companion.agents.adapters import llamacli as llamacli_module
+        from companion.agents.adapters.llamacli import LlamaCliAdapter
+        from companion.agents.config import ProviderConfiguration
+        from companion.agents.descriptor import EndpointIdentity
+        from companion.agents.structured import PLAN_SCHEMA_REFERENCE
+
+        from .agents_support import make_request
+
+        request = make_request(
+            provider_id="local.llamacli", purpose="plan",
+            structured_schema_reference=PLAN_SCHEMA_REFERENCE,
+        )
+        configuration = ProviderConfiguration(
+            provider_id="local.llamacli", adapter_id="llamacli",
+            endpoint=EndpointIdentity(kind="subprocess", locator="llama-cli"),
+            program="llama-cli",
+            model_id="qwen2.5-1.5b-instruct-q4_k_m.gguf",
+        )
+        events = StreamEventFactory(
+            request_id=request.request_id, provider_id=request.provider_id,
+            monotonic=lambda: 0.0,
+        )
+        sink: list = []
+        pieces = [
+            b'{\n  "summary": "The Moon is lit',
+            b' by sunlight."} [end ',
+            b'of text]\n\n\n',
+        ]
+        with mock.patch.object(llamacli_module, "_resolve_program",
+                               return_value=("/usr/bin/llama-cli", "")), \
+             mock.patch.object(llamacli_module, "_resolve_model",
+                               return_value=(Path("/tmp/fa-model.gguf"), "")), \
+             mock.patch.object(llamacli_module.subprocess, "Popen",
+                               return_value=_FakeProcess(pieces)):
+            outcome = LlamaCliAdapter().generate(
+                request, configuration, secret=None,
+                emit=sink.append, events=events, cancellation=CancellationSignal(),
+            )
+        self.assertTrue(outcome.ok, outcome.detail)
+        deltas = [str(event.payload["text"]) for event in sink
+                  if event.kind == "output_delta"]
+        assembled = "".join(deltas)
+        self.assertEqual(assembled, '{\n  "summary": "The Moon is lit by sunlight."}')
+        self.assertNotIn("[end of text]", assembled,
+                         "the engine's stop-token rendering reached the stream")
+        # Byte accounting still measures what the engine produced.
+        self.assertTrue(any(event.kind == "usage_update" for event in sink))
+
+
 if __name__ == "__main__":  # pragma: no cover
     unittest.main()

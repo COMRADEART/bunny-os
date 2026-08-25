@@ -28,6 +28,14 @@ adapter (``llamacpp``) claims structured support is claimed here for the prompt
 path. ``False`` here routed every local question to a blocked task instead of to
 the model. Usage is byte-estimated and labelled so; parsing timing lines off
 stderr would be a report built on a format nobody promised.
+
+One rendering habit is owned here too: under ``-no-cnv --simple-io`` the
+engine finishes every completion by printing its stop token as literal text
+("... [end of text]" plus newline padding). That is transport noise, not model
+output — left in, it made ``parse_structured`` refuse a well-formed plan JSON
+and it would end every user-visible answer with the engine's marker — so this
+adapter strips exactly that trailing decoration and no other layer has to know
+llama-cli's habits.
 """
 
 from __future__ import annotations
@@ -128,6 +136,20 @@ def _prompt_from(request: GenerationRequest) -> str:
         sections.append(f"[{message.role}]\n{message.content}")
     sections.append("[assistant]\n")
     return "\n\n".join(sections)
+
+
+#: The stop token's literal rendering, and how much of a stream tail is held
+#: back while that rendering could still be forming across read boundaries.
+_STOP_TOKEN_TEXT = "[end of text]"
+_STOP_TOKEN_HOLD_BACK = len(_STOP_TOKEN_TEXT) + 16
+
+
+def _without_stop_decoration(text: str) -> str:
+    """Drop one trailing stop-token rendering; everything else stays verbatim."""
+    stripped = text.rstrip()
+    if stripped.endswith(_STOP_TOKEN_TEXT):
+        return stripped[: -len(_STOP_TOKEN_TEXT)].rstrip()
+    return text
 
 
 class LlamaCliAdapter:
@@ -259,6 +281,7 @@ class LlamaCliAdapter:
         emit(events.started())
         decoder = codecs.getincrementaldecoder("utf-8")(errors="replace")
         output_bytes = 0
+        pending = ""
         try:
             assert process.stdout is not None
             while True:
@@ -266,11 +289,17 @@ class LlamaCliAdapter:
                 if not chunk:
                     break
                 output_bytes += len(chunk)
-                text = decoder.decode(chunk)
-                for piece in chunked(text, bound=MAX_DELTA_BYTES):
-                    emit(events.delta(piece))
-            tail = decoder.decode(b"", final=True)
-            for piece in chunked(tail, bound=MAX_DELTA_BYTES):
+                pending += decoder.decode(chunk)
+                # Stream everything except a tail that could still grow into
+                # the stop-token rendering; the decoration's fate is decided
+                # once the stream ends and the held-back tail is complete.
+                if len(pending) > _STOP_TOKEN_HOLD_BACK:
+                    cut = len(pending) - _STOP_TOKEN_HOLD_BACK
+                    for piece in chunked(pending[:cut], bound=MAX_DELTA_BYTES):
+                        emit(events.delta(piece))
+                    pending = pending[cut:]
+            pending += decoder.decode(b"", final=True)
+            for piece in chunked(_without_stop_decoration(pending), bound=MAX_DELTA_BYTES):
                 emit(events.delta(piece))
         finally:
             # The reap is unconditional: exit status is collected on every
