@@ -88,7 +88,7 @@ ReadWritePaths=-%h/Pictures
 # The store lives here. Per-user under the session, never system-wide: a
 # companion session is one person's conversation and /var would make it readable
 # by every account on a shared machine.
-StateDirectory=bunny-companion
+StateDirectory=bunny-os/companion
 StateDirectoryMode=0700
 UMask=0077
 

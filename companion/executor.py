@@ -492,6 +492,31 @@ class DeterministicLocalExecutor:
     #: also have to reimplement everything else.
     malformed: bool = False
 
+    @classmethod
+    def restricted_declaration(cls) -> "ExecutorDeclaration":
+        """The declaration when real generation is configured on this machine.
+
+        The deterministic executor keeps exactly the work it can do without a
+        model: recognized desktop intents (``local_action``, which
+        :func:`companion.runtime.classify_request` routes before any regex) and
+        pure closed-form arithmetic (``compute``), and yields the inference
+        classes (``unclassified`` / ``question`` / ``summarise`` /
+        ``transform``) to the provider-backed executor. Capability selection
+        still picks the first *eligible* local executor, so with the inference
+        classes dropped here an ordinary question no longer finds this executor
+        eligible and falls through to the provider-backed one. A machine whose
+        named provider then proves unavailable finds *neither* local executor
+        eligible, so the task is blocked bounded rather than answered with a
+        canned sentence, the honest failure.
+
+        Built by ``replace`` on the default declaration so a change to the
+        base fields flows here without a second copy to drift.
+        """
+        from dataclasses import replace
+
+        return replace(cls().declaration,
+                       supported_task_types=("compute", "local_action"))
+
     def health(self) -> ExecutorHealth:
         return self.reported_health
 
