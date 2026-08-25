@@ -57,8 +57,11 @@ class CompanionStateRootAlignment(unittest.TestCase):
                          "default_root() must end in bunny-os/companion")
         for unit in ("bunny-companion.service", "bunny-companion-window.service"):
             text = (UNITS / unit).read_text(encoding="utf-8")
+            # StateDirectory is a systemd (POSIX) unit directive; compare against
+            # the POSIX form so the assertion is stable on non-Linux dev hosts
+            # (on Linux as_posix() == str(), so nothing about the target changes).
             self.assertEqual(
-                _directives(text, "StateDirectory"), [str(SUFFIX)],
+                _directives(text, "StateDirectory"), [SUFFIX.as_posix()],
                 f"{unit} StateDirectory must align with the CLI default root",
             )
 
