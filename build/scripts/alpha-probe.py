@@ -272,7 +272,7 @@ def section_session() -> dict:
         "--property=Id --property=MainPID --property=NRestarts | cat",
     ).get("stdout", "")
     record["timeline"] = user_shell(
-        "cat ${XDG_STATE_HOME:-$HOME/.local/state}/bunny-companion/session-timeline.json "
+        "cat ${XDG_STATE_HOME:-$HOME/.local/state}/bunny-os/companion/session-timeline.json "
         "2>/dev/null || cat /var/lib/systemd/linger 2>/dev/null || true",
     ).get("stdout", "")
     record["socket"] = user_shell(

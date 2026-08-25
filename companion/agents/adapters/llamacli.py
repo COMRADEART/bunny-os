@@ -19,11 +19,15 @@ keeps each subsystem's subprocess law next to its subprocesses:
   — a zombie is a gate failure (§24 counts children), so ``finally`` owns the
   reap.
 
-This adapter declares no structured-output support and no tool proposals: raw
-``llama-cli`` completion has no grammar hook this build wants to claim, and an
-honest "no" here is what routes structured requests to the server adapters.
-Usage is byte-estimated and labelled so; parsing timing lines off stderr would
-be a report built on a format nobody promised.
+This adapter serves the prompt-based structured-output path the planner uses:
+the JSON instruction is in the prompt, ``parse_structured`` validates the text,
+and one bounded repair round handles malformation. ``llama-cli`` has no native
+grammar hook, so unlike the server adapters it passes no schema to the engine --
+but the planner never asked for one, and the same llama.cpp engine whose server
+adapter (``llamacpp``) claims structured support is claimed here for the prompt
+path. ``False`` here routed every local question to a blocked task instead of to
+the model. Usage is byte-estimated and labelled so; parsing timing lines off
+stderr would be a report built on a format nobody promised.
 """
 
 from __future__ import annotations
@@ -127,10 +131,13 @@ def _prompt_from(request: GenerationRequest) -> str:
 
 
 class LlamaCliAdapter:
-    #: An honest no. Raw ``llama-cli`` completion has no grammar hook this
-    #: build wants to claim, and the refusal is what routes structured work
-    #: to the server adapters instead of failing at the subprocess.
-    supports_structured_output = False
+    #: Prompt-based, not grammar-based. The planner puts the JSON instruction
+    #: in the prompt and validates the text with ``parse_structured`` plus one
+    #: repair round, so a plain text completion is enough -- the same engine's
+    #: server adapter (``llamacpp``) claims this for its native grammar path,
+    #: and the CLI path claims it for the prompt path. ``False`` here routed
+    #: every local question to a blocked task instead of to the model.
+    supports_structured_output = True
 
     def __init__(self) -> None:
         self._guard = threading.Lock()
@@ -205,11 +212,10 @@ class LlamaCliAdapter:
         model_path, model_refusal = _resolve_model(request.model_id or configuration.model_id)
         if model_path is None:
             return failed("model-unavailable", model_refusal)
-        if request.structured_schema_reference:
-            return failed(
-                "malformed-output",
-                "llama-cli declares no structured-output support; selection should not have sent this",
-            )
+        # The plan step's JSON instruction is already in the prompt assembled
+        # by ``_prompt_from``; the schema reference is metadata for the
+        # prompt-based parse + repair path, not a native grammar hook, so a
+        # plain text completion is what the planner validates.
         argv = [
             program,
             "-m", str(model_path),

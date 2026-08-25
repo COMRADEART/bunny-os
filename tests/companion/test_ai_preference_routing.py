@@ -391,5 +391,119 @@ class NoPreferenceKeepsTodayBehaviour(PreferenceRoutingTestCase):
         self.assertIn("open applications", summary.lower())
 
 
+class LlamaCliStructuredOutput(unittest.TestCase):
+    """The CLI subprocess adapter serves the plan step, not only free-text results.
+
+    The defect these tests pin: ``LlamaCliAdapter.supports_structured_output`` was
+    ``False`` and ``generate`` refused any request carrying a schema reference, so
+    the registry refused local.llamacli for every plan purpose -- "structured
+    output is required and not supported; tool proposals are required and not
+    supported" -- even with the model present and healthy, and every local
+    question blocked at ``waiting_for_executor``. The planner's structured output
+    is prompt-based: the JSON instruction is in the prompt and ``parse_structured``
+    plus one repair round validate the text. The same llama.cpp engine whose
+    server adapter (``llamacpp``) declares structured support is declared here
+    for the prompt path.
+    """
+
+    def test_the_adapter_declares_structured_output_support(self):
+        from companion.agents.adapters.llamacli import LlamaCliAdapter
+
+        self.assertTrue(
+            LlamaCliAdapter.supports_structured_output,
+            "llamacli must serve the prompt-based plan step; llamacpp (the same "
+            "engine's server adapter) declares this True",
+        )
+
+    def test_a_plan_requirement_does_not_refuse_a_structured_local_provider(self):
+        # The exact gate that blocked local.llamacli: a plan-purpose requirement
+        # (structured output + tool proposals) against a local provider that
+        # declares support. The registry must find it eligible -- the
+        # structured-output and tool-proposal reasons must not appear.
+        from companion.agents.adapter import ModelListing
+        from companion.agents.config import AgentConfiguration, ProviderConfiguration
+        from companion.agents.descriptor import EndpointIdentity
+        from companion.agents.registry import AgentProviderRegistry, SelectionRequirement
+
+        adapter = ScriptedAdapter(
+            adapter_identity="llamacli",
+            supports_structured_output=True,
+            probe_available=True,
+            probe_detail="llama-cli with qwen2.5-1.5b-instruct-q4_k_m.gguf",
+            models=(ModelListing(
+                model_id="qwen2.5-1.5b-instruct-q4_k_m.gguf",
+                size_bytes=1117320736),),
+        )
+        config = ProviderConfiguration(
+            provider_id="local.llamacli", adapter_id="llamacli",
+            endpoint=EndpointIdentity(kind="subprocess", locator="llama-cli"),
+            program="llama-cli",
+            model_id="qwen2.5-1.5b-instruct-q4_k_m.gguf",
+        )
+        registry = AgentProviderRegistry(
+            AgentConfiguration(providers=(config,)), {"llamacli": adapter})
+        requirement = SelectionRequirement(
+            task_class="question", locality="device-only",
+            needs_structured_output=True, needs_tool_proposals=True,
+        )
+        explanation = registry.select(requirement, monotonic=0.0)
+        self.assertTrue(explanation.found)
+        self.assertEqual(explanation.selected, "local.llamacli")
+        self.assertEqual(explanation.ineligible, ())
+        # Belt-and-braces: the structured-output and tool-proposal reasons that
+        # blocked the chain are absent from any ineligible provider.
+        for _provider_id, reasons in explanation.ineligible:
+            self.assertNotIn("structured output is required and not supported", reasons)
+            self.assertNotIn("tool proposals are required and not supported", reasons)
+
+    def test_generate_proceeds_past_the_structured_request_guard(self):
+        # The refusal guard that made selection's "yes" a dead letter: with the
+        # flag True, the plan request now carries a schema reference, and
+        # generate() must run the subprocess rather than return
+        # failure_kind="malformed-output". Program and model resolution are
+        # stubbed and Popen is made to fail, so the outcome is "connection" --
+        # the point is that it is NOT the structured-output refusal.
+        from pathlib import Path
+        from unittest import mock
+
+        from companion.agents.adapter import CancellationSignal, StreamEventFactory
+        from companion.agents.adapters import llamacli as llamacli_module
+        from companion.agents.adapters.llamacli import LlamaCliAdapter
+        from companion.agents.config import ProviderConfiguration
+        from companion.agents.descriptor import EndpointIdentity
+        from companion.agents.structured import PLAN_SCHEMA_REFERENCE
+
+        from .agents_support import make_request
+
+        request = make_request(
+            provider_id="local.llamacli", purpose="plan",
+            structured_schema_reference=PLAN_SCHEMA_REFERENCE,
+        )
+        configuration = ProviderConfiguration(
+            provider_id="local.llamacli", adapter_id="llamacli",
+            endpoint=EndpointIdentity(kind="subprocess", locator="llama-cli"),
+            program="llama-cli",
+            model_id="qwen2.5-1.5b-instruct-q4_k_m.gguf",
+        )
+        events = StreamEventFactory(
+            request_id=request.request_id, provider_id=request.provider_id,
+            monotonic=lambda: 0.0,
+        )
+        sink: list = []
+        with mock.patch.object(llamacli_module, "_resolve_program",
+                               return_value=("/usr/bin/llama-cli", "")), \
+             mock.patch.object(llamacli_module, "_resolve_model",
+                               return_value=(Path("/tmp/fa-model.gguf"), "")), \
+             mock.patch.object(llamacli_module.subprocess, "Popen",
+                               side_effect=OSError("test: no spawn")):
+            outcome = LlamaCliAdapter().generate(
+                request, configuration, secret=None,
+                emit=sink.append, events=events, cancellation=CancellationSignal(),
+            )
+        self.assertNotEqual(outcome.failure_kind, "malformed-output",
+                             "the structured-output refusal guard is gone")
+        self.assertEqual(outcome.failure_kind, "connection")
+
+
 if __name__ == "__main__":  # pragma: no cover
     unittest.main()

@@ -43,7 +43,7 @@ TimeoutStopSec=10s
 # The launcher writes the session timeline and the safe-mode flag into the
 # runtime's state directory, which systemd creates for the runtime unit and
 # leaves in place for the session.
-StateDirectory=bunny-companion
+StateDirectory=bunny-os/companion
 StateDirectoryMode=0700
 UMask=0077
 
