@@ -176,6 +176,13 @@ class FakeTransport:
                 return 200, {"ref": f"refs/tags/{tag}",
                              "object": {"type": "commit", "sha": self.state["tags"][tag]}}
             return 404, {"message": "no ref"}
+        if method == "POST" and path == f"{repo_path}/git/refs":
+            ref, sha = payload["ref"], payload["sha"]
+            tag = ref.rsplit("/", 1)[1]
+            if tag in self.state["tags"]:
+                return 422, {"message": "Reference already exists"}
+            self.state["tags"][tag] = sha
+            return 201, {"ref": ref, "object": {"type": "commit", "sha": sha}}
         if method == "GET" and path.startswith(f"{repo_path}/releases/tags/"):
             # Upstream semantics: this endpoint returns only the *published*
             # release for a tag; drafts are invisible here and reachable only
@@ -333,6 +340,27 @@ class PublisherEndToEnd(unittest.TestCase):
         self.assertIn("cat \\", release["body"])
         self.assertIn(COMMIT, release["body"])
         self.assertIn(f"'{ISO_NAME}.part-02' > '{ISO_NAME}'", release["body"])
+        # The tag ref was created before the release, so GitHub never gets to
+        # substitute its untagged-<slug> placeholder at publish time.
+        self.assertEqual(self.state["tags"]["0.3.0-live.test1234"], COMMIT)
+
+    def test_tag_ref_is_created_before_the_release_is(self):
+        code = self.run_publish([])
+        self.assertEqual(code, 0)
+        calls = self.transport.calls
+        ref_post = calls.index(("POST", f"/repos/{REPO}/git/refs"))
+        release_post = calls.index(("POST", f"/repos/{REPO}/releases"))
+        self.assertLess(ref_post, release_post,
+                        "the tag must exist before any release can claim it")
+
+    def test_raced_tag_pointing_elsewhere_is_refused(self):
+        state = fresh_state()
+        state["tags"]["0.3.0-live.test1234"] = OTHER_COMMIT
+        transport = FakeTransport(state)
+        publisher = pub.Publisher({"repo": REPO}, transport)
+        with self.assertRaises(SystemExit) as caught:
+            publisher.ensure_tag("0.3.0-live.test1234", COMMIT)
+        self.assertEqual(caught.exception.code, 2)
 
     def test_single_asset_below_threshold_is_not_split(self):
         small_tree = Path(self.tmp.name, "small")

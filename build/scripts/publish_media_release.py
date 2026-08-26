@@ -698,6 +698,31 @@ class Publisher:
                 time.sleep(2 * attempt)
         raise ApiError(f"upload of {asset['name']} failed after {UPLOAD_ATTEMPTS} attempts: {last_error}")
 
+    def ensure_tag(self, tag: str, commit: str) -> None:
+        """Create the tag ref before any release exists to carry it.
+
+        A draft whose tag_name names no ref gets rewritten by GitHub's
+        edit-before-publish flow into its internal untagged-<slug> name — and
+        that slug was minted as a real refs/tags/… on the live repo. With the
+        ref created up front, the release always binds to a tag that already
+        exists and there is nothing for GitHub to invent at publish time.
+        """
+        status, _ = self.quiet("POST", f"/repos/{self.config['repo']}/git/refs", {
+            "ref": f"refs/tags/{tag}",
+            "sha": commit,
+        })
+        if status == 201:
+            print(f"[publish] created tag {tag} at {commit[:12]}")
+            return
+        if status == 422:
+            # Already exists — a concurrent run won the race, or our earlier
+            # read was stale. Either way it must still name this commit.
+            existing = self.tag_points_at(tag)
+            if existing == commit:
+                return
+            raise Refusal(f"tag {tag} appeared pointing at {existing}, not {commit}")
+        raise ApiError(f"could not create tag {tag}: HTTP {status}")
+
     def run(self, context: dict) -> dict:
         commit = context["manifest"]["sourceCommit"]
         tag = context["tag"]
@@ -707,6 +732,8 @@ class Publisher:
         existing_tag = self.tag_points_at(tag)
         if existing_tag is not None and existing_tag != commit:
             raise Refusal(f"tag {tag} already exists pointing at {existing_tag}, not {commit}")
+        if existing_tag is None:
+            self.ensure_tag(tag, commit)
         release = self.release_for_tag(tag)
         if release is None:
             print(f"[publish] creating draft release for tag {tag} at commit {commit[:12]}")

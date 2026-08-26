@@ -18,7 +18,9 @@ immediately before upload.
 | `RELEASE-SHA256SUMS` | sha256 of every asset on the release itself |
 
 The git tag points at the manifest's `sourceCommit` — a release resolves to a
-commit, not to whatever HEAD was when someone ran this.
+commit, not to whatever HEAD was when someone ran this. The ref is created
+before anything else touches GitHub, so the publish step can never substitute
+GitHub's internal fallback slug for the requested tag.
 
 Parts are never written to scratch: each `.part-NN` asset names a byte range of
 the medium and streams straight off it during upload. Publishing costs no
