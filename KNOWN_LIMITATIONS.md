@@ -214,17 +214,23 @@ rebuild and a set of installation artifacts to rediscover.
 
 ### The NSS window is wider than chronyd
 
-`chronyd` was the unit measured failing, and it is the unit this pass corrects.
-The mechanism, however, is not chronyd-specific: `/etc/nsswitch.conf` is a
+`chronyd` was the unit measured failing, and it is the unit the in-tree drop-in
+corrects. The mechanism is not chronyd-specific: `/etc/nsswitch.conf` is a
 symlink to `/etc/authselect/nsswitch.conf`, `authselect apply-changes` rewrites
 that file on first boot, and for the width of that rewrite **no account
 provided by `/usr/lib/passwd` through the `altfiles` source resolves**. Any
 unit with a `User=` satisfied that way, spawning inside the window, is subject
 to the same race.
 
-A systematic sweep of units resolving `altfiles`-provided accounts is **not
-part of this pass**. Until it is done, the correction should be read as closing
-the one measured occurrence, not the class.
+Repo-shipped `User=` units are classified at build time
+(`tests/first_login/test_nss_account_sweep.py`); they resolve `root`,
+`bunny-policy` (sysusers → `/etc/passwd`), or a numeric UID. Base-image units
+are not enumerated in the repo. `scripts/bunny-nss-order-generator.py` scans
+the *installed* systemd tree at boot and writes the same drop-in pattern for
+altfiles-backed identities that lack it. On a host without Fedora's
+`/usr/lib/passwd` the generator is a no-op (runtime **NOT_RUN**). A booted
+Bunny OS image plus `scripts/nss_account_sweep.py` is still required to prove
+the overlay landed.
 
 ### Disk-image byte reproducibility is still not claimed
 
@@ -563,22 +569,24 @@ Removed by: mirroring the pinned base into a registry under this project's
 control, or a content-addressed local mirror both builders pull from. Until then
 every reproducibility comparison is against whatever base was current that week.
 
-### A shipped unit starts a program the build does not install
+### The policy agent is fail-closed until a signed control plane exists
 
 `systemd/bunny-policy-agent.service` names `/usr/libexec/bunny-policy-agent`.
-`build/scripts/install-root.py` copies `systemd/` wholesale, so the unit ships in
-every profile; nothing installs the program, and `enterprise/policy.py` is a
-library rather than an executable.
+The image build now installs `scripts/bunny-policy-agent.py` at that path, with
+`config/sysusers/bunny-policy.conf` creating the `bunny-policy` account in
+`/etc/passwd` (UID/GID 471). The program never writes
+`/etc/bunny-os/managed-settings.json` and never stages an unsigned bundle. With
+or without enrolment it exits 2, so systemd records a failed oneshot rather
+than a silent pass. The unit is still gated by
+`ConditionPathExists=/etc/bunny-os/enrolment.json`. The enterprise pilot gate
+remains `BLOCKED` because there is no production signing path for organisation
+bundles.
 
-The unit is guarded by `ConditionPathExists=/etc/bunny-os/enrolment.json`, no
-device has been enrolled, and the enterprise pilot gate is `BLOCKED`, so it does
-not run on any system that exists. It is recorded in
-`operations/data/unit-program-gaps.json`, and the `systemd unit programs`
-repository validator fails any unit whose program is neither shipped nor
-recorded.
+Frozen installed-system evidence may still list the old missing-program gap;
+those trees are byte-identical records and are not rewritten.
 
-Removed by: writing the agent, which is Phase 7 enterprise work and a new
-product feature, not a portability repair.
+The remaining recorded unit-program gap is `bunny-anaconda-bus.service`
+(`/usr/bin/dbus-daemon`), which the base image supplies.
 
 ### Both builders install from live repositories
 

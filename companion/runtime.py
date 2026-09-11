@@ -1558,6 +1558,11 @@ class CompanionRuntime:
         A plan with no operations is a success: "answer this question" is a real
         task and produces no operations at all. What is *not* a success is a plan
         whose operations were all attempted and none settled well.
+
+        A mix of completed and failed operations is observed ``success``. That is
+        deliberate: this function does not decide the whole task failed. The
+        executor must set ``TaskResult.outcome`` to ``failed`` when the job as a
+        whole failed; ``worst_outcome`` then takes the pessimistic verdict.
         """
         operations = task.operations
         if not operations:

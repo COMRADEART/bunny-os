@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import json
 import subprocess
+import sys
 import unittest
 from hashlib import sha256
 from pathlib import Path
@@ -124,7 +125,7 @@ class NoCreditTests(unittest.TestCase):
     def test_the_physical_hardware_prerequisite_is_not_satisfied(self):
         """The gate's own arithmetic, not a restatement of it."""
         result = subprocess.run(
-            ["python", "scripts/release.py", "gate", "--kind", "qualification-candidate"],
+            [sys.executable, "scripts/release.py", "gate", "--kind", "qualification-candidate"],
             cwd=ROOT,
             capture_output=True,
             text=True,

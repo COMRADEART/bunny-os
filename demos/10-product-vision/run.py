@@ -29,6 +29,8 @@ import unittest
 ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
+if str(ROOT / "demos") not in sys.path:
+    sys.path.insert(0, str(ROOT / "demos"))
 
 from capability.simulate import simulate
 from companion.appearance import apply_appearance
@@ -38,6 +40,7 @@ from companion.memory_boundary import (
     may_store,
 )
 from companion.onboarding.model import ONBOARDING_STEPS
+from host_chrome import DEMO_ONLY_CHROME_FLAGS
 from companion.outcome_router import OutcomeRequest, route_outcome
 from companion.presentation import PresentationSignals
 from companion.product_surface import (
@@ -71,14 +74,8 @@ def probe_host() -> dict[str, object]:
         "qemu": qemu or "",
         "display": display,
         "chrome": chrome or "",
-        "guestBoot": "NOT_RUN" if not (kvm and qemu) else "AVAILABLE",
-        "guestBootReason": (
-            "this demo does not start a guest"
-            if kvm and qemu
-            else "QEMU is not installed on this host"
-            if kvm
-            else "no /dev/kvm"
-        ),
+        "guestBoot": "NOT_RUN",
+        "guestBootReason": "this demo does not start a guest",
         "releaseState": "NO-GO",
         "pilots": "BLOCKED",
     }
@@ -96,9 +93,7 @@ def screenshot_html(html: Path, png: Path, chrome: str) -> dict[str, object]:
         }
     profile = tempfile.mkdtemp(prefix="bunny-chrome-")
     argv = [
-        chrome, "--no-sandbox", "--disable-gpu", "--disable-extensions",
-        "--disable-component-update", "--disable-background-networking",
-        "--no-first-run", "--no-default-browser-check", "--guest",
+        chrome, *DEMO_ONLY_CHROME_FLAGS,
         f"--user-data-dir={profile}", "--window-size=1280,800",
         "--window-position=0,0", f"--app={html.resolve().as_uri()}",
     ]

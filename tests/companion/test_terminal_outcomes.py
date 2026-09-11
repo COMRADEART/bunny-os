@@ -110,6 +110,32 @@ class TheRuntimeReadsTheRecord(unittest.TestCase):
             "success",
         )
 
+    def test_the_executor_must_report_failure_when_the_whole_task_failed(self) -> None:
+        """Observed mix is success; the executor's failed outcome still wins.
+
+        Do not change _observed_outcome to treat any failed op as a total
+        failure. The product contract is: executors tell the truth about the
+        job as a whole, and worst_outcome is pessimistic.
+        """
+        self.assertEqual(
+            worst_outcome(
+                "failed",
+                CompanionRuntime._observed_outcome(
+                    _task(("a", "completed"), ("b", "failed"))
+                ),
+            ),
+            "failed",
+        )
+        self.assertEqual(
+            worst_outcome(
+                "success",
+                CompanionRuntime._observed_outcome(
+                    _task(("a", "completed"), ("b", "failed"))
+                ),
+            ),
+            "success",
+        )
+
     def test_an_unsettled_operation_is_not_a_failure(self) -> None:
         """``unknown`` means the runtime stopped between starting an operation
         and settling it. That is not evidence the work failed, and calling it

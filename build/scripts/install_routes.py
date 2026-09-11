@@ -133,12 +133,20 @@ SYSTEM_SCRIPTS: tuple[str, ...] = (
     # often as a qualification harness does, and a probe that only exists in a
     # test image cannot answer it on a machine that is actually broken.
     "bunny-session-ready",
+    # Fail-closed ExecStart for bunny-policy-agent.service. Previously a
+    # recorded unit-program gap: the unit shipped and the program did not.
+    "bunny-policy-agent",
+    # Boot-time overlay for altfiles-backed User= units (the chronyd class).
+    "bunny-nss-order-generator",
+    # User-session overlay for a relocated XDG Pictures directory.
+    "bunny-pictures-path-generator",
 )
 
-#: The one system script that is a systemd generator rather than a libexec
-#: program, and therefore lands somewhere else.
+#: System scripts that are systemd generators rather than libexec programs.
 SYSTEM_SCRIPT_DESTINATIONS: Mapping[str, str] = {
     "bunny-recovery-generator": "/usr/lib/systemd/system-generators/bunny-recovery-generator",
+    "bunny-nss-order-generator": "/usr/lib/systemd/system-generators/bunny-nss-order-generator",
+    "bunny-pictures-path-generator": "/usr/lib/systemd/user-generators/bunny-pictures-path-generator",
 }
 
 
@@ -430,6 +438,11 @@ INSTALL_ROUTES: tuple[InstallRoute, ...] = (
     _file_route(
         "user-tmpfiles", "config/user-tmpfiles/bunny-os.conf",
         "/usr/share/user-tmpfiles.d/bunny-os.conf", 0o644,
+    ),
+    _file_route(
+        "policy-agent-sysusers", "config/sysusers/bunny-policy.conf",
+        "/usr/lib/sysusers.d/bunny-policy.conf", 0o644,
+        note="creates bunny-policy in /etc/passwd (files NSS), not altfiles",
     ),
     _file_route(
         "firewalld-zone", "config/firewalld/bunny-default.xml",

@@ -19,6 +19,8 @@ import shutil
 import subprocess
 import unittest
 
+from release.validation import _frozen_shell_scripts
+
 ROOT = Path(__file__).resolve().parents[2]
 COLLECTOR = ROOT / "scripts/reproducibility/collect-builder-record.sh"
 
@@ -45,7 +47,9 @@ def shell_scripts() -> list[Path]:
     ``qualification/*/evidence/`` is excluded for the reason
     ``release/validation.py``'s ``_shell_paths`` excludes it: those scripts are
     records of what ran, pinned byte-for-byte by the preservation tests, and a
-    lint finding there is unfixable without editing evidence.
+    lint finding there is unfixable without editing evidence. Scripts named in
+    the Phase 7 frozen-evidence record are excluded for the same reason even
+    when they do not live under an ``evidence/`` directory.
     """
     try:
         listed = subprocess.run(
@@ -59,12 +63,14 @@ def shell_scripts() -> list[Path]:
     else:
         candidates = (ROOT / name for name in listed.split("\0") if name)
 
+    frozen = _frozen_shell_scripts(ROOT)
     return sorted(
         path
         for path in candidates
         if path.is_file()
         and "node_modules" not in path.parts and ".git" not in path.parts
         and not ("qualification" in path.parts and "evidence" in path.parts)
+        and path.relative_to(ROOT).as_posix() not in frozen
     )
 
 
@@ -108,6 +114,19 @@ class OsReleaseIsReadNotSourcedTests(unittest.TestCase):
 
 
 class ShellCheckPassesTests(unittest.TestCase):
+    def test_frozen_qualification_harnesses_are_not_linted(self) -> None:
+        """SC2002 in a frozen Phase 5 harness must not force a byte change."""
+        frozen = _frozen_shell_scripts(ROOT)
+        self.assertIn(
+            "qualification/phase5/isolation/certification/verify.sh",
+            frozen,
+        )
+        maintained = {path.relative_to(ROOT).as_posix() for path in shell_scripts()}
+        self.assertNotIn(
+            "qualification/phase5/isolation/certification/verify.sh",
+            maintained,
+        )
+
     def test_shellcheck_accepts_every_shell_script(self) -> None:
         if not shutil.which("shellcheck"):
             self.skipTest("shellcheck unavailable on this host")

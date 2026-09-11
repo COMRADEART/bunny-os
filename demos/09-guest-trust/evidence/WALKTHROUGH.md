@@ -19,7 +19,7 @@ This document is evidence. A missing guest is recorded as NOT_RUN or BLOCKED, ne
 - KVM smoke: PASS — QEMU accepted accel=kvm (timed wait)
 - guest boot: **NOT_RUN** — no composed Bunny OS disk; image-builder is a Fedora 44 package and is not available on this host
 
-`report.passed` is the honest-probe flag (host tests passed and the guest status is PASS, NOT_RUN, or BLOCKED). It is **not** a guest Trust PASS and not a stable-release GO.
+`report.passed` is **guest Trust success only** (`guestPassed`). `report.probePassed` is the host harness. NOT_RUN/BLOCKED is not a guest PASS. Set `BUNNY_GUEST_TRUST_PROBE_OK=1` if a dashboard still wants the old probe-only `passed` bit. This is **not** a stable-release GO.
 
 ## Host regressions (no guest required)
 

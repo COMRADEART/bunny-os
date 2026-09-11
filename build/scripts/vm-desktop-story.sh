@@ -70,8 +70,9 @@ case "${journey}" in
   *) echo "unknown journey: ${journey} (want skip|granted|denied|failing)" >&2; exit 2 ;;
 esac
 
-bunny_require_commands qemu-system-x86_64 guestfish openssl git python3 || exit 3
-
+# Disk first: a missing image is a different answer from missing QEMU, and
+# the one-command guest demo's host tests assert exit 2 + "no qcow2" on a
+# machine that has not composed an image (and often has no QEMU either).
 source_image="${BUNNY_DESKTOP_IMAGE:-}"
 if [[ -z "${source_image}" ]]; then
   source_image="$(find "build/out/${profile}" -type f -name '*.qcow2' \
@@ -81,6 +82,8 @@ if [[ -z "${source_image}" ]]; then
   echo "no qcow2 under build/out/${profile}; build the image first" >&2
   exit 2
 fi
+
+bunny_require_commands qemu-system-x86_64 guestfish openssl git python3 || exit 3
 
 work="${BUNNY_DESKTOP_WORK:-build/out/${profile}/desktop-story/${label}}"
 mkdir -p "${work}/screens"

@@ -223,9 +223,6 @@ test-notifications:
 test-approvals:
 	$(PYTHON) scripts/task.py test-approvals
 
-test-companion:
-	$(PYTHON) scripts/task.py test-companion
-
 test-settings:
 	$(PYTHON) scripts/task.py test-settings
 

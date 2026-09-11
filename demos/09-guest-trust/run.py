@@ -99,6 +99,8 @@ def probe_host() -> dict[str, object]:
     missing: list[str] = []
     if not kvm:
         missing.append("/dev/kvm")
+    elif not kvm_rw:
+        missing.append("writable /dev/kvm")
     if not qemu:
         missing.append("qemu-system-x86_64")
     if not firmware:
@@ -109,7 +111,7 @@ def probe_host() -> dict[str, object]:
         missing.append("shell-test qcow2")
     if not image_builder and not qcow:
         missing.append("image-builder")
-    can_boot = bool(kvm and qemu and firmware and guestfish and qcow)
+    can_boot = bool(kvm and kvm_rw and qemu and firmware and guestfish and qcow)
     if can_boot:
         guest_boot = "AVAILABLE"
         reason = "QEMU/KVM, firmware, guestfish and a QCOW2 are present; this demo will boot"
@@ -376,10 +378,15 @@ def write_walkthrough(work: Path, report: dict[str, object]) -> Path:
         f"- QCOW2: {host.get('qcow') or 'ABSENT'}",
         f"- KVM smoke: {smoke.get('status')} — {smoke.get('reason')}",
         f"- guest boot: **{host.get('guestBoot')}** — {host.get('guestBootReason')}",
+        f"- probePassed: {report.get('probePassed')}",
+        f"- guestPassed: {report.get('guestPassed')}",
+        f"- passed: {report.get('passed')}",
         "",
-        "`report.passed` is the honest-probe flag (host tests passed and the guest "
-        "status is PASS, NOT_RUN, or BLOCKED). It is **not** a guest Trust PASS and "
-        "not a stable-release GO.",
+        "`report.passed` is **guest Trust success only** (`guestPassed`). "
+        "`report.probePassed` is the host harness. NOT_RUN/BLOCKED is not a "
+        "guest PASS. Set `BUNNY_GUEST_TRUST_PROBE_OK=1` if a dashboard still "
+        "wants the old probe-only `passed` bit. This is **not** a "
+        "stable-release GO.",
         "",
         "## Host regressions (no guest required)",
         "",
@@ -459,8 +466,8 @@ def main(argv: list[str] | None = None) -> int:
     if build.get("qcow"):
         host["qcow"] = build["qcow"]
         host["canBootGuest"] = bool(
-            host.get("kvmDevice") and host.get("qemu") and host.get("firmware")
-            and host.get("guestfish") and host.get("qcow")
+            host.get("kvmDevice") and host.get("kvmWritable") and host.get("qemu")
+            and host.get("firmware") and host.get("guestfish") and host.get("qcow")
         )
         if host["canBootGuest"]:
             host["guestBoot"] = "AVAILABLE"
@@ -471,8 +478,15 @@ def main(argv: list[str] | None = None) -> int:
 
     host_ok = bool(deadline["ok"] and harness["ok"])
     guest_status = str(guest.get("status") or "NOT_RUN")
-    # Honest NOT_RUN/BLOCKED is a successful probe, not a product PASS.
-    passed = host_ok and guest_status in {"PASS", "NOT_RUN", "BLOCKED"}
+    probe_passed = host_ok
+    guest_passed = guest_status == "PASS"
+    # Top-level ``passed`` is guest Trust success only. An honest NOT_RUN must
+    # not look like a guest PASS. Set BUNNY_GUEST_TRUST_PROBE_OK=1 to restore
+    # the old meaning (host harness OK and guest is PASS/NOT_RUN/BLOCKED).
+    if os.environ.get("BUNNY_GUEST_TRUST_PROBE_OK") == "1":
+        passed = probe_passed and guest_status in {"PASS", "NOT_RUN", "BLOCKED"}
+    else:
+        passed = guest_passed
     report = {
         "demo": "guest-trust-journey",
         "honest": True,
@@ -490,6 +504,8 @@ def main(argv: list[str] | None = None) -> int:
             "reason": guest.get("reason"),
             "journeys": guest.get("journeys"),
         },
+        "probePassed": probe_passed,
+        "guestPassed": guest_passed,
         "passed": passed,
         "summary": {
             "hostRegressions": "PASS" if host_ok else "FAIL",
@@ -512,10 +528,13 @@ def main(argv: list[str] | None = None) -> int:
     print(f"report: {work / 'report.json'}")
     print(f"walkthrough: {walkthrough}")
     print(f"latest: {latest}")
+    print(f"probePassed={probe_passed} guestPassed={guest_passed} passed={passed}")
     print("stable release: NO-GO (unchanged)")
     if os.environ.get("BUNNY_GUEST_TRUST_REQUIRE") == "1" and guest_status != "PASS":
         return 2
-    return 0 if passed else 1
+    if not probe_passed:
+        return 1
+    return 0
 
 
 if __name__ == "__main__":

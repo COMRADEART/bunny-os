@@ -28,6 +28,8 @@ The suite covers strict broker requests, invalid/injection-shaped methods/params
 
 On Linux, validation additionally runs ShellCheck and `systemd-analyze verify`. Fedora CI compiles the SELinux prototype. Record `systemd-analyze security` scores for every unit in `TEST_REPORT.md`; do not substitute a static directive check for the score.
 
+Schema Draft 2020-12 meta-validation needs the optional `jsonschema` package (`python3-jsonschema` on Fedora, or `pip install jsonschema`). If it is missing, that validator reports **SKIP**, not PASS; headers and local `$ref` still run. A skip is not a source-gate failure.
+
 ## Artifact and VM gate
 
 Build/inspect commands are in `docs/BUILDING.md`. For QEMU/KVM use UEFI q35, 4 vCPU, 6–8 GiB RAM, 64 GiB virtio disk, virtio network and GPU. Validate normal/recovery/previous deployment, root deployment evidence, expected files/modes/services, no secrets/world-writable system paths, GDM/Wayland, networking/audio/suspend if supported, first boot, placeholder/verified Bunny behavior, broker read/denial/mutation, update stage, power cycle, health success/failure, rollback, recovery menu, and support export. Capture serial, journal, `bootc status --json`, sockets, firewall, listeners, SELinux AVCs, and checksums.

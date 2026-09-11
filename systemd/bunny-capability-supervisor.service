@@ -26,6 +26,12 @@ Wants=dbus.service
 # Never part of a boot transaction that could deadlock on it: the supervisor
 # controls services, so it must not be something other services wait for.
 DefaultDependencies=yes
+# Restart bounds belong in [Unit]. A copy in the Service section is ignored
+# (systemd logs Unknown key StartLimitIntervalSec there), so a crashing
+# root supervisor would otherwise restart without the five-in-five-minutes
+# ceiling documented next to Restart= below.
+StartLimitIntervalSec=300
+StartLimitBurst=5
 
 [Service]
 Type=simple
@@ -69,8 +75,6 @@ KillMode=mixed
 # independently bounded mechanisms, not one unbounded pair.
 Restart=on-failure
 RestartSec=30s
-StartLimitIntervalSec=300
-StartLimitBurst=5
 
 # The supervisor's own resources. It is the component that enforces limits on
 # others; leaving itself unlimited would be the one process on the machine that

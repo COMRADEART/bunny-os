@@ -38,6 +38,8 @@ import unittest
 ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
+if str(ROOT / "demos") not in sys.path:
+    sys.path.insert(0, str(ROOT / "demos"))
 if str(ROOT / "tools/bunny-os") not in sys.path:
     sys.path.insert(0, str(ROOT / "tools/bunny-os"))
 
@@ -52,6 +54,7 @@ from companion.visible_trust import (
     forbidden_labels_present,
     frames_for,
 )
+from host_chrome import DEMO_ONLY_CHROME_FLAGS
 
 
 BUNNY = ROOT / "tools/bunny-os/bin/bunny-os"
@@ -83,14 +86,14 @@ def probe_host() -> dict[str, object]:
         "display": display,
         "gtk4": gtk,
         "chrome": chrome or "",
-        "canBootGuest": bool(kvm and qemu),
-        "guestBoot": "NOT_RUN" if not (kvm and qemu) else "AVAILABLE",
+        "canBootGuest": False,
+        "guestBoot": "NOT_RUN",
         "guestBootReason": (
-            "QEMU is not installed on this host"
-            if kvm and not qemu
+            "this demo does not start a guest"
+            if kvm and qemu
+            else "QEMU is not installed on this host"
+            if kvm
             else "no /dev/kvm"
-            if not kvm
-            else "QEMU/KVM present; this demo still does not start a guest"
         ),
         "releaseState": "NO-GO",
         "pilots": "BLOCKED",
@@ -189,14 +192,7 @@ def screenshot_html(html: Path, png: Path, chrome: str) -> dict[str, object]:
     profile = tempfile.mkdtemp(prefix="bunny-chrome-")
     argv = [
         chrome,
-        "--no-sandbox",
-        "--disable-gpu",
-        "--disable-extensions",
-        "--disable-component-update",
-        "--disable-background-networking",
-        "--no-first-run",
-        "--no-default-browser-check",
-        "--guest",
+        *DEMO_ONLY_CHROME_FLAGS,
         f"--user-data-dir={profile}",
         "--window-size=1280,800",
         "--window-position=0,0",

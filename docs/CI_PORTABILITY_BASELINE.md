@@ -311,6 +311,11 @@ not exist must fail.
 **Regression test required.** A unit naming a program the build does not install
 must still fail verification.
 
+The later host-gate work on this tree installs the repository programs (including
+`bunny-policy-agent`) into the CI fixture before `systemd-analyze verify`. The
+historical container log above is the measurement that motivated that fixture;
+it is not a claim that the program is still absent from the image build.
+
 ---
 
 ## F7 — `desktop-file-validate` rejects `DesktopNames` in session entries
