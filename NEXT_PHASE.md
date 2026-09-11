@@ -2,6 +2,39 @@
 
 Do not start a custom shell, compositor, visual redesign, installer experience, app store, or consumer release.
 
+## Update 2026-09-11 — host-visible Trust demo (no guest boot claimed)
+
+A reviewer can now run one command on a development host and see the Trust /
+approval path without a Fedora image-builder or nested KVM guest:
+
+```text
+python3 demos/08-visible-trust/run.py
+```
+
+**What moved.** The shell assistant's `watch()` clock is classified *after*
+the poll. A cold first request that is still in `understanding` / `planning`,
+or that reaches `waiting_for_approval` in the same tick as the old deadline,
+is no longer reported as "the runtime did not finish within the deadline".
+An unanswered approval is a different kind of answer; a hung *post-approval*
+worker still times out. The GTK companion window now exposes the same
+accessible names the guest harness presses (`Allow this Bunny action`,
+`Deny this Bunny action`). The host demo draws the production `TrustPrompt`,
+photographs idle → thinking → waiting_for_approval → granted / denied /
+failed, and drives Allow / Deny through `TrustGate`. Deny-by-default is
+unchanged; there is no `Always allow everything` control.
+
+**What did not move.** `gate-stable-release` is still `NO-GO`. All three
+pilot gates are still `BLOCKED`. The vulnerability position, absent
+hardware, absent independent reviews, absent second signer and absent
+production key are untouched. This host may have `/dev/kvm` and still lack
+QEMU/Podman — a guest boot is `NOT_RUN`, not a fake PASS.
+
+**Still required for a booted-guest photograph:** Fedora 44 image-builder,
+`make build-shell-image`, `vm-desktop-story.sh`, then
+`desktop-drive.py --journey {granted,denied,failing}` waiting on
+`BUNNY_SESSION_READY` and pressing the buttons at their AT-SPI extents.
+
+
 ## Next work after the TPM boot-reset investigation — 2026-08-01
 
 **Do not begin Phase 8. Do not begin a pilot. Do not create production keys.**

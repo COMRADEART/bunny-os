@@ -1,0 +1,33 @@
+{
+  "demo": "visible-trust-host",
+  "honest": true,
+  "capturedAt": "20260911T013940Z",
+  "stableRelease": "NO-GO",
+  "pilots": "BLOCKED",
+  "guestBoot": "NOT_RUN",
+  "guestBootReason": "QEMU is not installed on this host",
+  "passed": true,
+  "capability": {"ok": true},
+  "companion": {"granted": true, "denied": true},
+  "deadline": {"ok": true, "run": 5},
+  "visibleTrust": {
+    "ok": true,
+    "request": "Resize this to 100 pixels wide.",
+    "headline": "Bunny Image Tool wants to open /home/bunny/Pictures/holiday.png.",
+    "accessibleNames": [
+      "Deny this Bunny action",
+      "Allow this Bunny action"
+    ],
+    "granted": {"allowed": true, "reasonCode": "user-allowed"},
+    "denied": {"allowed": false, "reasonCode": "user-denied"},
+    "unknownNameDenies": {"allowed": false, "reasonCode": "user-denied"},
+    "screenshots": [
+      "idle.png",
+      "thinking.png",
+      "waiting_for_approval.png",
+      "granted.png",
+      "denied.png",
+      "failed.png"
+    ]
+  }
+}

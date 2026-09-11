@@ -936,6 +936,83 @@ class ApprovalIsNotASlowAnswerTests(unittest.TestCase):
             "the runtime did not finish within the deadline",
             [e.get("reason") for e in events if e.get("event") == "error"])
 
+    def test_a_late_question_is_not_reported_as_a_timeout(self) -> None:
+        """The clock is checked after the poll, not before it.
+
+        A cold first request can spend the whole budget in planning and then
+        raise a permission question. Timing out without reading that state is
+        how the desktop showed a warning where a question should have been.
+        """
+
+        class _PlansThenAsks:
+            def __init__(self) -> None:
+                self.started = time.monotonic()
+                self.revision = 0
+
+            def get_presentation_state(self, task_id: str) -> dict:
+                self.revision += 1
+                elapsed = time.monotonic() - self.started
+                if elapsed < 0.7:
+                    return {
+                        "revision": self.revision,
+                        "state": {"phase": "planning", "statusText": "Planning…"},
+                    }
+                if elapsed < 1.3:
+                    return {
+                        "revision": self.revision,
+                        "state": {
+                            "phase": "waiting_for_approval",
+                            "statusText": "May I?",
+                            "approvals": [{
+                                "requestId": "approval:late",
+                                "decision": "pending",
+                                "action": "launch_application",
+                                "reason": "Bunny Image Tool wants to open a file.",
+                            }],
+                        },
+                    }
+                return {
+                    "revision": self.revision,
+                    "state": {"phase": "success", "resultSummary": "Done."},
+                }
+
+        code, events = self._run_watch(_PlansThenAsks(), budget=0.4)
+        reasons = [e.get("reason") for e in events if e.get("event") == "error"]
+        self.assertEqual(
+            [], reasons,
+            "a late permission question was reported as a runtime timeout")
+        self.assertEqual(0, code)
+        self.assertIn(
+            "approval:late",
+            [e.get("requestId") for e in events if e.get("event") == "approval"])
+        self.assertIn("finished", [e.get("event") for e in events])
+
+    def test_planning_progress_does_not_spend_the_execution_deadline(self) -> None:
+        """Understanding/planning is work toward a question, not a hung answer."""
+
+        class _SlowPlanner:
+            def __init__(self) -> None:
+                self.started = time.monotonic()
+                self.revision = 0
+
+            def get_presentation_state(self, task_id: str) -> dict:
+                self.revision += 1
+                if time.monotonic() - self.started < 0.9:
+                    return {
+                        "revision": self.revision,
+                        "state": {"phase": "understanding", "statusText": "…"},
+                    }
+                return {
+                    "revision": self.revision,
+                    "state": {"phase": "success", "resultSummary": "Done."},
+                }
+
+        code, events = self._run_watch(_SlowPlanner(), budget=0.35)
+        self.assertEqual(0, code)
+        self.assertNotIn(
+            "the runtime did not finish within the deadline",
+            [e.get("reason") for e in events if e.get("event") == "error"])
+
 
 # ===========================================================================
 # The Alpha validation phase. Everything below guards a defect that was found
