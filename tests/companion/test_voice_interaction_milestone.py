@@ -48,6 +48,7 @@ from companion.service import (
 )
 from companion.speech.wakeword import WakeWordService, WakeWordState
 from companion.tools import ToolBroker, ToolInvocationContext
+from companion.trust_surface import ALLOW_ACCESSIBLE_NAME, DENY_ACCESSIBLE_NAME
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -965,13 +966,16 @@ class ShellVoiceBoundaryTests(unittest.TestCase):
         self.assertIn("TrustComponent", panel)
         self.assertIn("buildApproval", panel)
         prompt = (EXTENSION / "lib/trustPrompt.js").read_text(encoding="utf-8")
-        # Drawn labels are "Don't allow" / "Allow once". Bare quoted 'Deny' /
+        # Visible chrome after PR #42 is "Don't allow" / "Allow once". AT-SPI
+        # names stay DENY/ALLOW_ACCESSIBLE_NAME (buildApproval accessibleName;
+        # TrustComponent falls back to the same strings). Bare quoted 'Deny' /
         # 'Allow' left this check stale after the design-system wording change,
         # and 'Allow' alone would accept a weaker unbounded grant.
         self.assertIn('"Don\'t allow"', prompt)
         self.assertIn("'Allow once'", prompt)
         self.assertIn("defaultAction: 'deny'", prompt)
-        self.assertIn("accessibleName: 'Deny this Bunny action'", prompt)
+        self.assertIn(f"accessibleName: '{DENY_ACCESSIBLE_NAME}'", prompt)
+        self.assertIn(f"accessibleName: '{ALLOW_ACCESSIBLE_NAME}'", prompt)
         self.assertIn("resolveApproval(", shell)
 
     def test_stop_keeps_indicator_until_companion_confirms_device_closed(self) -> None:
@@ -1067,10 +1071,17 @@ class ShellVoiceBoundaryTests(unittest.TestCase):
     def test_file_results_have_a_bounded_scroll_area_and_show_all_control(self) -> None:
         panel = (EXTENSION / "lib/assistant/panel.js").read_text(encoding="utf-8")
         css = (EXTENSION / "stylesheet.css").read_text(encoding="utf-8")
+        generator = (EXTENSION / "lib/design/stylesheet.js").read_text(encoding="utf-8")
         self.assertIn("results.slice(0, 24)", panel)
         self.assertIn("Show all ${this._fileResultItems.length} results", panel)
         self.assertIn("bunny-assistant-file-results-scroll", panel)
-        self.assertIn("max-height: 132px", css)
+        # Token-derived: body size 14 × 11 lines = 154px. The pre-token sheet
+        # used 132px; the generated sheet is the contract, not a UX change.
+        self.assertIn(
+            ".bunny-assistant-file-results-scroll { max-height: ${px(theme.type.body.size * 11)}; }",
+            generator,
+        )
+        self.assertIn(".bunny-assistant-file-results-scroll { max-height: 154px; }", css)
 
 
 class _ScriptedStatusConnection:
