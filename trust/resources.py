@@ -61,6 +61,7 @@ __all__ = [
     "MAX_IDENTIFIER_LENGTH",
     "NETWORK_CLASSES",
     "NETWORK_DECLARED_ONLY",
+    "NETWORK_DISPLAY",
     "NETWORK_ENFORCEABLE_CLASSES",
     "Resource",
     "contains",
@@ -68,6 +69,7 @@ __all__ = [
     "network_class_enforceable",
     "network_class_of",
     "network_covers",
+    "network_display_for",
     "network_resource",
     "no_resource",
     "path_resource",
@@ -105,6 +107,17 @@ NETWORK_DECLARED_ONLY = tuple(
     for network_class in NETWORK_CLASSES
     if network_class not in NETWORK_ENFORCEABLE_CLASSES
 )
+
+#: What a person is told the class *is*. Domain names stay out: a stored grant
+#: from before fail-closed may still carry ``example.com`` as ``display``, and
+#: reprinting that would claim a filter this build does not have.
+NETWORK_DISPLAY: Mapping[str, str] = {
+    "none": "nothing on the network",
+    "loopback": "this computer",
+    "local-network": "your local network",
+    "allowlisted": "named destinations",
+    "internet": "the internet",
+}
 
 _DEVICE_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9 ._:+/-]{0,127}\Z")
 _PEER_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}\Z")
@@ -246,6 +259,16 @@ def network_class_enforceable(identifier: str) -> bool:
     ``example.org``.
     """
     return network_class_of(identifier) in NETWORK_ENFORCEABLE_CLASSES
+
+
+def network_display_for(identifier: str) -> str:
+    """Current user-facing class name for a stored network identifier.
+
+    Never a domain list. Settings uses this so a grant written when display
+    was ``example.com`` cannot reappear as a per-domain permission.
+    """
+    class_name = network_class_of(identifier)
+    return NETWORK_DISPLAY.get(class_name, class_name)
 
 
 def _split_network(identifier: str) -> tuple[str, frozenset[str]]:
@@ -426,17 +449,7 @@ def network_resource(value: str, *, allowlist: tuple[str, ...] = ()) -> Resource
     # allowlists must not compare as one grant, and `covers` has to be able to
     # read the set back out of a stored identifier to answer "is this a subset".
     identifier = value if not domains else value + ":" + ",".join(domains)
-    # Display names the *request*, not a held filter. Domain names stay in the
-    # identifier for ceiling checks and must not appear here: a prompt that
-    # read "connect to example.com" would claim per-domain enforcement this
-    # build does not have.
-    display = {
-        "none": "nothing on the network",
-        "loopback": "this computer",
-        "local-network": "your local network",
-        "allowlisted": "named destinations",
-        "internet": "the internet",
-    }[value]
+    display = NETWORK_DISPLAY[value]
     return Resource(
         kind="network",
         identifier=identifier,

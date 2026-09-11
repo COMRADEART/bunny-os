@@ -278,6 +278,13 @@ class PolicyTests(unittest.TestCase):
         self.assertEqual(resource.display, "named destinations")
         self.assertIn("api.example.com", resource.identifier)
 
+    def test_network_display_for_ignores_a_stored_domain_list(self) -> None:
+        from trust.resources import network_display_for
+
+        self.assertEqual(network_display_for("allowlisted:api.example.com"), "named destinations")
+        self.assertEqual(network_display_for("loopback"), "this computer")
+        self.assertEqual(network_display_for("internet"), "the internet")
+
     # -- fail closed ------------------------------------------------------
 
     def test_an_unreadable_store_denies_and_says_so(self) -> None:

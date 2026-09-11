@@ -181,7 +181,7 @@ the status phrases, not in a second vocabulary.
 | No network grant / class `none` | Network: **Off**. Absolute. |
 | Grant of `internet` | Network: **On**. The internet. |
 | Request for `allowlisted` / `loopback` / `local-network` | Denied. “Bunny can't enforce that in this build, so it won't record permission for it.” No per-domain language. |
-| Stale stored allowlist grant | Not applied. Plan remains Off. Refusal recorded on the plan. |
+| Stale stored allowlist grant | Not applied. Plan remains Off. Refusal recorded on the plan. Settings shows the row as not allowed, with the generic class name, never a stored domain list. |
 
 No surface may say “example.com only”, “only this computer”, or
 “your local network” as a *held* restriction until a filter exists

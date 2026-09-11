@@ -41,7 +41,7 @@ from trust.audit import ActivityEntry, TrustAudit
 from trust.categories import CATEGORIES, descriptor
 from trust.decision import Grant
 from trust.explain import revoke_sentence
-from trust.resources import network_class_enforceable
+from trust.resources import network_class_enforceable, network_display_for
 
 __all__ = [
     "MAINTENANCE_ACTIONS",
@@ -109,6 +109,8 @@ class PermissionRow:
     title: str
     risk: str
     #: ``granted``, ``denied``, ``not-asked`` or ``not-declared``.
+    #: A stored allow this build will not apply (unfilterable network class)
+    #: is ``denied``: the page describes the effective plan, not the store.
     standing: str
     scope: str | None
     resource: str | None
@@ -229,10 +231,21 @@ def application_settings(
             )
             continue
         for grant in sorted(held, key=lambda g: (g.verdict, g.resource.display, g.grant_id)):
+            standing = "granted" if grant.verdict == "allow" else "denied"
+            if (
+                standing == "granted"
+                and category == "network"
+                and not network_class_enforceable(grant.resource.identifier)
+            ):
+                # Fail-closed: a stale allowlisted/loopback/local-network grant
+                # is in the store and not on the plan. Showing "Allowed" would
+                # contradict Off, and reprinting a stored domain list would
+                # claim a filter this build does not have.
+                standing = "denied"
             rows.append(
                 _row(
                     category, entry,
-                    standing="granted" if grant.verdict == "allow" else "denied",
+                    standing=standing,
                     grant=grant,
                     required=category in capsule.manifest.required_permissions,
                     display_name=capsule.manifest.display_name,
@@ -291,15 +304,19 @@ def _row(
     reason: str | None,
 ) -> PermissionRow:
     enforced = entry.enforced_by_default
+    resource_display = grant.resource.display if grant is not None and grant.resource.display else None
     if category == "network" and grant is not None:
-        enforced = network_class_enforceable(grant.resource.identifier)
+        resource_display = network_display_for(grant.resource.identifier)
+        # The category is enforced: none and internet are kernel-held, and
+        # unfilterable classes are refused rather than granted unenforced.
+        enforced = True
     return PermissionRow(
         category=category,
         title=entry.title,
         risk=entry.risk,
         standing=standing,
         scope=grant.scope if grant is not None else None,
-        resource=grant.resource.display if grant is not None and grant.resource.display else None,
+        resource=resource_display,
         grant_id=grant.grant_id if grant is not None else None,
         required=required,
         enforced=enforced,
