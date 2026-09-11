@@ -14,7 +14,9 @@ bunny_firmware() {
     local candidate
     for candidate in "${BUNNY_OVMF_CODE:-}" "${OVMF_CODE:-}" \
         /usr/share/OVMF/OVMF_CODE.fd \
-        /usr/share/edk2/ovmf/OVMF_CODE.fd; do
+        /usr/share/OVMF/OVMF_CODE_4M.fd \
+        /usr/share/edk2/ovmf/OVMF_CODE.fd \
+        /usr/share/qemu/OVMF.fd; do
         if [[ -n "${candidate}" && -r "${candidate}" ]]; then
             printf '%s' "${candidate}"
             return 0

@@ -2,6 +2,31 @@
 
 Do not start a custom shell, compositor, visual redesign, installer experience, app store, or consumer release.
 
+## Update 2026-09-11 — guest Trust journey harness (Fedora+KVM still required to photograph)
+
+The one-command guest path now exists. A Fedora 44 image-builder host that has
+already composed `shell-test` can run:
+
+```text
+python3 demos/09-guest-trust/run.py
+```
+
+That boots twice (granted, then denied), waits on `BUNNY_SESSION_READY`, types
+the resize request, and presses `Allow this Bunny action` / `Deny this Bunny
+action` at their AT-SPI extents. The driver never calls `resolve_approval`.
+`vm-desktop-story.sh --journey granted` attaches as soon as QMP exists rather
+than sleeping through five minutes of boot photographs, and an incomplete
+journey fails the script.
+
+This Ubuntu cloud host now has `/dev/kvm`, QEMU, OVMF (4M), Podman and
+guestfish. It still has no unified `image-builder` and no composed QCOW2, so
+the guest journeys are `NOT_RUN` — not a fake PASS. Deny-by-default is
+unchanged. `gate-stable-release` is still `NO-GO`.
+
+**Still required to photograph the prompt inside Bunny Shell:** a Fedora 44
+image-builder host, `make build-shell-test-image`, then the same one command.
+
+
 ## Update 2026-09-11 — host-visible Trust demo (no guest boot claimed)
 
 A reviewer can now run one command on a development host and see the Trust /

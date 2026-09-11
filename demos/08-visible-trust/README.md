@@ -51,20 +51,17 @@ that skips the question.
 
 ## What still needs Fedora + KVM
 
-To photograph the prompt *inside* Bunny Shell:
+The guest photograph is a different demo. On a Fedora 44 image-builder host:
 
 ```text
-make build-shell-image          # Fedora 44 image-builder host
-build/scripts/vm-desktop-story.sh
-# then, with a logged-in session:
-#   desktop-drive.py --journey granted
-#   desktop-drive.py --journey denied
-#   desktop-drive.py --journey failing
+make build-shell-test-image
+python3 demos/09-guest-trust/run.py
 ```
 
-Those steps wait on `BUNNY_SESSION_READY`, type the resize request, and
-press the buttons at their AT-SPI extents. This host has `/dev/kvm` but
-no QEMU and no Podman, so they are recorded `NOT_RUN` rather than faked.
+See `demos/09-guest-trust/README.md`. Those steps wait on `BUNNY_SESSION_READY`,
+type the resize request, and press the buttons at their AT-SPI extents. A host
+with `/dev/kvm` and QEMU but no `image-builder` records `NOT_RUN` rather than
+faking a guest.
 
 ## Security boundaries
 
