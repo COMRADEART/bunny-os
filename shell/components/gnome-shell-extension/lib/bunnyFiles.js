@@ -15,11 +15,15 @@ import {
 import {SCREEN_QUESTIONS} from './design/tokens.js';
 import {
     ALLOW_ONCE_LABEL, DONT_ALLOW_LABEL, FILE_NOT_UPLOADED, FILE_OPEN_BUBBLE,
-    FILE_OPEN_HEADLINE, NETWORK_ALLOWLIST_NOTE, buildPrompt,
+    FILE_OPEN_DENIED, FILE_OPEN_FAILED, FILE_OPEN_GRANTED, FILE_OPEN_HEADLINE,
+    NETWORK_ALLOWLIST_NOTE, buildPrompt,
 } from './trustPrompt.js';
 import {routeCommandAnswer} from './commandSurface.js';
 
-export {FILE_NOT_UPLOADED, FILE_OPEN_BUBBLE, FILE_OPEN_HEADLINE};
+export {
+    FILE_NOT_UPLOADED, FILE_OPEN_BUBBLE, FILE_OPEN_DENIED, FILE_OPEN_FAILED,
+    FILE_OPEN_GRANTED, FILE_OPEN_HEADLINE,
+};
 
 export const FILE_ACTIONS = Object.freeze([
     'ask', 'summarise', 'workspace', 'provenance', 'checkpoint', 'open',
@@ -90,6 +94,105 @@ export function fileOpenNeedsTrust({action = 'open', approvedLocation = false} =
     if (String(action) === 'checkpoint')
         return true;
     return !approvedLocation && String(action) === 'workspace';
+}
+
+/**
+ * The exact file Trust granted. Not a folder walk, not Pictures.
+ */
+export function grantedFilePath(path) {
+    let raw = String(path || '').trim();
+    if (!raw || raw.includes('\n') || raw.includes('\0'))
+        return '';
+    if (/[;|`]|\$\(/.test(raw))
+        return '';
+    if (raw.toLowerCase().startsWith('file://')) {
+        let rest = raw.slice(7);
+        try {
+            rest = decodeURIComponent(rest);
+        } catch {
+            return '';
+        }
+        if (!rest)
+            return '';
+        raw = rest.startsWith('/') ? rest : `/${rest}`;
+    }
+    if (!raw.startsWith('/'))
+        return '';
+    return raw;
+}
+
+function isOnceGrant(decision) {
+    const token = String(decision || '').trim().toLowerCase();
+    return token === 'allow' || token === 'allow-once' || token === 'allow once'
+        || token === 'once' || token === 'granted';
+}
+
+/**
+ * Plan the open. Deny-by-default. One path. Nothing uploaded.
+ */
+export function resolveFileOpenAfterTrust({
+    decision = 'deny', path = '', action = 'open', extraPaths = [],
+} = {}) {
+    void extraPaths; // never widened — Pictures and siblings stay closed
+    const granted = grantedFilePath(path);
+    const once = isOnceGrant(decision);
+    if (String(action || 'open') !== 'open') {
+        return {
+            shouldOpen: false,
+            uploaded: false,
+            path: '',
+            command: null,
+            companionRequired: false,
+            chatbot: false,
+            note: FILE_NOT_UPLOADED,
+            message: once ? 'Allow once is recorded for this request.' : FILE_OPEN_DENIED,
+        };
+    }
+    if (!once || !granted) {
+        return {
+            shouldOpen: false,
+            uploaded: false,
+            path: '',
+            command: null,
+            companionRequired: false,
+            chatbot: false,
+            note: FILE_NOT_UPLOADED,
+            message: !once ? FILE_OPEN_DENIED : FILE_OPEN_FAILED,
+        };
+    }
+    return {
+        shouldOpen: true,
+        uploaded: false,
+        path: granted,
+        command: ['gio', 'open', granted],
+        companionRequired: false,
+        chatbot: false,
+        note: FILE_NOT_UPLOADED,
+        message: FILE_OPEN_GRANTED,
+    };
+}
+
+/**
+ * Grant opens that file. Deny opens nothing. Host-testable via `opener`.
+ */
+export function applyFileOpenAfterTrust(record = {}, opener = null) {
+    const plan = resolveFileOpenAfterTrust(record);
+    if (!plan.shouldOpen)
+        return {...plan, launched: false, paths: []};
+    let launched = false;
+    if (typeof opener === 'function') {
+        try {
+            launched = opener(plan.command, plan.path) === true;
+        } catch {
+            launched = false;
+        }
+    }
+    return {
+        ...plan,
+        launched,
+        paths: launched ? [plan.path] : [],
+        message: launched ? FILE_OPEN_GRANTED : FILE_OPEN_FAILED,
+    };
 }
 
 export function buildFileOpenTrust({

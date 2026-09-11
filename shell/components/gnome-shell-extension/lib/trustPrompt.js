@@ -123,6 +123,12 @@ export const DENY_ACCESSIBLE_NAME = 'Deny this Bunny action';
 export const FILE_OPEN_HEADLINE = 'Bunny wants to open this file';
 export const FILE_OPEN_BUBBLE = 'Review this open request.';
 export const FILE_NOT_UPLOADED = 'No file is uploaded automatically.';
+/** P4.1: Allow once executes the open. Don't allow opens nothing. */
+export const FILE_OPEN_GRANTED = 'Allow once. Bunny opened this file. Nothing was uploaded.';
+export const FILE_OPEN_DENIED =
+    "Don't allow. The file was not opened. "
+    + 'Ask again and choose Allow once if that was a mistake.';
+export const FILE_OPEN_FAILED = 'Allow once was recorded, but Bunny could not open this file.';
 
 function nonEmpty(value) {
     return typeof value === 'string' && value.trim().length > 0;

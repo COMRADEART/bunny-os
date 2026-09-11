@@ -24,9 +24,12 @@ from bunny_shell.app_chrome import (
 )
 from bunny_shell.bunny_files import (
     FILE_ACTIONS,
+    apply_file_open_after_trust,
     build_bunny_files,
     file_open_needs_trust,
+    granted_file_path,
     parse_files_uri,
+    resolve_file_open_after_trust,
     route_files_action,
 )
 from bunny_shell.bunny_settings import bunny_companion_module
@@ -44,6 +47,9 @@ from bunny_shell.trust_copy import (
     DONT_ALLOW_LABEL,
     FILE_NOT_UPLOADED,
     FILE_OPEN_BUBBLE,
+    FILE_OPEN_DENIED,
+    FILE_OPEN_FAILED,
+    FILE_OPEN_GRANTED,
     FILE_OPEN_HEADLINE,
     NETWORK_ALLOWLIST_NOTE,
 )
@@ -313,13 +319,163 @@ class WiringAndHonestyTests(NodeBackedTestCase):
 
     def test_file_open_copy_is_byte_identical(self) -> None:
         measured = run_node(
-            f"import {{FILE_OPEN_BUBBLE, FILE_NOT_UPLOADED, FILE_OPEN_HEADLINE}} "
+            f"import {{FILE_OPEN_BUBBLE, FILE_NOT_UPLOADED, FILE_OPEN_HEADLINE, "
+            f"FILE_OPEN_GRANTED, FILE_OPEN_DENIED, FILE_OPEN_FAILED}} "
             f"from '{(LIB / 'trustPrompt.js').as_uri()}';\n"
-            "console.log(JSON.stringify({FILE_OPEN_BUBBLE, FILE_NOT_UPLOADED, FILE_OPEN_HEADLINE}));\n"
+            "console.log(JSON.stringify({FILE_OPEN_BUBBLE, FILE_NOT_UPLOADED, FILE_OPEN_HEADLINE, "
+            "FILE_OPEN_GRANTED, FILE_OPEN_DENIED, FILE_OPEN_FAILED}));\n"
         )
         self.assertEqual(measured["FILE_OPEN_BUBBLE"], FILE_OPEN_BUBBLE)
         self.assertEqual(measured["FILE_NOT_UPLOADED"], FILE_NOT_UPLOADED)
         self.assertEqual(measured["FILE_OPEN_HEADLINE"], FILE_OPEN_HEADLINE)
+        self.assertEqual(measured["FILE_OPEN_GRANTED"], FILE_OPEN_GRANTED)
+        self.assertEqual(measured["FILE_OPEN_DENIED"], FILE_OPEN_DENIED)
+        self.assertEqual(measured["FILE_OPEN_FAILED"], FILE_OPEN_FAILED)
+
+
+class FileOpenGrantTests(NodeBackedTestCase):
+    """P4.1: Allow once executes open. Don't allow opens nothing."""
+
+    def test_allow_once_opens_only_the_granted_file(self) -> None:
+        opened: list[tuple[list[str], str]] = []
+
+        def opener(command: list[str], path: str) -> bool:
+            opened.append((command, path))
+            return True
+
+        result = apply_file_open_after_trust(
+            decision="allow",
+            path="/home/ravi/docs/notes.txt",
+            extra_paths=["/home/ravi/Pictures", "/home/ravi/docs"],
+            opener=opener,
+        )
+        self.assertTrue(result["shouldOpen"])
+        self.assertTrue(result["launched"])
+        self.assertFalse(result["uploaded"])
+        self.assertEqual(result["path"], "/home/ravi/docs/notes.txt")
+        self.assertEqual(result["command"], ["gio", "open", "/home/ravi/docs/notes.txt"])
+        self.assertEqual(result["paths"], ["/home/ravi/docs/notes.txt"])
+        self.assertEqual(result["message"], FILE_OPEN_GRANTED)
+        self.assertEqual(result["note"], FILE_NOT_UPLOADED)
+        self.assertFalse(result["companionRequired"])
+        self.assertEqual(opened, [(["gio", "open", "/home/ravi/docs/notes.txt"], "/home/ravi/docs/notes.txt")])
+        self.assertNotIn("/home/ravi/Pictures", json.dumps(result))
+
+    def test_dont_allow_opens_nothing_and_shows_recovery(self) -> None:
+        opened: list[object] = []
+
+        def opener(command: list[str], path: str) -> bool:
+            opened.append((command, path))
+            return True
+
+        result = apply_file_open_after_trust(
+            decision="deny",
+            path="/home/ravi/docs/notes.txt",
+            opener=opener,
+        )
+        self.assertFalse(result["shouldOpen"])
+        self.assertFalse(result["launched"])
+        self.assertFalse(result["uploaded"])
+        self.assertEqual(result["path"], "")
+        self.assertIsNone(result["command"])
+        self.assertEqual(result["paths"], [])
+        self.assertEqual(result["message"], FILE_OPEN_DENIED)
+        self.assertIn("Allow once", result["message"])
+        self.assertEqual(opened, [])
+        defaulted = apply_file_open_after_trust(path="/tmp/a.txt", opener=opener)
+        self.assertFalse(defaulted["shouldOpen"])
+        self.assertEqual(defaulted["message"], FILE_OPEN_DENIED)
+        always = apply_file_open_after_trust(
+            decision="always", path="/tmp/a.txt", opener=opener,
+        )
+        self.assertFalse(always["shouldOpen"])
+        self.assertEqual(opened, [])
+
+    def test_placeholder_and_non_open_actions_do_not_launch(self) -> None:
+        opened: list[object] = []
+
+        def opener(command: list[str], path: str) -> bool:
+            opened.append((command, path))
+            return True
+
+        fake = apply_file_open_after_trust(
+            decision="allow", path="result first", opener=opener,
+        )
+        self.assertEqual(granted_file_path("result first"), "")
+        self.assertFalse(fake["shouldOpen"])
+        self.assertFalse(fake["launched"])
+        self.assertEqual(opened, [])
+        checkpoint = apply_file_open_after_trust(
+            decision="allow",
+            path="/tmp/a.txt",
+            action="checkpoint",
+            opener=opener,
+        )
+        self.assertFalse(checkpoint["shouldOpen"])
+        failed = apply_file_open_after_trust(
+            decision="allow", path="/tmp/a.txt", opener=lambda *_a: False,
+        )
+        self.assertTrue(failed["shouldOpen"])
+        self.assertFalse(failed["launched"])
+        self.assertEqual(failed["message"], FILE_OPEN_FAILED)
+        planned = resolve_file_open_after_trust(
+            decision="allow", path="file:///tmp/photo.png",
+        )
+        self.assertTrue(planned["shouldOpen"])
+        self.assertEqual(planned["path"], "/tmp/photo.png")
+        self.assertEqual(planned["command"], ["gio", "open", "/tmp/photo.png"])
+
+    def test_javascript_grant_and_deny_match_python(self) -> None:
+        js = run_node(
+            f"import {{applyFileOpenAfterTrust, grantedFilePath}} "
+            f"from '{(LIB / 'bunnyFiles.js').as_uri()}';\n"
+            "const opened = [];\n"
+            "const grant = applyFileOpenAfterTrust(\n"
+            "  {decision: 'allow', path: '/home/ravi/docs/notes.txt',\n"
+            "   extraPaths: ['/home/ravi/Pictures']},\n"
+            "  (command, path) => { opened.push({command, path}); return true; });\n"
+            "const deny = applyFileOpenAfterTrust(\n"
+            "  {decision: 'deny', path: '/home/ravi/docs/notes.txt'},\n"
+            "  (command, path) => { opened.push({command, path}); return true; });\n"
+            "console.log(JSON.stringify({grant, deny, opened, "
+            "placeholder: grantedFilePath('result first')}));\n"
+        )
+        py_grant = apply_file_open_after_trust(
+            decision="allow",
+            path="/home/ravi/docs/notes.txt",
+            extra_paths=["/home/ravi/Pictures"],
+            opener=lambda *_a: True,
+        )
+        py_deny = apply_file_open_after_trust(
+            decision="deny",
+            path="/home/ravi/docs/notes.txt",
+            opener=lambda *_a: True,
+        )
+        self.assertEqual(js["grant"]["command"], py_grant["command"])
+        self.assertEqual(js["grant"]["message"], py_grant["message"])
+        self.assertEqual(js["grant"]["note"], FILE_NOT_UPLOADED)
+        self.assertTrue(js["grant"]["launched"])
+        self.assertFalse(js["deny"]["launched"])
+        self.assertEqual(js["deny"]["message"], py_deny["message"])
+        self.assertEqual(js["opened"], [{
+            "command": ["gio", "open", "/home/ravi/docs/notes.txt"],
+            "path": "/home/ravi/docs/notes.txt",
+        }])
+        self.assertEqual(js["placeholder"], "")
+
+    def test_shell_executes_open_after_allow_once(self) -> None:
+        shell = (LIB / "desktopShell.js").read_text(encoding="utf-8")
+        launcher = (LIB / "services/launcher.js").read_text(encoding="utf-8")
+        start = shell.find("_presentFileOpenTrust")
+        self.assertGreaterEqual(start, 0)
+        region = shell[start:start + 2200]
+        self.assertIn("applyFileOpenAfterTrust", region)
+        self.assertIn("openGrantedFile", region)
+        self.assertNotIn("Bunny does not open the file itself", region)
+        self.assertIn("FILE_OPEN_DENIED", region)
+        self.assertIn("openGrantedFile", launcher)
+        self.assertIn("gio", launcher)
+        self.assertNotIn("Always allow everything", region)
 
 
 class FrozenEvidenceTests(unittest.TestCase):

@@ -17,6 +17,9 @@ from .trust_copy import (
     DONT_ALLOW_LABEL,
     FILE_NOT_UPLOADED,
     FILE_OPEN_BUBBLE,
+    FILE_OPEN_DENIED,
+    FILE_OPEN_FAILED,
+    FILE_OPEN_GRANTED,
     FILE_OPEN_HEADLINE,
     NETWORK_ALLOWLIST_NOTE,
 )
@@ -74,6 +77,105 @@ def file_open_needs_trust(*, action: str = "open", approved_location: bool = Fal
     if action == "checkpoint":
         return True
     return (not approved_location) and action == "workspace"
+
+
+def granted_file_path(path: str) -> str:
+    """The exact file Trust granted. Not a folder walk, not Pictures."""
+    raw = str(path or "").strip()
+    if not raw or "\n" in raw or "\0" in raw:
+        return ""
+    if any(token in raw for token in (";", "|", "`", "$(")):
+        return ""
+    if raw.casefold().startswith("file://"):
+        rest = raw[7:]
+        try:
+            rest = unquote(rest)
+        except Exception:  # noqa: BLE001 - malformed escape is not a grant
+            return ""
+        if not rest:
+            return ""
+        raw = rest if rest.startswith("/") else f"/{rest}"
+    if not raw.startswith("/"):
+        return ""
+    return raw
+
+
+def _is_once_grant(decision: str) -> bool:
+    token = str(decision or "").strip().casefold()
+    return token in {"allow", "allow-once", "allow once", "once", "granted"}
+
+
+def resolve_file_open_after_trust(
+    *,
+    decision: str = "deny",
+    path: str = "",
+    action: str = "open",
+    extra_paths: Sequence[str] | None = None,
+) -> dict[str, Any]:
+    """Plan the open. Deny-by-default. One path. Nothing uploaded."""
+    del extra_paths  # never widened — Pictures and siblings stay closed
+    granted = granted_file_path(path)
+    once = _is_once_grant(decision)
+    if str(action or "open") != "open":
+        return {
+            "shouldOpen": False,
+            "uploaded": False,
+            "path": "",
+            "command": None,
+            "companionRequired": False,
+            "chatbot": False,
+            "note": FILE_NOT_UPLOADED,
+            "message": FILE_OPEN_DENIED if not once else "Allow once is recorded for this request.",
+        }
+    if not once or not granted:
+        return {
+            "shouldOpen": False,
+            "uploaded": False,
+            "path": "",
+            "command": None,
+            "companionRequired": False,
+            "chatbot": False,
+            "note": FILE_NOT_UPLOADED,
+            "message": FILE_OPEN_DENIED if not once else FILE_OPEN_FAILED,
+        }
+    return {
+        "shouldOpen": True,
+        "uploaded": False,
+        "path": granted,
+        "command": ["gio", "open", granted],
+        "companionRequired": False,
+        "chatbot": False,
+        "note": FILE_NOT_UPLOADED,
+        "message": FILE_OPEN_GRANTED,
+    }
+
+
+def apply_file_open_after_trust(
+    *,
+    decision: str = "deny",
+    path: str = "",
+    action: str = "open",
+    extra_paths: Sequence[str] | None = None,
+    opener: Any = None,
+) -> dict[str, Any]:
+    """Grant opens that file. Deny opens nothing. Host-testable via ``opener``."""
+    plan = resolve_file_open_after_trust(
+        decision=decision, path=path, action=action, extra_paths=extra_paths,
+    )
+    if not plan["shouldOpen"]:
+        return {**plan, "launched": False, "paths": []}
+    launched = False
+    if callable(opener):
+        try:
+            launched = opener(plan["command"], plan["path"]) is True
+        except Exception:  # noqa: BLE001 - a failed handler is a failed open
+            launched = False
+    return {
+        **plan,
+        "launched": launched,
+        "paths": [plan["path"]] if launched else [],
+        "message": FILE_OPEN_GRANTED if launched else FILE_OPEN_FAILED,
+    }
 
 
 def build_file_open_trust(

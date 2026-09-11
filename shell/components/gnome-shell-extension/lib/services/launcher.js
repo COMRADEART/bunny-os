@@ -17,6 +17,7 @@
 // decision and is recorded there.
 
 import Gio from 'gi://Gio';
+import GLib from 'gi://GLib';
 import Shell from 'gi://Shell';
 
 import {logError_, logOnce} from '../util.js';
@@ -123,6 +124,28 @@ export class ApplicationLauncher {
             logError_(`could not run ${argv[0]}`, error);
             return false;
         }
+    }
+
+    /**
+     * Open one Trust-granted file with the session handler.
+     *
+     * That path only — not a folder walk, not Pictures. `gio open` is the
+     * fallback when the default handler cannot start.
+     */
+    openGrantedFile(path) {
+        const raw = String(path || '').trim();
+        if (!raw.startsWith('/') && !raw.toLowerCase().startsWith('file://'))
+            return false;
+        try {
+            const uri = raw.toLowerCase().startsWith('file://')
+                ? raw
+                : GLib.filename_to_uri(raw, null);
+            if (Gio.AppInfo.launch_default_for_uri(uri, null))
+                return true;
+        } catch (error) {
+            logError_('could not open the granted file with its handler', error);
+        }
+        return this.spawn(['gio', 'open', raw]);
     }
 
     /** Every installed application, for the launcher grid and search. */

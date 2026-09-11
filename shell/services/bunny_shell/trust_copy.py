@@ -39,6 +39,12 @@ DENY_ACCESSIBLE_NAME = "Deny this Bunny action"
 FILE_OPEN_HEADLINE = "Bunny wants to open this file"
 FILE_OPEN_BUBBLE = "Review this open request."
 FILE_NOT_UPLOADED = "No file is uploaded automatically."
+FILE_OPEN_GRANTED = "Allow once. Bunny opened this file. Nothing was uploaded."
+FILE_OPEN_DENIED = (
+    "Don't allow. The file was not opened. "
+    "Ask again and choose Allow once if that was a mistake."
+)
+FILE_OPEN_FAILED = "Allow once was recorded, but Bunny could not open this file."
 
 _EXPLICIT_OFF = {"off", "none", "blocked", "nothing on the network"}
 _EXPLICIT_ON = {
