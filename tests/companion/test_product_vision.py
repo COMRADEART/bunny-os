@@ -326,7 +326,9 @@ class VoiceStoryTests(unittest.TestCase):
         self.assertEqual(report.to_json()["unrestrictedShell"], False)
         self.assertEqual(report.to_json()["modelBytesVendored"], False)
         statuses = {item["name"]: item["status"] for item in report.steps}
-        self.assertIn(statuses["speech-to-text"], {"PASS", "NOT_RUN"})
+        self.assertEqual(statuses["speech-to-text"], "NOT_RUN")
+        self.assertEqual(statuses["local TTS"], "NOT_RUN")
+        self.assertEqual(report.to_json()["spokenE2e"], "NOT_RUN")
         html = render_voice_html(report)
         self.assertIn("NOT_RUN", html)
         self.assertNotIn("Always allow everything", html)

@@ -25,6 +25,7 @@ from typing import Any
 from companion.executor import TaskContext
 from companion.intents import recognise
 from companion.local_intent import LocalIntentExecutor
+from companion.speech.recognizers import MODEL_DIRECTORIES
 from companion.speech.vosk_runtime import VoskRuntimeUnavailable, probe as probe_vosk
 from companion.voice.system import local_voice_available
 
@@ -84,6 +85,8 @@ class VoiceStoryReport:
             "physicalMicrophoneValidated": False,
             "modelBytesVendored": False,
             "unrestrictedShell": False,
+            "spokenE2e": "NOT_RUN",
+            "transcriptSource": "labelled-fixture",
         }
 
 
@@ -98,24 +101,44 @@ def _vosk_status() -> tuple[bool | None, str]:
 
 
 def _model_status() -> tuple[bool | None, str]:
-    candidates = (
-        Path("/usr/share/vosk/model"),
-        Path("/usr/share/vosk/vosk-model-small-en-us"),
-        Path("/usr/share/vosk-models/small-en-us"),
+    searched: list[str] = []
+    for raw in MODEL_DIRECTORIES:
+        root = Path(raw).expanduser()
+        searched.append(str(root))
+        if not root.is_dir():
+            continue
+        try:
+            matches = sorted(
+                path for path in root.iterdir()
+                if path.is_dir() and path.name.startswith("vosk-model")
+            )
+        except OSError as exc:
+            return None, f"{root} could not be listed: {exc}"
+        if matches:
+            return True, str(matches[0])
+    return None, (
+        "no vosk-model-* directory under "
+        + ", ".join(searched)
+        + "; this repo does not vendor model bytes"
     )
-    for path in candidates:
-        if path.is_dir():
-            return True, str(path)
-    return None, "no packaged Vosk model directory; this repo does not vendor model bytes"
 
 
 def _microphone_status() -> tuple[bool | None, str]:
-    pulse = shutil.which("parec") or shutil.which("pw-record")
-    if Path("/dev/snd").is_dir() and pulse:
-        return True, f"capture helper {pulse}"
-    if Path("/dev/snd").is_dir():
-        return None, "sound devices present; no parec/pw-record capture helper"
-    return None, "no microphone capture path on this host"
+    helpers = [
+        name for name in ("pw-record", "parec", "arecord") if shutil.which(name)
+    ]
+    snd = Path("/dev/snd").is_dir()
+    if not helpers and not snd:
+        return None, "no microphone capture path on this host"
+    bits = []
+    if helpers:
+        bits.append("capture helper " + ",".join(helpers))
+    if snd:
+        bits.append("/dev/snd present")
+    return None, (
+        "; ".join(bits)
+        + "; live guest microphone journey is NOT_RUN on this host harness"
+    )
 
 
 def run_voice_story(*, utterance: str = VOICE_STORY_UTTERANCE) -> VoiceStoryReport:
@@ -131,19 +154,12 @@ def run_voice_story(*, utterance: str = VOICE_STORY_UTTERANCE) -> VoiceStoryRepo
     mic_ok, mic_detail = _microphone_status()
     report.record(3, "probe microphone capture", passed=mic_ok, detail=mic_detail)
 
-    if vosk_ok and model_ok and mic_ok:
-        report.record(
-            4, "speech-to-text",
-            passed=None,
-            detail="runtime present; physical microphone journey is NOT_RUN in this host demo",
-        )
-    else:
-        report.record(
-            4, "speech-to-text",
-            passed=None,
-            detail="STT not live; using a labelled fixture transcript, not a recorded microphone",
-            fixture=True,
-        )
+    report.record(
+        4, "speech-to-text",
+        passed=None,
+        detail="STT not live; using a labelled fixture transcript, not a recorded microphone",
+        fixture=True,
+    )
     report.transcript = utterance
 
     intent = recognise(utterance)
@@ -184,16 +200,14 @@ def run_voice_story(*, utterance: str = VOICE_STORY_UTTERANCE) -> VoiceStoryRepo
     caption = intent.description
     report.caption = caption
     tts = local_voice_available()
-    if tts:
-        report.record(
-            7, "local TTS",
-            passed=True,
-            detail="a local system voice is installed; this demo does not play it unattended",
-        )
-    else:
-        report.record(
-            7, "local TTS",
-            passed=None,
-            detail="no local system voice (espeak-ng / speech-dispatcher) on this host",
-        )
+    report.record(
+        7, "local TTS",
+        passed=None,
+        detail=(
+            "a local system voice is installed; unattended host playback is NOT_RUN, not spoken e2e"
+            if tts else
+            "no local system voice (espeak-ng / speech-dispatcher) on this host"
+        ),
+        binaryPresent=tts,
+    )
     return report

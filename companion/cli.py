@@ -291,6 +291,14 @@ def add_arguments(subparsers: argparse._SubParsersAction) -> None:
         help="report which capture devices and local recognisers this machine has (read-only)",
     )
 
+    group.add_parser(
+        "voice-pipeline-inventory",
+        help=(
+            "host-honest inventory of the spoken pipeline (CODE vs NOT_RUN); "
+            "never claims spoken e2e PASS"
+        ),
+    )
+
     agent_slice = group.add_parser(
         "run-agent-slice",
         help=(
@@ -478,6 +486,8 @@ def dispatch(args: argparse.Namespace) -> dict[str, Any]:
         return _agents_health(args)
     if args.companion_command == "speech-input-health":
         return _speech_input_health(args)
+    if args.companion_command == "voice-pipeline-inventory":
+        return _voice_pipeline_inventory(args)
     if args.companion_command == "character":
         return _character_command(args)
     if args.companion_command == "renderer":
@@ -1333,6 +1343,20 @@ def _agents_health(args: argparse.Namespace) -> dict[str, Any]:
     }
 
 
+def _optional_audio_runtime_unavailable(kind: str, exc: BaseException) -> dict[str, Any]:
+    """Health commands must not crash the CLI when speech/TTS cannot construct."""
+    return {
+        "effect": (
+            f"{kind} runtime could not be constructed; typed input is the whole of input"
+        ),
+        "available": False,
+        "reason": str(exc),
+        "typedInputPreserved": True,
+        "taskAffected": False,
+        "spokenE2e": "NOT_RUN",
+    }
+
+
 def _speech_input_health(args: argparse.Namespace) -> dict[str, Any]:
     """What this machine could listen with. Opens nothing.
 
@@ -1343,13 +1367,17 @@ def _speech_input_health(args: argparse.Namespace) -> dict[str, Any]:
 
     from .speech.service import SpeechInputService, SpeechInputServiceOptions
 
-    service = SpeechInputService(SpeechInputServiceOptions(
-        runtime_directory=Path(tempfile.mkdtemp(prefix="bunny-speech-health-")),
-    ))
+    try:
+        service = SpeechInputService(SpeechInputServiceOptions(
+            runtime_directory=Path(tempfile.mkdtemp(prefix="bunny-speech-health-")),
+        ))
+    except Exception as exc:  # noqa: BLE001 - missing libvosk must not crash the CLI
+        return _optional_audio_runtime_unavailable("speech-input", exc)
     try:
         service.refresh()
         return {
             "effect": "read capture and recogniser health; no microphone was opened",
+            "spokenE2e": "NOT_RUN",
             **service.speech_input_health(),
             "devices": service.speech_input_devices(),
         }
@@ -1387,20 +1415,39 @@ def _voice_health(args: argparse.Namespace) -> dict[str, Any]:
 
     from .voice.service import VoiceService, VoiceServiceOptions
 
-    service = VoiceService(VoiceServiceOptions(
-        runtime_directory=Path(tempfile.mkdtemp(prefix="bunny-voice-health-")),
-        start_worker=False,
-    ))
+    try:
+        service = VoiceService(VoiceServiceOptions(
+            runtime_directory=Path(tempfile.mkdtemp(prefix="bunny-voice-health-")),
+            start_worker=False,
+        ))
+    except Exception as exc:  # noqa: BLE001 - missing TTS must not crash the CLI
+        return _optional_audio_runtime_unavailable("voice", exc)
     try:
         health = service.voice_health()
         voices = service.voice_list(language=args.language, limit=64)
         return {
             "effect": "REPORTED the local voice inventory and audio backends. Nothing was spoken.",
+            "spokenE2e": "NOT_RUN",
             **health,
             "voices": voices,
         }
     finally:
         service.close()
+
+
+def _voice_pipeline_inventory(_args: argparse.Namespace) -> dict[str, Any]:
+    """CODE vs NOT_RUN inventory. Never a spoken e2e PASS."""
+    from .voice_pipeline import construct_speech_and_voice_safely, run_voice_pipeline_inventory
+
+    report = run_voice_pipeline_inventory()
+    construction = construct_speech_and_voice_safely()
+    document = report.to_json()
+    document["effect"] = (
+        "inventoried the spoken pipeline on this host; STT/mic/TTS live steps "
+        "are NOT_RUN; spoken e2e is NOT_RUN"
+    )
+    document["construction"] = construction
+    return document
 
 
 def _run_demo(args: argparse.Namespace) -> dict[str, Any]:
