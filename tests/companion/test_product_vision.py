@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+from html import escape as html_escape
 import tempfile
 import unittest
 from pathlib import Path
@@ -358,7 +359,7 @@ class SecurityInvariantsTests(unittest.TestCase):
             "Appearance", "Bunny", "AI & Models", "Privacy",
             "Apps", "Permissions", "Accessibility", "System", "Updates",
         ):
-            self.assertIn(title, html)
+            self.assertIn(html_escape(title), html)
         self.assertNotIn("GGUF", html)
 
     def test_errors_say_what_happened_what_to_do_and_what_changed(self) -> None:
