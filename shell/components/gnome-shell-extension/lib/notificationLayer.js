@@ -29,6 +29,7 @@ import {ease, enter} from './animation.js';
 import {log_, makeActivatable, setAccessibleRole, timeout} from './util.js';
 import {MOTION} from './design/tokens.js';
 import {NOTIFICATION_ICONS, resolveIconName} from './icons.js';
+import {shouldToast} from './notificationCenter.js';
 
 const DISMISS_AFTER_MS = {info: 4500, warning: 7000, error: 9000};
 const MAX_VISIBLE = 3;
@@ -113,6 +114,8 @@ export class NotificationService {
     constructor() {
         this._layer = null;
         this._pending = [];
+        this._recent = [];
+        this.quiet = true;
     }
 
     attach(layer) {
@@ -139,6 +142,12 @@ export class NotificationService {
     }
 
     _push(level, message, options) {
+        const now = Date.now();
+        if (!shouldToast(level, message, this._recent, {quiet: this.quiet, now}))
+            return;
+        this._recent.push({level, message, at: now});
+        if (this._recent.length > 12)
+            this._recent.splice(0, this._recent.length - 12);
         if (this._layer === null) {
             // Queued rather than dropped: a failure during startup is exactly
             // the one worth seeing, and it happens before the layer exists.

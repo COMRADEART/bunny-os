@@ -8,7 +8,8 @@
 // Two layers, and the difference is not cosmetic.
 //
 // **Chrome** — top bar, sidebar, dock, toasts, the search results, the power
-// menu, the Trust overlay — goes through Main.layoutManager.addChrome. That
+// menu, the Trust overlay, the task overlay — goes through
+// Main.layoutManager.addChrome. That
 // puts it above windows,
 // in the shell's input region, and — with trackFullscreen — makes it disappear
 // under a fullscreen video without any code here knowing that fullscreen
@@ -70,7 +71,9 @@ import {AssistantBubble} from './assistant/bubble.js';
 import {SuggestedActions} from './assistant/suggestions.js';
 import {AssistantPanel} from './assistant/panel.js';
 import {TrustOverlay} from './assistant/trustOverlay.js';
+import {TaskOverlay} from './assistant/taskOverlay.js';
 import {consentSurfaceForLayout} from './companionVocabulary.js';
+import {buildCommandSurface, routeCommandAnswer} from './commandSurface.js';
 
 import {SystemOverview} from './cards/systemOverview.js';
 import {QuickAccess} from './cards/quickAccess.js';
@@ -493,7 +496,7 @@ export class DesktopShell {
 
         this._characterViewport = this._optional('character', () => new CharacterViewport({
             stateManager: this.characterState,
-            onActivate: () => this._activateAssistant(),
+            onActivate: () => this._openCommandSurface('character-click'),
         }));
 
         this._bubble = this._optional('speech bubble', () => new AssistantBubble({blur}));
@@ -516,6 +519,7 @@ export class DesktopShell {
         }));
 
         this._trustOverlay = this._optional('trust overlay', () => new TrustOverlay({blur}));
+        this._taskOverlay = this._optional('task overlay', () => new TaskOverlay({blur}));
 
         // Cards, each on its own. A card is a widget over a service, so it is
         // the piece most likely to meet a machine its service has no answer
@@ -642,6 +646,7 @@ export class DesktopShell {
         for (const actor of [
             this.topBar?.actor, this.sidebar?.actor, this.dock?.actor,
             this.notificationLayer?.actor, this._searchResults, this._trustOverlay?.actor,
+            this._taskOverlay?.actor,
         ]) {
             if (!actor)
                 continue;
@@ -927,9 +932,9 @@ export class DesktopShell {
             this._keybindings.push(key);
         };
         try {
+            bind('open-launcher', () => this._openCommandSurface('super-space'));
             bind('focus-desktop-search', () => {
-                this.topBar?.focusSearch();
-                this.characterState.noteActivity();
+                this._openCommandSurface('search-entry');
             });
             bind('focus-desktop-sidebar', () => this.sidebar?.focus());
             bind('focus-desktop-assistant', () => this._activateAssistant());
@@ -1020,6 +1025,7 @@ export class DesktopShell {
         this._characterViewport?.setGeometry(rects.character);
         this._placeBubbles(rects.character);
         this._trustOverlay?.place(monitor);
+        this._taskOverlay?.place(monitor);
 
         log_(`layout ${screen.width}x${screen.height} -> ${solution.breakpoint}, ` +
             `${solution.columns} card column(s)` +
@@ -1328,13 +1334,46 @@ export class DesktopShell {
      *
      * This is the typed-input shortcut. LISTENING is reserved for an explicit
      * microphone activation, so keyboard focus can never be mistaken for a
-     * live microphone.
+     * live microphone. Super+Space, the search field, and this path share
+     * `_openCommandSurface`.
      */
     _activateAssistant() {
         log_('assistant activated; the text input has focus');
-        this.characterState.noteActivity();
-        this._bubble?.say('Ready when you are. Type a request or press the microphone.', {wave: false});
+        this._openCommandSurface('character-click');
         this._assistantPanel?.focusInput();
+        this._bubble?.say('Search or ask. Type here, or Escape to dismiss.', {wave: false});
+    }
+
+    /**
+     * Universal command surface: Super+Space, character click, or Search.
+     * Companion is optional. The field is a search box, not a chat thread.
+     */
+    _openCommandSurface(trigger = 'search-entry') {
+        const surface = buildCommandSurface({
+            trigger,
+            query: this.topBar?.searchText ?? '',
+        });
+        log_(`command surface opened (${surface.trigger}); companion is not required`);
+        this.characterState.noteActivity();
+        this.topBar?.focusSearch();
+        this._bubble?.say('Search or ask. Type here, or Escape to dismiss.', {wave: false});
+    }
+
+    /**
+     * Short answers stay in the bubble. Longer work is a task card.
+     * Neither path is a chat transcript.
+     */
+    _presentCommandAnswer(reply, {isError = false, working = false} = {}) {
+        const routed = routeCommandAnswer(reply, {working});
+        const tone = isError ? 'error' : 'normal';
+        this._bubble?.say(routed.bubble.text, {tone, wave: false});
+        this._assistantPanel?.setStatus(routed.bubble.text, {tone});
+        if (routed.surface === 'task-card' && routed.taskCard) {
+            this._taskOverlay?.show(routed.taskCard);
+            this._taskOverlay?.place(Main.layoutManager.primaryMonitor);
+        } else {
+            this._taskOverlay?.hide();
+        }
     }
 
     /**
@@ -1352,6 +1391,7 @@ export class DesktopShell {
         if (this.characterState.state === 'listening' || this.characterState.state === 'talking')
             this.characterState.setState('idle', {reason: 'the request was dismissed'});
         this._bubble?.hide();
+        this._taskOverlay?.hide();
         global.stage.set_key_focus(null);
     }
 
@@ -1388,8 +1428,7 @@ export class DesktopShell {
 
         log_(`assistant request submitted: ${trimmed.length} characters`);
         this.characterState.noteActivity();
-        this._assistantPanel?.addTurn('user', trimmed);
-        this._assistantPanel?.showFileResults([]);
+        this._taskOverlay?.hide();
         this._clearPresentedApproval();
         this._assistantPanel?.setBusy(true);
         this._assistantPanel?.setStatus('Thinking…');
@@ -1434,15 +1473,7 @@ export class DesktopShell {
             onReply: (reply, isError, meta) => {
                 if (!this._owns(meta))
                     return;
-                this._assistantPanel?.addTurn('bunny', reply, {tone: isError ? 'error' : 'normal'});
-                // The bubble is the primary surface: it shows a preview and
-                // hands the rest to the card, which is a scrolling transcript
-                // and already has the whole thing from `addTurn` above.
-                this._bubble?.say(reply, {
-                    tone: isError ? 'error' : 'normal',
-                    wave: false,
-                    onOpenFull: () => this._assistantPanel?.focusInput(),
-                });
+                this._presentCommandAnswer(reply, {isError});
             },
             onFileResults: (results, meta) => {
                 if (this._owns(meta))
@@ -1535,9 +1566,8 @@ export class DesktopShell {
     _failRequest(reason, {retry = null} = {}) {
         this._assistantPanel?.setBusy(false);
         this._assistantPanel?.setStatus(reason, {tone: 'error'});
-        this._assistantPanel?.addTurn('bunny', reason, {tone: 'error'});
         this.characterState.setState('error', {reason});
-        this._bubble?.say(reason, {tone: 'error'});
+        this._presentCommandAnswer(reason, {isError: true});
         logError_('the assistant request failed', new Error(reason));
         if (retry) {
             this.notifications.error(`Bunny could not answer: ${reason}`, {
@@ -1673,7 +1703,6 @@ export class DesktopShell {
                 this._setMicrophoneVisible(false);
                 this._assistantPanel?.setVoiceState(false);
                 if (text) {
-                    this._assistantPanel?.addTurn('user', text);
                     this._assistantPanel?.setStatus(`Heard: ${text}`);
                     this._bubble?.say(text, {wave: false});
                 }
@@ -1709,12 +1738,7 @@ export class DesktopShell {
             onReply: (reply, isError, meta) => {
                 if (!this._ownsVoice(meta))
                     return;
-                this._assistantPanel?.addTurn('bunny', reply, {tone: isError ? 'error' : 'normal'});
-                this._bubble?.say(reply, {
-                    tone: isError ? 'error' : 'normal',
-                    wave: false,
-                    onOpenFull: () => this._assistantPanel?.focusInput(),
-                });
+                this._presentCommandAnswer(reply, {isError});
             },
             onFileResults: (results, meta) => {
                 if (this._ownsVoice(meta))
@@ -1746,10 +1770,9 @@ export class DesktopShell {
                 if (!this._ownsVoice(meta))
                     return;
                 this._bubble?.setSpeaking(false);
-                this._assistantPanel?.addTurn('bunny', reason, {tone: 'error'});
                 this._assistantPanel?.setStatus(reason);
                 this.characterState.setState('warning', {reason});
-                this._bubble?.say(reason, {tone: 'warning'});
+                this._presentCommandAnswer(reason, {isError: true});
             },
             onFinished: (phase, meta) => {
                 if (!this._ownsVoice(meta))
@@ -2104,6 +2127,7 @@ export class DesktopShell {
             ['notification layer', this.notificationLayer], ['bubble', this._bubble],
             ['suggestions', this._suggestions], ['character', this._characterViewport],
             ['trust overlay', this._trustOverlay],
+            ['task overlay', this._taskOverlay],
             ['wallpaper', this.wallpaper],
         ]) {
             attempt(what, () => component?.destroy());

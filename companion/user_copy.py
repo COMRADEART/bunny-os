@@ -26,6 +26,13 @@ from typing import Mapping
 __all__ = [
     "SCREEN_QUESTIONS",
     "UserMessage",
+    "CLOUD_MEMORY_IS_OFF",
+    "CLOUD_MEMORY_STAYS_OFF",
+    "NETWORK_ALLOWLIST_NOTE",
+    "NETWORK_FULL_INTERNET",
+    "NETWORK_OFF",
+    "ALLOWLISTED_CEILING_NOTE",
+    "CLIPBOARD_BLUETOOTH_NOTE",
     "disconnected_message",
     "error_message",
     "offline_message",
@@ -36,6 +43,33 @@ SCREEN_QUESTIONS = (
     "What am I doing?",
     "What is Bunny doing?",
     "What can I do next?",
+)
+
+#: Security #47 — fail-closed network chrome. Never a per-domain allowlist.
+NETWORK_OFF = "Off"
+NETWORK_FULL_INTERNET = "On (full internet)"
+NETWORK_ALLOWLIST_NOTE = (
+    "Site allowlists aren’t available yet — Full internet or Off."
+)
+ALLOWLISTED_CEILING_NOTE = (
+    "No network until a real filter ships, or you allow the full internet. "
+    "Bunny is not waiting for a site list."
+)
+CLIPBOARD_BLUETOOTH_NOTE = (
+    "Clipboard and Bluetooth are not mediated in this build. Requests are denied "
+    "before a prompt — Bunny cannot watch the clipboard or pair devices for an app."
+)
+
+#: Privacy cloud_context=none. Distinct from the remote_dispatch TrustPrompt line.
+CLOUD_MEMORY_IS_OFF = (
+    "Cloud memory is off. Bunny won’t send saved memory, session memory, "
+    "or a conversation summary online."
+)
+
+#: Security #52 — remote_dispatch is not cloud_context.
+CLOUD_MEMORY_STAYS_OFF = (
+    "Cloud memory stays off. Allowing this sends only what you asked this time "
+    "to that online service — not your saved memory, session memory, or a conversation summary."
 )
 
 

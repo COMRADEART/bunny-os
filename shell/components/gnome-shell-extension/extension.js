@@ -209,6 +209,11 @@ export default class BunnyShellExtension extends Extension {
             ['open-files', 'files'], ['open-approvals', 'approvals'], ['open-tasks', 'tasks'],
             ['open-workspaces', 'workspaces'],
         ]) {
+            // Super+Space is the in-session command surface when the Bunny
+            // desktop is live. The GTK launcher remains the fallback when
+            // the desktop setting is off.
+            if (key === 'open-launcher' && this._settings.get_boolean('desktop-enabled'))
+                continue;
             Main.wm.addKeybinding(
                 key,
                 this._settings,

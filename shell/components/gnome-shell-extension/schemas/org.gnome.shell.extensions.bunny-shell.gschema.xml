@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <schemalist>
   <schema id="org.gnome.shell.extensions.bunny-shell" path="/org/gnome/shell/extensions/bunny-shell/">
-    <key name="open-launcher" type="as"><default>['&lt;Super&gt;space']</default><summary>Open Bunny Launcher</summary></key>
+    <key name="open-launcher" type="as"><default>['&lt;Super&gt;space']</default><summary>Open Bunny command surface (launcher when the desktop is off)</summary></key>
     <key name="open-bunny" type="as"><default>['&lt;Super&gt;b']</default><summary>Open Bunny command surface</summary></key>
     <key name="open-terminal" type="as"><default>['&lt;Super&gt;t']</default><summary>Open the normal terminal</summary></key>
     <key name="open-files" type="as"><default>['&lt;Super&gt;e']</default><summary>Open Files</summary></key>

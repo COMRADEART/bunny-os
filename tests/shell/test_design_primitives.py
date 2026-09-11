@@ -162,10 +162,11 @@ class PermissionCardTests(NodeBackedTestCase):
         self.assertFalse(card["enforced"])
         self.assertEqual(card["standing"], "unenforced")
         self.assertEqual(card["enforcementNote"], "Declared, not enforced")
-        blob = json.dumps(card).casefold()
-        self.assertNotIn("allowlist", blob)
+        self.assertIn("aren’t available yet", card["networkHonesty"])
+        blob = json.dumps({k: v for k, v in card.items() if k != "networkHonesty"}).casefold()
+        self.assertNotIn("example.com", blob)
         self.assertNotIn("allow-listed", blob)
-        self.assertNotIn("allow listed", blob)
+        self.assertNotIn("per-domain", blob)
 
     def test_enforced_is_honest_when_true(self) -> None:
         card = call("buildPermissionCard", {"enforced": True, "network": "Off"})

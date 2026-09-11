@@ -84,8 +84,137 @@ export const CONFINEMENT_ROWS = [
     {key: 'privateAppData', label: 'App data'},
 ];
 
+/** Security #47: this build can only hold Off or On (full internet). */
+export const NETWORK_OFF = 'Off';
+export const NETWORK_FULL_INTERNET = 'On (full internet)';
+export const NETWORK_ALLOWLIST_NOTE =
+    "Site allowlists aren’t available yet — Full internet or Off.";
+
+/** Allowlisted ceiling (LibreOffice, named destinations): denied, not a pending filter. */
+export const ALLOWLISTED_CEILING_NOTE =
+    'No network until a real filter ships, or you allow the full internet. '
+    + 'Bunny is not waiting for a site list.';
+
+/** Clipboard / Bluetooth: deny-before-prompt. Do not imply mediation. */
+export const CLIPBOARD_BLUETOOTH_NOTE =
+    'Clipboard and Bluetooth are not mediated in this build. Requests are denied '
+    + 'before a prompt — Bunny cannot watch the clipboard or pair devices for an app.';
+
+/** Privacy cloud_context=none. Distinct from the remote_dispatch TrustPrompt line. */
+export const CLOUD_MEMORY_IS_OFF =
+    'Cloud memory is off. Bunny won’t send saved memory, session memory, '
+    + 'or a conversation summary online.';
+
+/** Security #52: remote_dispatch is not cloud memory. */
+export const CLOUD_MEMORY_STAYS_OFF =
+    'Cloud memory stays off. Allowing this sends only what you asked this time '
+    + 'to that online service — not your saved memory, session memory, or a conversation summary.';
+
+export const ALLOW_ONCE_LABEL = 'Allow once';
+export const DONT_ALLOW_LABEL = "Don't allow";
+export const ALLOW_ACCESSIBLE_NAME = 'Allow this Bunny action';
+export const DENY_ACCESSIBLE_NAME = 'Deny this Bunny action';
+
 function nonEmpty(value) {
     return typeof value === 'string' && value.trim().length > 0;
+}
+
+function networkToken(value) {
+    return String(value ?? '').trim().toLowerCase();
+}
+
+function isExplicitNetworkOff(lower) {
+    return lower === 'off' || lower === 'none' || lower === 'blocked'
+        || lower === 'nothing on the network';
+}
+
+function isExplicitFullInternet(lower) {
+    return lower === 'on' || lower === 'internet' || lower === 'full internet'
+        || lower === 'on (full internet)' || lower === 'the internet'
+        || lower === 'granted';
+}
+
+/**
+ * Catalogue declarations this build cannot filter: allowlisted ceilings
+ * (LibreOffice), loopback, local-network, hostnames. Fail-closed Off —
+ * never “waiting for domains”.
+ */
+export function networkIsDeclaredOnly(value) {
+    const lower = networkToken(value);
+    if (!lower)
+        return false;
+    if (isExplicitNetworkOff(lower) || isExplicitFullInternet(lower))
+        return false;
+    return true;
+}
+
+/**
+ * Person-facing network label. Only Off or On (full internet).
+ *
+ * An allowlisted ceiling or a hostname is Off until a real filter ships or
+ * the person explicitly raises the ceiling. Domain lists are never reprinted.
+ */
+export function networkFacingLabel(value) {
+    const text = String(value ?? '').trim();
+    if (!text)
+        return '';
+    const lower = networkToken(text);
+    if (isExplicitFullInternet(lower))
+        return NETWORK_FULL_INTERNET;
+    return NETWORK_OFF;
+}
+
+function isUnboundedGrant(option) {
+    const scope = String(option?.scope ?? '').toLowerCase();
+    const label = String(option?.label ?? '').toLowerCase();
+    if (scope === '*' || scope === 'everything' || scope === 'unbounded')
+        return true;
+    return label.includes('everything') || label.includes('unbounded')
+        || label.includes('always allow all');
+}
+
+/**
+ * Buttons a person may press. Never “Always allow everything”. Network never
+ * offers Always — that would be an unbounded internet grant.
+ */
+export function boundedAllowOptions(options, category = '') {
+    const cat = String(category ?? '').toLowerCase();
+    return (Array.isArray(options) ? options : []).filter(option => {
+        if (!option || typeof option !== 'object')
+            return false;
+        if (isUnboundedGrant(option))
+            return false;
+        if (cat === 'network' && String(option.scope ?? '').toLowerCase() === 'always')
+            return false;
+        return true;
+    });
+}
+
+export function remoteDispatchDisclosure({
+    cloudContext = 'none', offeringRemoteDispatch = false,
+} = {}) {
+    if (!offeringRemoteDispatch)
+        return '';
+    const cloud = String(cloudContext ?? 'none').trim().toLowerCase();
+    if (cloud === 'none' || cloud === '')
+        return CLOUD_MEMORY_STAYS_OFF;
+    return '';
+}
+
+function offersRemoteDispatch(approval, prompt) {
+    if (approval?.offeringRemoteDispatch === true || prompt?.offeringRemoteDispatch === true)
+        return true;
+    const tokens = [
+        approval?.action, approval?.capability, approval?.category,
+        prompt?.kind, prompt?.operationId, prompt?.capability,
+    ].map(value => String(value ?? '').toLowerCase().replace(/-/g, '_'));
+    return tokens.some(token => token.includes('remote_dispatch'));
+}
+
+function cloudContextOf(approval, prompt) {
+    const raw = approval?.cloudContext ?? prompt?.cloudContext
+        ?? approval?.cloud_context ?? prompt?.cloud_context ?? 'none';
+    return String(raw ?? 'none').trim().toLowerCase() || 'none';
 }
 
 function standingFor(key, value) {
@@ -93,7 +222,7 @@ function standingFor(key, value) {
     if (!text)
         return 'unavailable';
     if (key === 'network')
-        return text.toLowerCase() === 'off' ? 'blocked' : 'granted';
+        return networkFacingLabel(text) === NETWORK_OFF ? 'blocked' : 'granted';
     return 'granted';
 }
 
@@ -121,27 +250,42 @@ export function buildPrompt(record, options = {}) {
         else if (key === 'enforcement' && nonEmpty(record.enforcementNote))
             body.push({key, text: record.enforcementNote, emphasis: 'warning'});
     }
+    const capabilityDisclosure = remoteDispatchDisclosure({
+        cloudContext: cloudContextOf(record, record),
+        offeringRemoteDispatch: offersRemoteDispatch(record, record),
+    });
+    if (capabilityDisclosure)
+        body.push({key: 'remote-dispatch', text: capabilityDisclosure, emphasis: 'warning'});
+    const category = String(record.category || '').toLowerCase();
+    if ((category === 'clipboard' || category === 'bluetooth')
+            && !body.some(line => line.text === CLIPBOARD_BLUETOOTH_NOTE))
+        body.push({key: 'enforcement', text: CLIPBOARD_BLUETOOTH_NOTE, emphasis: 'warning'});
+    if (category === 'network' && networkIsDeclaredOnly(record.resource))
+        body.push({key: 'enforcement', text: ALLOWLISTED_CEILING_NOTE, emphasis: 'warning'});
 
     // Reading order: the allow options in escalating order, then deny.
-    const buttons = (record.options || []).map((option, index) => ({
+    const buttons = boundedAllowOptions(record.options, record.category).map((option, index) => ({
         id: option.scope,
         label: option.label,
         verdict: 'allow',
         scope: option.scope,
         role: index === 0 ? 'suggested-weak' : 'normal',
-        accessibleName: index === 0 ? 'Allow this Bunny action' : option.label,
+        accessibleName: index === 0 ? ALLOW_ACCESSIBLE_NAME : option.label,
     }));
     buttons.push({
         id: 'deny',
-        label: (record.denyOption && record.denyOption.label) || "Don't allow",
+        label: (record.denyOption && record.denyOption.label) || DONT_ALLOW_LABEL,
         verdict: 'deny',
         scope: null,
         role: 'safe-default',
+        accessibleName: DENY_ACCESSIBLE_NAME,
     });
 
-    const enforced = !nonEmpty(record.enforcementNote);
+    const enforced = !nonEmpty(record.enforcementNote)
+        && category !== 'clipboard' && category !== 'bluetooth';
 
-    const firstAllowScope = (record.options && record.options[0] && record.options[0].scope) || 'once';
+    const allowButtons = buttons.filter(button => button.verdict === 'allow');
+    const firstAllowScope = (allowButtons[0] && allowButtons[0].scope) || 'once';
     const identity = identityOf(record);
 
     return {
@@ -218,12 +362,24 @@ export function buildApproval(approval, options = {}) {
     if (body.length === 0 && nonEmpty(approval.reason) && approval.reason !== heading)
         body.push({key: 'reason', text: approval.reason, emphasis: 'quiet'});
 
+    const networkShown = nonEmpty(prompt.network);
+    if (networkShown)
+        body.push({key: 'enforcement', text: NETWORK_ALLOWLIST_NOTE, emphasis: 'warning'});
+    if (networkIsDeclaredOnly(prompt.network))
+        body.push({key: 'enforcement', text: ALLOWLISTED_CEILING_NOTE, emphasis: 'warning'});
+    const disclosure = remoteDispatchDisclosure({
+        cloudContext: cloudContextOf(approval, prompt),
+        offeringRemoteDispatch: offersRemoteDispatch(approval, prompt),
+    });
+    if (disclosure)
+        body.push({key: 'remote-dispatch', text: disclosure, emphasis: 'warning'});
+
     const confinement = CONFINEMENT_ROWS
         .filter(row => nonEmpty(prompt[row.key]))
         .map(row => ({
             key: row.key,
             label: row.label,
-            value: prompt[row.key],
+            value: row.key === 'network' ? networkFacingLabel(prompt[row.key]) : prompt[row.key],
             standing: standingFor(row.key, prompt[row.key]),
             // Every restriction shown here is one the capsule runtime holds. A
             // row this surface could not verify would need `enforced: false`
@@ -235,22 +391,22 @@ export function buildApproval(approval, options = {}) {
     const buttons = [
         {
             id: 'allow',
-            label: 'Allow once',
+            label: ALLOW_ONCE_LABEL,
             verdict: 'allow',
             scope: 'once',
             role: 'suggested-weak',
             // The name the harness presses and the name Orca speaks. It says
             // what pressing does, because "Allow" alone in a list of buttons is
             // not a sentence a screen reader user can act on.
-            accessibleName: 'Allow this Bunny action',
+            accessibleName: ALLOW_ACCESSIBLE_NAME,
         },
         {
             id: 'deny',
-            label: "Don't allow",
+            label: DONT_ALLOW_LABEL,
             verdict: 'deny',
             scope: null,
             role: 'safe-default',
-            accessibleName: 'Deny this Bunny action',
+            accessibleName: DENY_ACCESSIBLE_NAME,
         },
     ];
 

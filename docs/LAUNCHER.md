@@ -10,7 +10,7 @@ Natural-language routing is deterministic for supported phrases. `Check for syst
 
 Consequential results open a detail/confirmation or approval flow. They do not execute directly from search. Application launch is non-consequential; system mutation is not.
 
-Default shortcut is `Super+Space`. `Super+A` remains GNOME's application grid, so approvals use `Super+Shift+A`. The editor is the GNOME extension settings schema; a future preferences UI may write only those typed keys.
+Default shortcut is `Super+Space`. When the Bunny desktop is on, that key opens the in-session command surface (search field, not a chat log); when it is off, it still opens the GTK launcher. `Super+A` remains GNOME's application grid, so approvals use `Super+Shift+A`. The editor is the GNOME extension settings schema; a future preferences UI may write only those typed keys.
 
 Repository smoke examples:
 

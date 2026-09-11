@@ -34,7 +34,7 @@
    ],
    "trust": {
     "identity": true,
-    "bodyLines": 2,
+    "bodyLines": 3,
     "confinementRows": [
      "Files",
      "Network",
@@ -59,7 +59,7 @@
     ],
     "initialFocus": "deny"
    },
-   "longPromptBodyLines": 2,
+   "longPromptBodyLines": 3,
    "errorKinds": 6,
    "resultActions": [
     "open",
@@ -718,7 +718,7 @@
    ],
    "trust": {
     "identity": true,
-    "bodyLines": 2,
+    "bodyLines": 3,
     "confinementRows": [
      "Files",
      "Network",
@@ -743,7 +743,7 @@
     ],
     "initialFocus": "deny"
    },
-   "longPromptBodyLines": 2,
+   "longPromptBodyLines": 3,
    "errorKinds": 6,
    "resultActions": [
     "open",
@@ -1402,7 +1402,7 @@
    ],
    "trust": {
     "identity": true,
-    "bodyLines": 2,
+    "bodyLines": 3,
     "confinementRows": [
      "Files",
      "Network",
@@ -1427,7 +1427,7 @@
     ],
     "initialFocus": "deny"
    },
-   "longPromptBodyLines": 2,
+   "longPromptBodyLines": 3,
    "errorKinds": 6,
    "resultActions": [
     "open",
@@ -2086,7 +2086,7 @@
    ],
    "trust": {
     "identity": true,
-    "bodyLines": 2,
+    "bodyLines": 3,
     "confinementRows": [
      "Files",
      "Network",
@@ -2111,7 +2111,7 @@
     ],
     "initialFocus": "deny"
    },
-   "longPromptBodyLines": 2,
+   "longPromptBodyLines": 3,
    "errorKinds": 6,
    "resultActions": [
     "open",
@@ -2770,7 +2770,7 @@
    ],
    "trust": {
     "identity": true,
-    "bodyLines": 2,
+    "bodyLines": 3,
     "confinementRows": [
      "Files",
      "Network",
@@ -2795,7 +2795,7 @@
     ],
     "initialFocus": "deny"
    },
-   "longPromptBodyLines": 2,
+   "longPromptBodyLines": 3,
    "errorKinds": 6,
    "resultActions": [
     "open",
@@ -3454,7 +3454,7 @@
    ],
    "trust": {
     "identity": true,
-    "bodyLines": 2,
+    "bodyLines": 3,
     "confinementRows": [
      "Files",
      "Network",
@@ -3479,7 +3479,7 @@
     ],
     "initialFocus": "deny"
    },
-   "longPromptBodyLines": 2,
+   "longPromptBodyLines": 3,
    "errorKinds": 6,
    "resultActions": [
     "open",
@@ -4138,7 +4138,7 @@
    ],
    "trust": {
     "identity": true,
-    "bodyLines": 2,
+    "bodyLines": 3,
     "confinementRows": [
      "Files",
      "Network",
@@ -4163,7 +4163,7 @@
     ],
     "initialFocus": "deny"
    },
-   "longPromptBodyLines": 2,
+   "longPromptBodyLines": 3,
    "errorKinds": 6,
    "resultActions": [
     "open",

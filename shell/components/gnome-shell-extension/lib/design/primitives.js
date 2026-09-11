@@ -14,6 +14,7 @@ import {
     RADIUS,
     SCREEN_QUESTIONS,
 } from './tokens.js';
+import {NETWORK_ALLOWLIST_NOTE} from '../trustPrompt.js';
 
 /** Every primitive this phase ships, named once so a test can enumerate them. */
 export const PRIMITIVE_KINDS = [
@@ -292,6 +293,7 @@ export function buildPermissionCard({
         enforced: isEnforced,
         standing: isEnforced ? 'granted' : 'unenforced',
         enforcementNote: isEnforced ? 'Enforced' : 'Declared, not enforced',
+        networkHonesty: NETWORK_ALLOWLIST_NOTE,
         styleClass: 'bunny-permission-card',
         radius: RADIUS.card,
         canFocus: true,

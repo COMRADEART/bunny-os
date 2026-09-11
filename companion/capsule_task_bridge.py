@@ -79,6 +79,7 @@ from .executor import PlannedOperation
 from .ids import IdSource, RandomIds
 from .task import CompanionTask
 from .tools import ToolBroker, ToolDeclaration, ToolOutcome
+from .user_copy import NETWORK_FULL_INTERNET, NETWORK_OFF
 
 __all__ = [
     "CAPSULE_TOOL_IDS",
@@ -241,7 +242,7 @@ class PreparedCapsuleTask:
             ),
             "disclosure": self.resource_display,
             "fileAccess": f"{self.resource_display} only",
-            "network": "On" if self.descriptor.network == "internet" else "Off",
+            "network": NETWORK_FULL_INTERNET if self.descriptor.network == "internet" else NETWORK_OFF,
             "privateAppData": "Isolated",
         }
 
