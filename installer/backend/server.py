@@ -57,7 +57,19 @@ from typing import Any, Callable, Mapping
 from installer.backend.anaconda import ExecutorUnavailable, InstallationFailed
 from installer.backend.service import AuthenticationError, BackendUnavailable, InstallerService
 
-__all__ = ["SOCKET_PATH", "ProtocolServer", "serve"]
+__all__ = [
+    "SOCKET_PATH",
+    "PeerCredentialError",
+    "ProtocolServer",
+    "listening_greeting",
+    "serve",
+    "write_session_token",
+]
+
+
+class PeerCredentialError(AuthenticationError):
+    """The kernel did not supply a usable peer identity. Refuse, do not guess."""
+
 
 SOCKET_PATH = Path("/run/bunny-installer/backend.sock")
 
@@ -125,16 +137,34 @@ class ProtocolServer:
 
     @staticmethod
     def peer_uid(connection: socket.socket) -> int:
-        raw = connection.getsockopt(socket.SOL_SOCKET, socket.SO_PEERCRED,
-                                    struct.calcsize("3i"))
-        _pid, uid, _gid = struct.unpack("3i", raw)
+        if not hasattr(socket, "SO_PEERCRED"):
+            raise PeerCredentialError("SO_PEERCRED is unavailable")
+        try:
+            raw = connection.getsockopt(socket.SOL_SOCKET, socket.SO_PEERCRED,
+                                        struct.calcsize("3i"))
+            pid, uid, gid = struct.unpack("3i", raw)
+        except (OSError, struct.error, ValueError) as error:
+            raise PeerCredentialError("peer credentials could not be read") from error
+        if pid <= 0 or uid < 0 or gid < 0:
+            raise PeerCredentialError("invalid peer credentials")
         return uid
 
     def handle(self, connection: socket.socket) -> None:
-        uid = self.peer_uid(connection)
+        try:
+            uid = self.peer_uid(connection)
+        except PeerCredentialError as error:
+            self.on_event("refused", {"reason": "peer-cred", "detail": str(error)})
+            try:
+                connection.sendall(self._error("this socket serves one session only") + b"\n")
+            except OSError:
+                pass
+            return
         if uid != self.live_uid:
             self.on_event("refused", {"reason": "peer-uid", "uid": uid})
-            connection.sendall(self._error("this socket serves one session only") + b"\n")
+            try:
+                connection.sendall(self._error("this socket serves one session only") + b"\n")
+            except OSError:
+                pass
             return
 
         buffered = b""
@@ -391,6 +421,44 @@ def _engine_logs() -> dict[str, str]:
     return tails
 
 
+def listening_greeting(*, path: Path, token_path: Path | None,
+                       destructive: bool) -> dict[str, Any]:
+    """The one-line stdout announcement. Never includes the session token."""
+    return {
+        "schemaVersion": 1,
+        "socket": str(path),
+        "sessionTokenPath": str(token_path) if token_path is not None else None,
+        "destructiveExecutionAvailable": destructive,
+    }
+
+
+def write_session_token(token_path: Path, token: str, live_uid: int) -> None:
+    """Write the session token as a 0400 regular file owned by the live user.
+
+    A leftover world-readable file, or a symlink planted at the token path,
+    must not receive the token. Unlink first (a symlink is removed, its target
+    is not), then create with ``O_EXCL|O_NOFOLLOW`` and ``fchmod 0400``.
+    """
+    token_path.parent.mkdir(parents=True, exist_ok=True, mode=0o755)
+    try:
+        token_path.unlink()
+    except FileNotFoundError:
+        pass
+    flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW | os.O_CLOEXEC
+    descriptor = os.open(str(token_path), flags, 0o400)
+    try:
+        os.fchmod(descriptor, 0o400)
+        try:
+            os.fchown(descriptor, live_uid, -1)
+        except (OSError, PermissionError):
+            # Host tests and non-root dry-run still need a readable token file
+            # owned by the process. SO_PEERCRED remains the uid check.
+            pass
+        os.write(descriptor, token.encode("ascii"))
+    finally:
+        os.close(descriptor)
+
+
 def serve(*, live_uid: int, probe: Callable[[], list], adapter: object | None,
           path: Path = SOCKET_PATH, token_path: Path | None = None) -> int:
     """Run the backend until it is stopped.
@@ -429,23 +497,14 @@ def serve(*, live_uid: int, probe: Callable[[], list], adapter: object | None,
         # so a session that finds the socket has already been able to find the
         # token — the reverse order gives a window in which the surface starts,
         # fails to authenticate, and shows a person an error that fixes itself.
-        token_path.parent.mkdir(parents=True, exist_ok=True, mode=0o755)
-        descriptor = os.open(str(token_path),
-                             os.O_WRONLY | os.O_CREAT | os.O_TRUNC | os.O_NOFOLLOW, 0o400)
-        try:
-            os.write(descriptor, token.encode("ascii"))
-            os.fchown(descriptor, live_uid, -1)
-        finally:
-            os.close(descriptor)
-    # The token goes to stdout once, for the unit to hand to the session. It is
-    # not in the socket's greeting: a client that could read the token from the
-    # socket it is authenticating to would make the token pointless.
-    sys.stdout.write(json.dumps({
-        "schemaVersion": 1,
-        "socket": str(path),
-        "sessionToken": token,
-        "destructiveExecutionAvailable": adapter is not None,
-    }, sort_keys=True) + "\n")
+        write_session_token(token_path, token, live_uid)
+    # The live user reads the token from the 0400 file, not from this process's
+    # stdout. systemd's default StandardOutput=journal would otherwise persist
+    # the token for the life of the journal (and a driven run copies stderr to
+    # the serial console — stdout must never grow the same habit).
+    sys.stdout.write(json.dumps(listening_greeting(
+        path=path, token_path=token_path, destructive=adapter is not None,
+    ), sort_keys=True) + "\n")
     sys.stdout.flush()
     try:
         server.serve_forever()

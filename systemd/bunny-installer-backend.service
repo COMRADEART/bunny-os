@@ -68,6 +68,11 @@ ReadWritePaths=-/run/anaconda
 # EROFS and the replay would measure the backend instead of the failure.
 ReadWritePaths=-/mnt
 RuntimeDirectoryPreserve=yes
+# The session token is a 0400 file under /run. Stdout used to print it as a
+# greeting; systemd's default StandardOutput=journal would then persist the
+# token for the life of the journal. The live user reads the file, not stdout.
+StandardOutput=null
+StandardError=journal
 ProtectKernelTunables=yes
 ProtectKernelModules=yes
 ProtectKernelLogs=yes
