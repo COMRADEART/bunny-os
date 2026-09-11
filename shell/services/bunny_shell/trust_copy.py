@@ -29,6 +29,9 @@ CLOUD_MEMORY_STAYS_OFF = (
     "Cloud memory stays off. Allowing this sends only what you asked this time "
     "to that online service — not your saved memory, session memory, or a conversation summary."
 )
+NO_ONLINE_MODELS_IS_LOCAL_ONLY = (
+    "No online models ever is Local only — not Cloud memory off."
+)
 ALLOW_ONCE_LABEL = "Allow once"
 DONT_ALLOW_LABEL = "Don't allow"
 ALLOW_ACCESSIBLE_NAME = "Allow this Bunny action"

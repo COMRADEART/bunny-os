@@ -110,8 +110,11 @@ class ConversationTests(unittest.TestCase):
 
     def test_first_run_explains_capsules_and_permissions(self) -> None:
         keys = [entry.key for entry in FIRST_RUN_STAGES]
-        self.assertIn("capsules_explained", keys)
-        self.assertIn("trust_explained", keys)
+        self.assertIn("privacy", keys)
+        self.assertIn("companion", keys)
+        privacy = stage("privacy")
+        self.assertIn("own space", privacy.says)
+        self.assertIn("Cloud memory", privacy.says)
 
     def test_first_run_is_never_destructive(self) -> None:
         for entry in FIRST_RUN_STAGES:

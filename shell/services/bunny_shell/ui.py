@@ -16,18 +16,22 @@ from typing import Any
 
 from .command_surface import build_command_surface, route_command_answer
 from .control_center import ai_module, bunny_module, privacy_module
+from .bunny_settings import ai_models_module, bunny_companion_module, settings_privacy_module
 from .core_state import read_snapshot, shell_status
 from .launcher import LauncherState, application_search, route_intent
+from .lock_screen import build_lock_screen, build_login_screen
 from .notification_center import build_notification_center
 from .project import project_status
 from .search import SearchIndex
 from .settings import SECTIONS, SettingsStore
+from .settings_ia import build_settings_ia, resolve_section, sidebar_groups
 from .trust_copy import (
     ALLOWLISTED_CEILING_NOTE,
     CLIPBOARD_BLUETOOTH_NOTE,
     CLOUD_MEMORY_IS_OFF,
     CLOUD_MEMORY_STAYS_OFF,
     NETWORK_ALLOWLIST_NOTE,
+    NO_ONLINE_MODELS_IS_LOCAL_ONLY,
 )
 from .workspaces import WorkspaceStore
 
@@ -150,6 +154,8 @@ class BunnyApplication:
             "notifications": self._notifications,
             "quick-settings": self._quick_settings,
             "command": self._command,
+            "lock": self._lock,
+            "login": self._login,
         }
         content = builders.get(self.surface, self._command)()
         root.append(content)
@@ -207,37 +213,42 @@ class BunnyApplication:
         detail = self.Gtk.Box(orientation=self.Gtk.Orientation.VERTICAL, spacing=12)
         detail.set_margin_start(24)
         settings = SettingsStore().get_all()
+        ia = build_settings_ia(selected=self.section or "bunny")
+        wanted = ia["selectedTitle"]
 
         def select(_list: Any, row: Any) -> None:
+            if row is None or not hasattr(row, "section_name"):
+                return
             while child := detail.get_first_child():
                 detail.remove(child)
             name = row.section_name
-            detail.append(self._label(name, "title-1"))
-            if name == "Bunny":
-                self._render_module(detail, bunny_module(settings))
-            elif name == "Voice & AI":
-                self._render_module(detail, ai_module(settings))
+            item = resolve_section(name)
+            detail.append(self._label(item.title, "title-1"))
+            if item.id == "bunny":
+                self._render_module(detail, bunny_companion_module(settings))
+            elif item.id == "ai-models":
+                self._render_module(detail, ai_models_module(settings))
                 self._voice_settings(detail)
-            elif name == "Privacy":
-                self._render_module(detail, privacy_module(settings, cloud_context=_cloud_context()))
+            elif item.id == "privacy":
+                self._render_module(
+                    detail, settings_privacy_module(settings, cloud_context=_cloud_context())
+                )
                 detail.append(self._label("Device camera, microphone, and screen sharing stay in GNOME."))
                 detail.append(self._button("Open GNOME device privacy", lambda _b: _fixed_spawn(["/usr/bin/gnome-control-center", "privacy"])))
-            elif name == "Notifications":
+            elif item.id == "notifications":
                 self._render_notifications(detail, settings)
                 detail.append(self._button("Open GNOME Notifications", lambda _b: _fixed_spawn(["/usr/bin/gnome-control-center", "notifications"])))
-            elif name in GNOME_PANELS:
+            elif item.gnome_panel:
                 detail.append(self._label("This stable system section is provided by GNOME Settings."))
-                detail.append(self._button("Open GNOME Settings", lambda _b: _fixed_spawn(["/usr/bin/gnome-control-center", GNOME_PANELS[name]])))
-                if name == "Appearance":
+                detail.append(self._button("Open GNOME Settings", lambda _b: _fixed_spawn(["/usr/bin/gnome-control-center", item.gnome_panel])))
+                if item.id == "appearance":
                     detail.append(self._label(f"Bunny surface theme: {settings['theme']} · Reduced motion: {settings['reducedMotion']} · Reduced transparency: {settings['reducedTransparency']}"))
-            elif name == "Updates":
+            elif item.id == "updates":
                 detail.append(self._label("OS image updates remain separate from Bunny application updates and require broker authorization."))
                 detail.append(self._button("Inspect OS update status", lambda _b: _fixed_spawn(["/usr/bin/gnome-terminal", "--", "/usr/bin/bunny-os", "update", "status"])))
-            elif name == "Recovery":
+            elif item.id == "recovery":
                 detail.append(self._label("Recovery, previous deployments, safe graphics, and diagnostics remain available without Bunny Core."))
                 detail.append(self._button("Inspect recovery status", lambda _b: _fixed_spawn(["/usr/bin/gnome-terminal", "--", "/usr/bin/bunny-os", "recovery", "status"])))
-            elif name == "Voice":
-                self._voice_settings(detail)
             else:
                 for key, value in settings.items():
                     if isinstance(value, bool):
@@ -251,17 +262,21 @@ class BunnyApplication:
                     else:
                         detail.append(self._label(f"{key}: {json.dumps(value)}"))
         selected_row = None
-        for section in SECTIONS:
-            row = self.Gtk.ListBoxRow()
-            row.section_name = section
-            row.set_child(self._label(section))
-            navigation.append(row)
-            if section.casefold() == (self.section or "Bunny").replace("bunny-", "").casefold():
-                selected_row = row
+        for group in sidebar_groups(device_collapsed=False):
+            header = self.Gtk.ListBoxRow(selectable=False, activatable=False)
+            header.set_child(self._label(group["title"], "heading"))
+            navigation.append(header)
+            for item in group["items"]:
+                row = self.Gtk.ListBoxRow()
+                row.section_name = item["title"]
+                row.set_child(self._label(item["title"]))
+                navigation.append(row)
+                if item["title"].casefold() == wanted.casefold():
+                    selected_row = row
         navigation.connect("row-selected", select)
         split.set_start_child(navigation)
         split.set_end_child(detail)
-        navigation.select_row(selected_row or navigation.get_row_at_index(0))
+        navigation.select_row(selected_row or navigation.get_row_at_index(1))
         return split
 
     def _render_module(self, detail: Any, module: Any) -> None:
@@ -280,6 +295,30 @@ class BunnyApplication:
                 if row.hint:
                     line = f"{line}\n{row.hint}"
                 detail.append(self._label(line))
+
+    def _lock(self) -> Any:
+        model = build_lock_screen()
+        return self._chrome_screen(model)
+
+    def _login(self) -> Any:
+        model = build_login_screen()
+        return self._chrome_screen(model)
+
+    def _chrome_screen(self, model: dict[str, Any]) -> Any:
+        box = self.Gtk.Box(orientation=self.Gtk.Orientation.VERTICAL, spacing=12)
+        box.append(self._label(str(model.get("title") or ""), "title-1"))
+        box.append(self._label(str(model.get("summary") or "")))
+        box.append(self._label(
+            f"Companion: {'visible' if model.get('companionVisible') else 'hidden'} · {model.get('companionAnchor')}"
+        ))
+        password = self.Gtk.PasswordEntry()
+        password.update_property(
+            [self.Gtk.AccessibleProperty.LABEL],
+            [str(model.get("passwordAccessibleName") or "Password")],
+        )
+        box.append(password)
+        box.append(self._label(str(model.get("next") or "")))
+        return box
 
     def _render_notifications(self, detail: Any, settings: dict[str, Any]) -> None:
         center = build_notification_center(
@@ -619,6 +658,7 @@ class BunnyApplication:
         box.append(self._label(CLIPBOARD_BLUETOOTH_NOTE))
         box.append(self._label(CLOUD_MEMORY_IS_OFF))
         box.append(self._label(CLOUD_MEMORY_STAYS_OFF))
+        box.append(self._label(NO_ONLINE_MODELS_IS_LOCAL_ONLY))
         box.append(self._button("Open GNOME device privacy", lambda _b: _fixed_spawn(["/usr/bin/gnome-control-center", "privacy"])))
         return box
 

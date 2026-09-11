@@ -114,6 +114,17 @@ a one-time online hop as two consents. Model id, measured tok/s or “not
 measured”, and GPU/VRAM/NPU as unknown/absent/unusable live under Advanced
 only — never invented in normal chrome. Live GNOME remains **not verified**.
 
+## Phase 3 settings, onboarding, lock (draft)
+
+Settings uses a calm sidebar (`You` / `This computer` / `System`) with the
+Phase 1 Sidebar primitive. Bunny, AI & Models, Privacy, and Accessibility are
+the open group. Device panels stay nested GNOME deep-links.
+
+Onboarding is a short guided intro (name, timezone, accessibility, companion,
+voice, privacy) that ends Ready with the companion in the corner. Login and
+lock chrome may show the figure; they stay usable if it is hidden or fails.
+GDM remains the stock Fedora greeter. Live GNOME remains **not verified**.
+
 ## Primitives
 
 Button, IconButton, Card, Panel, Sheet, Dialog, Popover, Tooltip, TextField,

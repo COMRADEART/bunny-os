@@ -415,8 +415,8 @@ def render_settings_html() -> str:
       <span>user concepts · no credentials · no model shop</span></header>
     <main class="panel">
       <h1>Settings, as you would look for them</h1>
-      <p class="muted">Appearance, Bunny, Voice, AI, Privacy, Memory, Apps,
-        Permissions, Accessibility, System, Updates.</p>
+      <p class="muted">Bunny, AI &amp; Models, Privacy, Accessibility — then this
+        computer and system, folded away.</p>
       <div class="grid">{"".join(cards)}</div>
     </main>
     <p class="note">This catalog projects existing settings documents. It does

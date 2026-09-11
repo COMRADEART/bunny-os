@@ -33,6 +33,7 @@ __all__ = [
     "NETWORK_OFF",
     "ALLOWLISTED_CEILING_NOTE",
     "CLIPBOARD_BLUETOOTH_NOTE",
+    "NO_ONLINE_MODELS_IS_LOCAL_ONLY",
     "disconnected_message",
     "error_message",
     "offline_message",
@@ -70,6 +71,11 @@ CLOUD_MEMORY_IS_OFF = (
 CLOUD_MEMORY_STAYS_OFF = (
     "Cloud memory stays off. Allowing this sends only what you asked this time "
     "to that online service — not your saved memory, session memory, or a conversation summary."
+)
+
+#: “Never go online for models” is the AI mode, not the cloud-memory consent.
+NO_ONLINE_MODELS_IS_LOCAL_ONLY = (
+    "No online models ever is Local only — not Cloud memory off."
 )
 
 

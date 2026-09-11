@@ -271,48 +271,73 @@ PROGRESS_STAGES: tuple[tuple[str, str], ...] = (
     ("finalise", "Finishing up"),
 )
 
-#: First boot. Shorter, and every stage is companion authority — nothing here
-#: destroys anything, so nothing here needs a typed confirmation.
+#: First boot. A short guided intro — not a Linux wizard. Every stage is
+#: companion authority: nothing here destroys anything, so nothing here needs
+#: a typed confirmation.
 FIRST_RUN_STAGES: tuple[Stage, ...] = (
     Stage(
         key="hello",
-        says="Hi. I'm Bunny. You're set up — let me show you three things, then I'll get out of your way.",
+        says="Hi. I'm Bunny. You're set up — a minute of this, then I'll get out of your way.",
         heading="Hello",
         authority="companion",
         companion="idle",
         advanced=("Session type, compositor and GPU driver in use",),
     ),
     Stage(
-        key="what_you_chose",
-        says="Here's what you picked during setup. Change any of it now if you like.",
-        heading="Your choices",
-        authority="companion",
-        companion="presenting_result",
-        advanced=("first-run.json state document",),
-    ),
-    Stage(
-        key="capsules_explained",
-        says="Every app here runs in its own space. It can't see your files, or another app's, until you say so.",
-        heading="App Capsules",
+        key="name",
+        says="What should I call you? A name is enough — not a Linux username.",
+        heading="Your name",
         authority="companion",
         companion="understanding",
-        advanced=("Isolation backend in use and what it enforces", "Per-capsule directory layout"),
+        skip_note="Bunny can wait. The desktop works either way.",
     ),
     Stage(
-        key="trust_explained",
-        says="When an app wants something, I'll ask you in plain words. You can change your mind later in Settings.",
-        heading="Permissions",
+        key="timezone",
+        says="When is it where you are?",
+        heading="Timezone",
         authority="companion",
-        companion="waiting_for_approval",
-        advanced=("Permission categories and the Linux mechanism behind each",),
+        companion="understanding",
+        advanced=("IANA timezone id",),
+        skip_note="The system clock stays as it is.",
     ),
     Stage(
-        key="try_something",
-        says="Ask me to do something. I'll show you exactly what I'm doing while I do it.",
-        heading="Try me",
+        key="accessibility",
+        says="Would you like larger text, more contrast, less movement, or a screen reader? You can change all of this later.",
+        heading="Accessibility",
         authority="companion",
         companion="listening",
-        advanced=("Task workspace projection", "Capability to application mapping"),
+        advanced=("Orca autostart", "text-scaling-factor", "prefers-reduced-motion"),
+        skip_note="Defaults follow the system settings you can change any time.",
+    ),
+    Stage(
+        key="companion",
+        says="How much of me would you like on screen?",
+        heading="Bunny",
+        authority="companion",
+        companion="idle",
+        advanced=("Presentation implementation ladder", "Autostart unit and session target"),
+        skip_note="You can turn me off entirely and the desktop works the same.",
+    ),
+    Stage(
+        key="voice",
+        says="I can listen while you hold a key, and I can read replies aloud. Skip either if you would rather type.",
+        heading="Voice",
+        authority="companion",
+        companion="listening",
+        advanced=("Push-to-talk Super+Alt+Space", "No wake word in this release"),
+        skip_note="Typed Search always works. Captions always appear.",
+    ),
+    Stage(
+        key="privacy",
+        says="Everything is off unless you turn it on. Cloud memory is not a one-time online answer. No online models ever is Local only. Every app here runs in its own space until you say so.",
+        heading="Privacy",
+        authority="companion",
+        companion="understanding",
+        advanced=(
+            "cloud_context vs remote_dispatch",
+            "Isolation backend in use and what it enforces",
+            "Permission categories and the Linux mechanism behind each",
+        ),
     ),
     Stage(
         key="done",
@@ -321,6 +346,8 @@ FIRST_RUN_STAGES: tuple[Stage, ...] = (
         authority="companion",
         companion="success",
         advanced=(),
+        skippable=False,
+        skip_note="",
     ),
 )
 

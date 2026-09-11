@@ -266,13 +266,13 @@ class SafeModeTests(TemporaryRootTests):
 
 
 class OnboardingModelTests(unittest.TestCase):
-    """§7. Ten steps, and an offline machine that completes all of them."""
+    """Cinematic first-run. An offline machine that completes all of them."""
 
-    def test_the_ten_steps_are_the_ten_steps(self) -> None:
+    def test_the_cinematic_steps_are_the_cinematic_steps(self) -> None:
         self.assertEqual(
             [step.step_id for step in ONBOARDING_STEPS],
-            ["welcome", "privacy", "character", "microphone", "speaker", "providers",
-             "local_model", "remote_provider", "permissions", "finish"],
+            ["welcome", "name", "timezone", "accessibility", "companion",
+             "voice", "privacy", "finish"],
         )
 
     def test_exactly_two_steps_are_required_and_neither_asks_for_anything(self) -> None:
@@ -305,12 +305,12 @@ class OnboardingModelTests(unittest.TestCase):
             calls.append(1)
             return len(calls)
 
-        model = OnboardingModel(surveyors={"providers": counting})
-        model.go_to("providers")
-        self.assertEqual(model.view().survey, 1)
-        self.assertEqual(model.view().survey, 1)
-        model.refresh("providers")
-        self.assertEqual(model.view().survey, 2)
+        model = OnboardingModel(surveyors={"speech": counting})
+        model.go_to("voice")
+        self.assertEqual(model.survey("speech"), 1)
+        self.assertEqual(model.survey("speech"), 1)
+        model.refresh("speech")
+        self.assertEqual(model.survey("speech"), 2)
 
     def test_restore_ignores_a_step_it_does_not_know(self) -> None:
         model = OnboardingModel()
