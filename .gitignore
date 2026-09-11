@@ -17,6 +17,10 @@ demos/08-visible-trust/out/
 # demos/09-guest-trust/evidence/; each run writes a fresh out/<stamp>.
 demos/09-guest-trust/out/
 
+# Product-vision host demo working copies. Curated screenshots live in
+# demos/10-product-vision/evidence/; each run writes a fresh out/<stamp>.
+demos/10-product-vision/out/
+
 # Bunny OS generated validation/build outputs
 build/out/
 .selfcheck-tmp/

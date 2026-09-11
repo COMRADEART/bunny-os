@@ -124,6 +124,12 @@ class ConversationTests(unittest.TestCase):
         with self.assertRaises(KeyError):
             stages_for("nonsense")
 
+    def test_first_run_ends_ready(self) -> None:
+        last = FIRST_RUN_STAGES[-1]
+        self.assertEqual(last.key, "done")
+        self.assertTrue(last.says.startswith("Ready."))
+        self.assertEqual(last.heading, "Ready")
+
     def test_the_companion_can_be_turned_off_entirely(self) -> None:
         """A person who does not want a character still gets a desktop."""
         behaviour = stage("companion_behaviour")

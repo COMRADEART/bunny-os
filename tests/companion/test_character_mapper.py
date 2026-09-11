@@ -232,6 +232,14 @@ class PriorityTests(MapperTestCase):
             self.mapped(presentation_phase="working", tool_activity="research").character_state,
             CharacterState.RESEARCHING,
         )
+        self.assertEqual(
+            self.mapped(presentation_phase="working", tool_activity="search").character_state,
+            CharacterState.RESEARCHING,
+        )
+        self.assertEqual(
+            self.mapped(presentation_phase="working", tool_activity="coding").character_state,
+            CharacterState.TYPING,
+        )
         # An unknown activity stays plain working rather than being guessed at.
         self.assertEqual(
             self.mapped(presentation_phase="working", tool_activity="haruspicy").character_state,

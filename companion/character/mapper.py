@@ -382,11 +382,11 @@ def _select_state(value: StateMapperInput) -> tuple[CharacterState, str]:
     # `working` becomes a more specific kind of working, never something else.
     if base is CharacterState.WORKING:
         activity = value.tool_activity.casefold()
-        if activity in {"research", "researching", "web", "browse"}:
+        if activity in {"research", "researching", "web", "browse", "search", "searching"}:
             candidates.append(
                 (CharacterState.RESEARCHING, f"tool {value.current_tool} is a research activity")
             )
-        elif activity in {"typing", "write", "editing"}:
+        elif activity in {"typing", "write", "editing", "code", "coding"}:
             candidates.append(
                 (CharacterState.TYPING, f"tool {value.current_tool} produces visible output")
             )

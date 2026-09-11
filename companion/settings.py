@@ -378,6 +378,13 @@ class PrivacySettings:
     clipboard_ceiling: str = "internal"
     #: How many days of task history to keep. Zero keeps everything.
     history_retention_days: int = 0
+    #: Local session memory (until logout). Off until the person turns it on.
+    local_session_memory: bool = False
+    #: Local durable memory (across reboots). Off until the person turns it on.
+    local_durable_memory: bool = False
+    #: Cloud context share. ``none`` is the default. ``minimized`` still
+    #: respects :attr:`remote_transfer_ceiling` and an explicit field allow-list.
+    cloud_context: str = "none"
 
     def __post_init__(self) -> None:
         from .privacy import DATA_CLASSES
@@ -395,6 +402,8 @@ class PrivacySettings:
             )
         if not 0 <= self.history_retention_days <= 3650:
             raise SettingsError("privacy.historyRetentionDays is between 0 and 3650")
+        if self.cloud_context not in ("none", "minimized"):
+            raise SettingsError("privacy.cloudContext is 'none' or 'minimized'")
 
 
 @dataclass(frozen=True)
@@ -547,6 +556,9 @@ class Settings:
                 "desktopActionApproval": self.privacy.desktop_action_approval,
                 "clipboardCeiling": self.privacy.clipboard_ceiling,
                 "historyRetentionDays": self.privacy.history_retention_days,
+                "localSessionMemory": self.privacy.local_session_memory,
+                "localDurableMemory": self.privacy.local_durable_memory,
+                "cloudContext": self.privacy.cloud_context,
             },
             "accessibility": {
                 "reducedMotion": self.accessibility.reduced_motion,
@@ -652,6 +664,9 @@ class Settings:
                 desktop_action_approval=text(privacy, "desktopActionApproval", "always"),
                 clipboard_ceiling=text(privacy, "clipboardCeiling", "internal"),
                 history_retention_days=int(number(privacy, "historyRetentionDays", 0)),
+                local_session_memory=flag(privacy, "localSessionMemory", False),
+                local_durable_memory=flag(privacy, "localDurableMemory", False),
+                cloud_context=text(privacy, "cloudContext", "none"),
             ),
             accessibility=AccessibilitySettings(
                 reduced_motion=flag(access, "reducedMotion", False),
