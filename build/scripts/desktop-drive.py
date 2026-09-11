@@ -140,6 +140,8 @@ def main() -> int:
     parser.add_argument("--journey", default="skip",
                         choices=("skip", "granted", "denied", "failing"),
                         help="drive the image journey through the shell's own Trust surface")
+    parser.add_argument("--journey-only", action="store_true",
+                        help="run the Trust journey and stop; skip Files/Terminal clicks")
     parser.add_argument("--system-report", action="store_true",
                         help="record the guest's runtime hostname, locale, "
                              "session list, Bunny user units and persisted "
@@ -462,6 +464,13 @@ def interact(control, qmp, pointer, targets, arguments,
             state = str(observation.get("state", ""))
             if state and (not states or states[-1] != state):
                 states.append(state)
+                # Photograph every character-state change. A later walk that
+                # finds no button cannot be told from "the prompt was never
+                # drawn" without a frame bound to the state that claimed it.
+                safe = "".join(
+                    ch if ch.isalnum() or ch in "-_" else "-" for ch in state
+                )[:40] or "unknown"
+                screenshot(f"journey-state-{safe}")
             if "approval" in state or "permission" in str(observation.get("says", "")).lower():
                 asking = True
                 break
@@ -595,6 +604,8 @@ def interact(control, qmp, pointer, targets, arguments,
 
         x, y = centre(button["extents"])
         pointer.click(x, y)
+        outcome["pressed"] = wanted
+        outcome["pressedAt"] = {"x": x, "y": y}
         step("journey-decision", pressed=wanted, at={"x": x, "y": y})
         screenshot("journey-05-decided")
 
@@ -675,6 +686,20 @@ def interact(control, qmp, pointer, targets, arguments,
         }
         step("orca-speech", total=spoken.get("total"),
              captured=len(utterances), **report["orcaHeard"])
+
+    if arguments.journey != "skip" and arguments.journey_only:
+        # The Trust journey is the claim this run exists to make. Files and
+        # Terminal remain available as the default desktop story (`--journey skip`).
+        control.ask({"command": "done"}, timeout=60)
+        control.close()
+        qmp.close()
+        journey = report.get("journey") or {}
+        aborted = (not (journey.get("ready") or {}).get("ok")
+                   or not (journey.get("fixture") or {}).get("ok")
+                   or journey.get("activated") is False
+                   or not journey.get("approvalVisible")
+                   or not journey.get("pressed"))
+        return save("journey-incomplete" if aborted else "complete")
 
     # ---- accessibility ------------------------------------------------------
     #
@@ -1066,7 +1091,8 @@ def interact(control, qmp, pointer, targets, arguments,
         aborted = (not (journey.get("ready") or {}).get("ok")
                    or not (journey.get("fixture") or {}).get("ok")
                    or journey.get("activated") is False
-                   or not journey.get("approvalVisible"))
+                   or not journey.get("approvalVisible")
+                   or not journey.get("pressed"))
         if aborted:
             return save("journey-incomplete")
 

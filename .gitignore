@@ -13,6 +13,10 @@ desktop.ini
 # demos/08-visible-trust/evidence/; each run writes a fresh out/<stamp>.
 demos/08-visible-trust/out/
 
+# Guest Trust journey working copies. Curated honest probes live in
+# demos/09-guest-trust/evidence/; each run writes a fresh out/<stamp>.
+demos/09-guest-trust/out/
+
 # Bunny OS generated validation/build outputs
 build/out/
 .selfcheck-tmp/

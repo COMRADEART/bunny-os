@@ -1,0 +1,27 @@
+Nested Fedora 44 container attempt — 2026-09-11 cloud Ubuntu host
+================================================================
+
+Goal: install unified `image-builder` inside a Fedora container so this
+Ubuntu VM could compose `shell-test` without a native Fedora 44 host.
+
+Pull: PASS
+  sudo podman pull registry.fedoraproject.org/fedora:44
+  IMAGE ID 74d8893a22f2  (~190 MB)
+
+Install: BLOCKED
+  sudo podman run --rm registry.fedoraproject.org/fedora:44 \
+    dnf -y install image-builder
+  dnf could not resolve mirrors.fedoraproject.org from inside the
+  container (Curl error 6 / 7). The host pulled the registry image, so
+  this is container DNS/mirror reachability, not "Fedora 44 does not
+  ship image-builder".
+
+This is not a substitute for the documented builder. `image-builder`
+needs loop/mount, rootful container storage, and a Fedora 44 host as
+described in docs/BUILDING.md. Nested compose was not faked.
+
+Next operator on Fedora 44:
+  sudo dnf install -y git make podman image-builder osbuild-selinux \
+      qemu-system-x86 edk2-ovmf guestfs-tools ShellCheck
+  make build-shell-test-image
+  python3 demos/09-guest-trust/run.py

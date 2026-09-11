@@ -1,0 +1,84 @@
+{
+  "deadline": {
+    "failures": [],
+    "ok": true,
+    "run": 5
+  },
+  "demo": "guest-trust-journey",
+  "fedoraCommands": [
+    "sudo dnf install -y git make podman image-builder osbuild-selinux qemu-system-x86 edk2-ovmf guestfs-tools ShellCheck",
+    "# add the operator to the kvm group so /dev/kvm is writable",
+    "make build-shell-test-image",
+    "python3 demos/09-guest-trust/run.py",
+    "# equivalent: make demo-guest-trust",
+    "# optional: BUNNY_DESKTOP_IMAGE=build/out/shell/<file>.qcow2 make demo-guest-trust"
+  ],
+  "guest": {
+    "journeys": {
+      "denied": {
+        "status": "NOT_RUN"
+      },
+      "granted": {
+        "status": "NOT_RUN"
+      }
+    },
+    "ok": false,
+    "reason": "no composed Bunny OS disk; image-builder is a Fedora 44 package and is not available on this host",
+    "status": "NOT_RUN"
+  },
+  "guestBoot": "NOT_RUN",
+  "harness": {
+    "failures": [],
+    "ok": true,
+    "run": 14
+  },
+  "honest": true,
+  "host": {
+    "accessibleNames": {
+      "allow": "Allow this Bunny action",
+      "deny": "Deny this Bunny action"
+    },
+    "canBootGuest": false,
+    "firmware": "/usr/share/OVMF/OVMF_CODE_4M.fd",
+    "guestBoot": "NOT_RUN",
+    "guestBootReason": "no composed Bunny OS disk; image-builder is a Fedora 44 package and is not available on this host",
+    "guestfish": "/usr/bin/guestfish",
+    "imageBuilder": "",
+    "kvmDevice": true,
+    "kvmWritable": true,
+    "missing": [
+      "shell-test qcow2",
+      "image-builder"
+    ],
+    "osRelease": "Ubuntu 24.04.4 LTS",
+    "pilots": "BLOCKED",
+    "platform": "linux",
+    "podman": "/usr/bin/podman",
+    "python": "3.12.3",
+    "qcow": "",
+    "qemu": "/usr/bin/qemu-system-x86_64",
+    "releaseState": "NO-GO"
+  },
+  "imageCompose": {
+    "ok": false,
+    "reason": "image-builder is not installed (Fedora 44 package; not shipped on Ubuntu)",
+    "status": "NOT_RUN"
+  },
+  "kvmSmoke": {
+    "ok": true,
+    "reason": "QEMU accepted accel=kvm (timed wait)",
+    "status": "PASS"
+  },
+  "passed": true,
+  "pilots": "BLOCKED",
+  "stableRelease": "NO-GO",
+  "summary": {
+    "guestDenied": "NOT_RUN",
+    "guestGranted": "NOT_RUN",
+    "hostRegressions": "PASS",
+    "imageCompose": "NOT_RUN",
+    "kvmSmoke": "PASS",
+    "pilots": "BLOCKED",
+    "stableRelease": "NO-GO"
+  }
+}

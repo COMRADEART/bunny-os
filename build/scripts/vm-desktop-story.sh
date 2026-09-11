@@ -28,15 +28,47 @@ cd "${repository_root}" || exit 1
 source build/scripts/vm-lib.sh
 
 profile="${BUNNY_DESKTOP_PROFILE:-shell-test}"
-label="${1:-desktop-story}"
+label="desktop-story"
+journey="${BUNNY_DESKTOP_JOURNEY:-skip}"
 seconds="${BUNNY_DESKTOP_TIMEOUT:-540}"
 user="${BUNNY_DESKTOP_USER:-bunny}"
 session="${BUNNY_DESKTOP_SESSION:-bunny}"
 width="${BUNNY_DESKTOP_WIDTH:-1920}"
 height="${BUNNY_DESKTOP_HEIGHT:-1080}"
 #: Seconds after boot at which to photograph. The last one is also when the
-#: run ends, so it must be inside the timeout.
+#: run ends, so it must be inside the timeout. Trust journeys skip this wait:
+#: the driver already blocks on BUNNY_SESSION_READY.
 shots="${BUNNY_DESKTOP_SHOTS:-120 180 240 300}"
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --journey)
+      journey="${2:?usage: vm-desktop-story.sh [--journey skip|granted|denied|failing] [label]}"
+      shift 2
+      ;;
+    --help|-h)
+      echo "usage: vm-desktop-story.sh [--journey skip|granted|denied|failing] [label]" >&2
+      exit 2
+      ;;
+    --)
+      shift
+      break
+      ;;
+    -*)
+      echo "unknown option: $1" >&2
+      exit 2
+      ;;
+    *)
+      label="$1"
+      shift
+      ;;
+  esac
+done
+
+case "${journey}" in
+  skip|granted|denied|failing) ;;
+  *) echo "unknown journey: ${journey} (want skip|granted|denied|failing)" >&2; exit 2 ;;
+esac
 
 bunny_require_commands qemu-system-x86_64 guestfish openssl git python3 || exit 3
 
@@ -63,6 +95,7 @@ echo "source image: ${source_image}"
 echo "work:         ${work}"
 echo "display:      ${width}x${height}"
 echo "session:      ${session}"
+echo "journey:      ${journey}"
 
 cp --reflink=auto "${source_image}" "${disk}"
 
@@ -145,27 +178,37 @@ if [[ ! -S "${qmp}" ]]; then
 fi
 
 elapsed=0
-for at in ${shots}; do
-  delay=$(( at - elapsed ))
-  [[ ${delay} -gt 0 ]] && sleep "${delay}"
-  elapsed=${at}
-  if ! kill -0 "${qemu_pid}" 2>/dev/null; then
-    echo "the guest exited before t=${at}s; see ${log}" >&2
-    break
-  fi
-  target="${work}/screens/t${at}.ppm"
-  if python3 build/scripts/qmp-screendump.py --socket "${qmp}" --output "${target}"; then
-    echo "screenshot at t=${at}s: ${target}"
-  else
-    echo "screendump failed at t=${at}s" >&2
-  fi
-done
+if [[ "${journey}" != "skip" ]]; then
+  # A Trust journey must not wait five minutes photographing GDM. The driver
+  # already blocks on the guest probe / BUNNY_SESSION_READY. One boot frame is
+  # kept so a hang before ready is still visible from outside the guest.
+  echo "--- journey mode: attaching the driver as soon as QMP exists ---"
+  python3 build/scripts/qmp-screendump.py --socket "${qmp}" \
+    --output "${work}/screens/t-boot.ppm" || true
+else
+  for at in ${shots}; do
+    delay=$(( at - elapsed ))
+    [[ ${delay} -gt 0 ]] && sleep "${delay}"
+    elapsed=${at}
+    if ! kill -0 "${qemu_pid}" 2>/dev/null; then
+      echo "the guest exited before t=${at}s; see ${log}" >&2
+      break
+    fi
+    target="${work}/screens/t${at}.ppm"
+    if python3 build/scripts/qmp-screendump.py --socket "${qmp}" --output "${target}"; then
+      echo "screenshot at t=${at}s: ${target}"
+    else
+      echo "screendump failed at t=${at}s" >&2
+    fi
+  done
+fi
 
 interaction_status=skipped
 if [[ "${interact}" == "1" ]]; then
   echo "--- interaction (clicking the Bunny UI) ---"
   # The driver blocks until the guest's probe announces itself on the control
-  # channel, so it is started after the screenshots rather than racing them.
+  # channel. Timed boot photographs above must not delay a Trust journey: the
+  # readiness probe is the wait, not a sleep tuned on one machine.
   a11y_flag=()
   if [[ "${BUNNY_DESKTOP_ACCESSIBILITY:-0}" == "1" ]]; then
     a11y_flag=(--accessibility)
@@ -184,8 +227,14 @@ if [[ "${interact}" == "1" ]]; then
   if [[ "${BUNNY_DESKTOP_PERFORMANCE:-0}" == "1" ]]; then
     a11y_flag+=(--performance)
   fi
+  journey_flag=(--journey "${journey}")
+  if [[ "${journey}" != "skip" ]]; then
+    # Files/Terminal remain the default desktop story. A Trust journey is the
+    # permission question; do not spend the rest of the budget clicking the dock.
+    journey_flag+=(--journey-only)
+  fi
   if python3 build/scripts/desktop-drive.py \
-      --journey "${BUNNY_DESKTOP_JOURNEY:-skip}" \
+      "${journey_flag[@]}" \
       "${a11y_flag[@]}" \
       --qmp "${qmp}" --control "${control}" \
       --width "${width}" --height "${height}" \
@@ -309,6 +358,15 @@ for key in ("shellAfterFiles", "shellAfterTerminal"):
     state = report.get(key) or {}
     print(f"  {key}: responded={state.get('responded')} "
           f"extensionEnabled={state.get('extensionEnabled')}")
+journey = report.get("journey") or {}
+if journey:
+    ready = journey.get("ready") or {}
+    print(f"  journey:  decision={journey.get('decision')} "
+          f"ready={ready.get('ok')} activated={journey.get('activated')} "
+          f"approvalVisible={journey.get('approvalVisible')} "
+          f"pressed={journey.get('pressed')!r}")
+    print(f"    states before approval: {journey.get('statesBeforeApproval')}")
+    print(f"    states after approval:  {journey.get('statesAfterApproval')}")
 PYTHON
   fi
 fi
@@ -329,3 +387,8 @@ print(f"  desktop log lines: {len(lines)}")
 for line in lines[:12]:
     print(f"    {line}")
 PYTHON
+
+if [[ "${journey}" != "skip" && "${interaction_status}" != "complete" ]]; then
+  echo "guest Trust journey '${journey}' did not complete (${interaction_status})" >&2
+  exit 7
+fi

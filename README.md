@@ -86,6 +86,7 @@ python scripts/task.py test
 python scripts/task.py test-shell
 python scripts/task.py test-desktop-security
 python3 demos/08-visible-trust/run.py    # visible Trust / approval demo (no guest)
+python3 demos/09-guest-trust/run.py      # guest Trust journeys, or honest NOT_RUN
 ```
 
 On the documented Fedora 44 image-builder host:
@@ -94,9 +95,11 @@ On the documented Fedora 44 image-builder host:
 make gate
 make build-developer-image
 make build-shell-image
+make build-shell-test-image
 make inspect-image
 make vm-smoke
 make vm-shell-smoke
+make demo-guest-trust
 make sbom
 ```
 
@@ -115,6 +118,7 @@ Release builds additionally require `BUNNY_RELEASE_BUILD=1`, a digest-pinned `BU
 - `demos/01-os-foundation/`: repeatable Phase 1 demonstrations.
 - `demos/02-bunny-shell/`: Phase 2 demonstrations and expected degraded/full behavior.
 - `demos/08-visible-trust/`: host-runnable Trust / approval demo (prompt drawn, Allow/Deny by accessible name, no guest boot claimed).
+- `demos/09-guest-trust/`: one-command guest Trust journeys (AT-SPI inside a booted Bunny OS guest, or honest NOT_RUN).
 - `docs/phase-1/`: the earlier constitutional/architecture package retained as governing history.
 
 Phase 2 stops before installer development, hardware provisioning, an app store, device manufacturing, consumer distribution, or stable release work. See `PHASE_2_REPORT.md` for remaining runtime blockers.
