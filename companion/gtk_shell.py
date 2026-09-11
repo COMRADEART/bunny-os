@@ -1078,14 +1078,20 @@ class BunnyCompanionApplication:  # pragma: no cover - requires a display
             label.add_css_class(css)
         return label
 
-    def _button(self, text: str, callback: Any, css: str = "") -> Any:
+    def _button(
+        self, text: str, callback: Any, css: str = "", *, accessible_name: str | None = None,
+    ) -> Any:
         button = self.Gtk.Button(label=text)
         if css:
             button.add_css_class(css)
         # Every control carries its own accessible name. A button whose label is
         # the only thing naming it is a button a screen reader announces by
-        # whatever the styling happened to leave in it.
-        button.update_property([self.Gtk.AccessibleProperty.LABEL], [text])
+        # whatever the styling happened to leave in it. Approval buttons use the
+        # same names the GNOME Shell Trust surface exposes, so AT-SPI (and the
+        # desktop-drive harness) can press them without a second contract.
+        button.update_property(
+            [self.Gtk.AccessibleProperty.LABEL], [accessible_name or text]
+        )
         button.connect("clicked", callback)
         return button
 
@@ -1462,12 +1468,20 @@ class BunnyCompanionApplication:  # pragma: no cover - requires a display
         card.append(self._label("Approval Centre", "title-2"))
         for name, value in rows:
             card.append(self._label(f"{name}: {value}"))
+        from companion.trust_surface import ALLOW_ACCESSIBLE_NAME, DENY_ACCESSIBLE_NAME
+
         actions = self.Gtk.Box(orientation=self.Gtk.Orientation.HORIZONTAL, spacing=8)
         actions.append(self._button(
-            "Approve", lambda _b, item=binding: self._resolve(item, "granted"), "suggested-action"
+            "Allow",
+            lambda _b, item=binding: self._resolve(item, "granted"),
+            "suggested-action",
+            accessible_name=ALLOW_ACCESSIBLE_NAME,
         ))
         actions.append(self._button(
-            "Decline", lambda _b, item=binding: self._resolve(item, "denied"), "destructive-action"
+            "Deny",
+            lambda _b, item=binding: self._resolve(item, "denied"),
+            "destructive-action",
+            accessible_name=DENY_ACCESSIBLE_NAME,
         ))
         actions.append(self._button("Stop the task", self._cancel))
         card.append(actions)

@@ -9,6 +9,10 @@ Thumbs.db
 desktop.ini
 .DS_Store
 
+# Host-visible Trust demo working copies. Curated screenshots live in
+# demos/08-visible-trust/evidence/; each run writes a fresh out/<stamp>.
+demos/08-visible-trust/out/
+
 # Bunny OS generated validation/build outputs
 build/out/
 .selfcheck-tmp/

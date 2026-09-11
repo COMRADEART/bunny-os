@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Bunny OS · Trust · denied</title>
+<style>
+  :root {
+    --ink: #080B12;
+    --panel: #111520;
+    --card: #1B1F2D;
+    --text: #F7F8FA;
+    --muted: #8F96A4;
+    --accent: #7C3AED;
+    --danger: #F43F5E;
+    --ok: #34D399;
+    --warn: #F59E0B;
+    --ring: #FDE68A;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--ink); color: var(--text);
+    font: 16px/1.45 "Source Sans 3", "Segoe UI", sans-serif; }
+  .desktop { min-height: 100vh; padding: 48px 56px; background:
+    radial-gradient(900px 500px at 80% 10%, #2a1848 0%, transparent 55%),
+    linear-gradient(180deg, #0c1018 0%, #080B12 100%); }
+  .chrome { display: flex; justify-content: space-between; color: var(--muted);
+    font-size: 13px; letter-spacing: 0.04em; margin-bottom: 36px; }
+  .stage { display: grid; grid-template-columns: 220px 1fr; gap: 36px; align-items: start; }
+  .character { width: 180px; height: 180px; border-radius: 40px;
+    background: #161320; display: grid; place-items: center;
+    box-shadow: 0 0 0 1px #2a2f40, 0 24px 60px rgba(0,0,0,0.45); }
+  .character[data-pose="thinking"] { box-shadow: 0 0 0 2px var(--accent), 0 24px 60px rgba(0,0,0,0.45); }
+  .character[data-pose="warning"] { box-shadow: 0 0 0 2px var(--warn), 0 24px 60px rgba(0,0,0,0.45); }
+  .character[data-pose="success"] { box-shadow: 0 0 0 2px var(--ok), 0 24px 60px rgba(0,0,0,0.45); }
+  .character[data-pose="error"] { box-shadow: 0 0 0 2px var(--danger), 0 24px 60px rgba(0,0,0,0.45); }
+  .face { font-size: 72px; line-height: 1; }
+  .panel { background: var(--panel); border-radius: 20px; padding: 22px 24px 28px;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.4); min-height: 360px; }
+  .ask { color: var(--muted); font-size: 14px; margin: 0 0 8px; }
+  .user { margin: 0 0 16px; font-size: 20px; }
+  .status { margin: 0 0 20px; color: var(--muted); }
+  .trust { background: var(--card); border-radius: 16px; padding: 20px 22px 18px;
+    border: 1px solid #2c3346; }
+  .identity { margin: 0 0 6px; color: var(--muted); font-size: 13px; letter-spacing: 0.03em; }
+  h1 { margin: 0 0 12px; font-size: 22px; font-weight: 650; }
+  .row { margin: 0 0 8px; }
+  .row.reason { color: var(--muted); }
+  .row.enforcement { color: var(--warn); }
+  .confinement { list-style: none; padding: 10px 0 0; margin: 12px 0 0;
+    border-top: 1px solid #2c3346; display: grid; gap: 6px; }
+  .confinement li { display: flex; justify-content: space-between; font-size: 14px; }
+  .confinement .k { color: var(--muted); }
+  .actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px; }
+  button { appearance: none; border: 0; border-radius: 10px; padding: 8px 16px;
+    font: 600 15px/1.2 inherit; cursor: default; }
+  .deny { background: #3a1520; color: #fecdd3; }
+  .deny.focused { outline: 2px solid var(--ring); outline-offset: 2px; }
+  .allow { background: var(--accent); color: white; }
+  .note { margin-top: 28px; color: var(--muted); font-size: 12px; }
+</style>
+</head>
+<body data-state="denied" data-character="idle">
+  <div class="desktop">
+    <header class="chrome"><span>Bunny OS · host-visible Trust demo</span>
+      <span>deny-by-default · no blanket always-allow</span></header>
+    <div class="stage">
+      <aside class="character" data-pose="idle"
+             aria-label="Bunny is idle">
+        <div class="face">🐰</div>
+      </aside>
+      <main class="panel">
+        <p class="ask">You asked Bunny</p>
+        <p class="user">Resize this to 100 pixels wide.</p>
+        <p class="status" aria-live="polite">the request was declined</p>
+        
+      </main>
+    </div>
+    <p class="note">The Deny control is focused (Return and Escape refuse).
+      This is a host rendering of the production TrustPrompt. It is not a
+      booted GNOME session, not hardware evidence, and not a release GO.
+      There is no blanket always-allow control.</p>
+  </div>
+</body>
+</html>

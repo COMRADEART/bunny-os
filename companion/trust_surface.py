@@ -57,12 +57,21 @@ from trust.explain import DENY_LABEL, TrustPrompt
 from trust.gate import ConsentSurface, DenyingSurface, PromptTicket, UserAnswer
 
 __all__ = [
+    "ALLOW_ACCESSIBLE_NAME",
+    "DENY_ACCESSIBLE_NAME",
     "AutomationSurface",
     "GtkConsentSurface",
     "TextConsentSurface",
     "prompt_lines",
     "select_consent_surface",
 ]
+
+#: Accessible names the guest harness presses. These must stay identical to
+#: ``shell/components/gnome-shell-extension/lib/components/trust.js`` and
+#: ``build/scripts/desktop_interaction.py``. Visible labels may localise;
+#: these names are the AT-SPI contract.
+ALLOW_ACCESSIBLE_NAME = "Allow this Bunny action"
+DENY_ACCESSIBLE_NAME = "Deny this Bunny action"
 
 
 def prompt_lines(prompt: TrustPrompt, *, width: int = 72) -> tuple[str, ...]:

@@ -103,6 +103,14 @@ VOICE_READINESS_MESSAGES = {
 #: Phases after which nothing further will arrive.
 TERMINAL_PHASES = frozenset({"success", "error", "cancelled", "blocked"})
 
+#: Phases that mean the runtime is still working toward a question, not
+#: hanging after one. A cold first request under llvmpipe spends its time
+#: here; treating that as the same clock as post-approval execution is what
+#: turned a permission ask into "the runtime did not finish".
+PRE_APPROVAL_PHASES = frozenset({
+    "starting", "recovering", "understanding", "planning", "reviewing",
+})
+
 POLL_SECONDS = 0.4
 
 # Capture is bounded by the speech request at 30 seconds.  Recognition gets a
@@ -856,14 +864,10 @@ def watch(
     # it had left rather than being granted a fresh one.
     waiting_since = 0.0
     waited_for_a_person = 0.0
+    started_at = time.monotonic()
+    budget_seconds = max(0.01, deadline - started_at)
+    last_progress_at = started_at
     while True:
-        if waiting_since:
-            elapsed_waiting = time.monotonic() - waiting_since
-        else:
-            elapsed_waiting = 0.0
-        if time.monotonic() - (waited_for_a_person + elapsed_waiting) > deadline:
-            emit("error", reason="the runtime did not finish within the deadline", taskId=task_id)
-            return 5
         try:
             document = connection.get_presentation_state(task_id)
         except (CompanionClientError, OSError) as exc:
@@ -993,6 +997,32 @@ def watch(
                 emit("phase", phase="success", statusText="Done", taskId=task_id)
             emit("finished", phase=phase, taskId=task_id)
             return 0
+
+        # Classify *after* the poll. The previous order checked the clock
+        # before reading the runtime, so a cold first request that reached
+        # `waiting_for_approval` in the same tick as the deadline was reported
+        # as "the runtime did not finish" — a permission question replaced by
+        # a complaint that the person was never asked.
+        #
+        # An unanswered approval is not a slow answer. Pre-approval thinking
+        # (understanding / planning) is the runtime working toward that
+        # question, which is what a cold session spends its first minutes on.
+        # Only a stuck post-approval worker, or a planner that stops publishing
+        # revisions, spends the deadline.
+        if revision != last_revision:
+            last_progress_at = time.monotonic()
+        now = time.monotonic()
+        if unanswered:
+            pass
+        elif phase in PRE_APPROVAL_PHASES:
+            if now - last_progress_at > budget_seconds:
+                emit("error", reason="the runtime did not finish within the deadline", taskId=task_id)
+                return 5
+        else:
+            elapsed_waiting = (now - waiting_since) if waiting_since else 0.0
+            if now - (waited_for_a_person + elapsed_waiting) > deadline:
+                emit("error", reason="the runtime did not finish within the deadline", taskId=task_id)
+                return 5
 
         # Sleep only when nothing moved. A task emitting events quickly should
         # be reported quickly; one sitting in an approval should not be polled
