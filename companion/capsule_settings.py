@@ -41,6 +41,7 @@ from trust.audit import ActivityEntry, TrustAudit
 from trust.categories import CATEGORIES, descriptor
 from trust.decision import Grant
 from trust.explain import revoke_sentence
+from trust.resources import network_class_enforceable
 
 __all__ = [
     "MAINTENANCE_ACTIONS",
@@ -289,6 +290,9 @@ def _row(
     display_name: str,
     reason: str | None,
 ) -> PermissionRow:
+    enforced = entry.enforced_by_default
+    if category == "network" and grant is not None:
+        enforced = network_class_enforceable(grant.resource.identifier)
     return PermissionRow(
         category=category,
         title=entry.title,
@@ -298,7 +302,7 @@ def _row(
         resource=grant.resource.display if grant is not None and grant.resource.display else None,
         grant_id=grant.grant_id if grant is not None else None,
         required=required,
-        enforced=entry.enforced_by_default,
+        enforced=enforced,
         enforcement=entry.enforcement,
         revocation=entry.revocation,
         revoke_note=revoke_sentence(category, application_name=display_name),

@@ -106,43 +106,49 @@ class HonestyTests(unittest.TestCase):
         self.assertFalse(decision.allowed)
         self.assertEqual(decision.reason_code, "not-enforceable")
 
-    def test_an_unfilterable_network_class_never_reads_as_a_boundary(self) -> None:
+    def test_an_unenforceable_network_class_never_reads_as_a_boundary(self) -> None:
         """The sentence this test exists to prevent is 'Network: example.com only'
-        for a class this build does not filter on."""
+        for a class this build does not filter on. Fail-closed: the request is
+        denied, the plan stays Off, and no domain name appears."""
         capsule = self.world.install(
             manifest_for(optional=("network",), network_ceiling="allowlisted",
                          network_domains=("example.com",))
         )
         self.world.answer(("network", "allow", "always"))
-        self.world.request(
+        decision = self.world.request(
             capsule, category="network",
             resource=trust.network_resource("allowlisted", allowlist=("example.com",)),
         )
+        self.assertFalse(decision.allowed)
+        self.assertEqual(decision.reason_code, "not-enforceable")
         reopened = self.world.runtime.open("org.example.PhotoEditor")
         plan = self.world.runtime.build_plan(reopened)
         status = capsule_status(reopened, plan)
-        self.assertFalse(plan.network_enforced)
-        self.assertEqual(dict(status.plain)["Network"], "On")
+        self.assertEqual(plan.network, "none")
+        self.assertTrue(plan.network_enforced)
+        self.assertEqual(dict(status.plain)["Network"], "Off")
         self.assertNotIn("example.com", dict(status.plain)["Network"])
-        self.assertTrue(any("cannot hold it" in caveat for caveat in status.caveats))
-        self.assertTrue(any("anything on the internet" in caveat for caveat in status.caveats))
+        self.assertFalse(any("anything on the internet" in caveat for caveat in status.caveats))
 
-    def test_a_local_network_grant_reads_as_on_not_as_a_subnet(self) -> None:
-        """'Your local network' implies a boundary nothing in this build holds."""
+    def test_a_local_network_request_does_not_open_the_network(self) -> None:
+        """'Your local network' implies a boundary nothing in this build holds.
+        Fail-closed: denied, Off, no internet caveat claiming it was granted."""
         capsule = self.world.install(
             manifest_for(optional=("network",), network_ceiling="local-network")
         )
         self.world.answer(("network", "allow", "always"))
-        self.world.request(
+        decision = self.world.request(
             capsule, category="network",
             resource=trust.network_resource("local-network"),
         )
+        self.assertEqual(decision.reason_code, "not-enforceable")
         reopened = self.world.runtime.open("org.example.PhotoEditor")
         plan = self.world.runtime.build_plan(reopened)
         status = capsule_status(reopened, plan)
-        self.assertFalse(plan.network_enforced)
-        self.assertEqual(dict(status.plain)["Network"], "On")
-        self.assertTrue(any("anything on the internet" in caveat for caveat in status.caveats))
+        self.assertEqual(plan.network, "none")
+        self.assertTrue(plan.network_enforced)
+        self.assertEqual(dict(status.plain)["Network"], "Off")
+        self.assertFalse(any("anything on the internet" in caveat for caveat in status.caveats))
 
     def test_a_non_confining_plan_says_so_in_the_plain_layer(self) -> None:
         world = World.build(probe=unconfined_probe())

@@ -1034,16 +1034,23 @@ Measured in a booted guest, SELinux enforcing, at commit `524107e50b2e`. Each of
 these was recorded by the qualification section that found it, alongside its
 pass, rather than being left out. See `CAPSULE_VM_SECURITY_REPORT.md`.
 
-### A capsule's network allowlist is a declaration, not a boundary
+### A capsule's network allowlist is refused, not a boundary
 
-Only the `none` class is enforced, and it is enforced absolutely by
-`--unshare-net`: no external host, no DNS, no loopback. Every other class
-currently means "there is a network". A capsule granted `example.com` connected
-to `example.org` in the guest run.
+Only `none` and `internet` can be granted. `none` is enforced absolutely by
+`--unshare-net`: no external host, no DNS, no loopback. `internet` is the
+absence of that unshare. `loopback`, `local-network` and `allowlisted` are
+catalogue declarations: policy denies them `not-enforceable` (the clipboard /
+Bluetooth pattern) and the isolation planner will not map a stale stored
+allow onto the host network.
 
-The consequence is a rule for the product, not just a gap: **no user-facing
-string may imply per-domain enforcement.** The one network state that can be
-described in absolute terms today is Off.
+A real per-domain filter does not exist in this build. Historical guest
+measurement, not re-run here: a capsule granted `example.com` connected to
+`example.org` when those classes were still mapped to internet. Guest
+re-verification of the fail-closed path is **NOT_RUN**.
+
+The consequence for the product: **no user-facing string may imply
+per-domain enforcement.** The one network state that can be described in
+absolute terms is Off. See `SECURITY_NETWORK_ALLOWLIST_PLAN.md`.
 
 ### SELinux denials for capsule operations have never been observed
 
