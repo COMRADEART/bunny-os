@@ -6,7 +6,7 @@ Layout under the memory root::
 
     records/<scope-kind>/<scope-id>/<plugin>/<id>.json
     records/<scope-kind>/<scope-id>/<plugin>/<id>.md   # optional sidecar
-    keys/<id>.dek                                     # sensitive-body DEK
+    keys/<id>.dek                                     # plaintext DEK or keystore wrap JSON
     index/memory.sqlite                               # disposable, rebuilt
 
 Owner-only modes, atomic replace, no symlink follow. Export is ``cp -r``.
