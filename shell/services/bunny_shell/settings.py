@@ -14,6 +14,7 @@ from typing import Any, Callable
 from . import SETTINGS_SCHEMA_VERSION
 from .managed import MANAGEABLE_SETTINGS, ManagedOverlay, load_overlay
 from .paths import JsonStore, config_dir
+from .settings_ia import SIDEBAR_SECTION_TITLES
 
 
 def _boolean(value: Any) -> bool:
@@ -84,16 +85,23 @@ DEFINITIONS: dict[str, dict[str, Any]] = {
     "clipboardExcludedApplications": {"default": [], "scope": "user", "owner": "bunny-shell", "validate": _strings},
     "reducedMotion": {"default": False, "scope": "user", "owner": "bunny-shell", "validate": _boolean},
     "reducedTransparency": {"default": False, "scope": "user", "owner": "bunny-shell", "validate": _boolean},
+    "personality": {
+        "default": "bunny",
+        "scope": "user",
+        "owner": "bunny-desktop",
+        "validate": _choice("bunny", "focused", "playful"),
+    },
+    "proactivity": {
+        "default": "off",
+        "scope": "user",
+        "owner": "bunny-desktop",
+        "validate": _choice("off", "gentle"),
+    },
     "theme": {"default": "system", "scope": "user", "owner": "bunny-shell", "validate": _choice("system", "bunny-light", "bunny-dark", "high-contrast")},
     "textScalePercent": {"default": 100, "scope": "user", "owner": "gnome", "validate": _bounded_int(75, 200)},
 }
 
-SECTIONS = (
-    "Network", "Bluetooth", "Displays", "Sound", "Power", "Keyboard", "Mouse and Touchpad",
-    "Appearance", "Applications", "Notifications", "Privacy", "Memory", "Users", "Date and Time", "Storage",
-    "Updates", "Recovery", "Bunny", "Voice & AI", "Local Models", "Plugins", "Permissions",
-    "Accessibility", "System Information",
-)
+SECTIONS = SIDEBAR_SECTION_TITLES
 
 
 def defaults() -> dict[str, Any]:

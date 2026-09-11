@@ -1,26 +1,14 @@
 # SPDX-FileCopyrightText: 2026 ComradeArt
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The Public Alpha first run: ten pages that are about *this* machine.
+"""The Public Alpha first run: a short cinematic intro about *this* machine.
 
-The first-run application that existed before this was thirteen pages of static
-copy with a Next button. It said "No multi-gigabyte model is downloaded
-automatically", which is true, and it never looked to see whether one was there.
-A person finished it knowing what Bunny OS does in general and nothing about
-what their computer would actually do.
+Name, timezone, accessibility, companion, voice, privacy — then Ready with
+Bunny in the corner. Not a Linux/systemd wizard. Microphone and speakers are
+skippable. The two required pages, welcome and finish, ask for nothing.
 
-So the pages are the same ten :mod:`companion.onboarding` declares, and each one
-that has a survey shows the survey's own sentence — the provider page says which
-providers answered, the microphone page says how many devices were found and
-whether a recognition model exists, the character page says which character this
-machine will draw and why. The remedies come from the surveys too, so the wizard
-has no opinions of its own to keep in step with the runtime's.
-
-What this module owns: a window, a state file, and the bridge between them.
-
-The offline rule from §7 is structural rather than defended: eight of the ten
-pages are skippable, and the two that are not — welcome and finish — ask for
-nothing. A machine with no network, no microphone, no speakers, no model and no
-GPU walks through all ten and arrives at a companion that works.
+The pages are the same :mod:`companion.onboarding` declares, and each one that
+has a survey shows the survey's own sentence. The offline rule is structural:
+every page except hello and ready can be skipped.
 """
 
 from __future__ import annotations
@@ -371,7 +359,7 @@ def _survey_rows(step_id: str, survey: Any) -> tuple[str, ...]:
             if finding.remedy:
                 rows.append(f"    {finding.remedy}")
         return tuple(rows) or ("No local provider adapters are configured.",)
-    if step_id == "microphone":
+    if step_id in ("microphone", "voice"):
         rows = [f"Microphones found: {len(getattr(survey, 'microphones', ()))}"]
         for device in getattr(survey, "microphones", ())[:8]:
             rows.append(f"    {device.description or device.name}{' (default)' if device.default else ''}")
@@ -380,6 +368,7 @@ def _survey_rows(step_id: str, survey: Any) -> tuple[str, ...]:
         )
         if getattr(survey, "reason", ""):
             rows.append(f"    {survey.reason}")
+        rows.append("Speakers can be skipped. Captions always appear.")
         return tuple(rows)
     if step_id == "speaker":
         rows = [f"Output devices: {len(getattr(survey, 'outputs', ()))}"]
@@ -387,7 +376,7 @@ def _survey_rows(step_id: str, survey: Any) -> tuple[str, ...]:
             rows.append(f"    {device.description or device.name}{' (default)' if device.default else ''}")
         rows.append(f"Local voice: {getattr(survey, 'voice_id', '') or 'none installed'}")
         return tuple(rows)
-    if step_id == "character":
+    if step_id in ("character", "companion"):
         rows = []
         if getattr(survey, "package_id", ""):
             rows.append(f"Character: {getattr(survey, 'package_name', '') or survey.package_id}")

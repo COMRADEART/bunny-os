@@ -1,23 +1,20 @@
 # SPDX-FileCopyrightText: 2026 ComradeArt
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The ten first-run steps, as data a window can draw and a test can assert.
+"""The cinematic first-run steps, as data a window can draw and a test can assert.
 
-§7 names ten steps and one rule that shapes all of them: **a valid offline first
-run must be possible**. Every step is therefore either informational or
-*skippable*, and the model enforces that structurally — :attr:`OnboardingStep.
-required` is ``True`` for exactly two steps, the welcome and the finish, and
-neither of them asks for anything.
+A valid offline first run must be possible. Every step is therefore either
+informational or *skippable*, and the model enforces that structurally —
+:attr:`OnboardingStep.required` is ``True`` for exactly two steps, the welcome
+and the finish, and neither of them asks for anything.
 
-The consequence worth stating: a machine with no network, no microphone, no
-speakers, no AI model and no GPU completes this wizard. It arrives at a working
-companion that types and reads, and every page it passed through told it what
-was missing and what would fix it. That configuration is not an error path; on
-the hardware this product is aimed at it is a common one.
+This is a short guided intro — name, timezone, accessibility, companion,
+voice, privacy — not a Linux/systemd wizard. Microphone and speakers are
+skippable. The last page leaves Bunny in the corner, or hidden if that was
+chosen.
 
-What is *not* here: any decision. The steps carry surveys, and the surveys carry
-their own reasons and remedies. This module owns the order, the skippability,
-what has been answered, and how to persist that — nothing else. A wizard that
-also decided whether Ollama was eligible would be a second opinion about it.
+A machine with no network, no microphone, no speakers, no AI model and no GPU
+completes this wizard. It arrives at a working desktop. That configuration is
+not an error path.
 """
 
 from __future__ import annotations
@@ -61,91 +58,82 @@ class OnboardingStep:
         }
 
 
-#: The ten steps, in order. The bodies are the copy; they are here rather than
-#: in the window because the accessibility surface, the CLI and the window all
-#: have to say the same thing, and three copies of a sentence become three
-#: different sentences.
+#: The cinematic first-run, in order. Not a disk, locale, or systemd wizard.
 ONBOARDING_STEPS: tuple[OnboardingStep, ...] = (
     OnboardingStep(
         "welcome", "Hi. I'm Bunny.",
-        "Hi. I'm Bunny. I'll help you get ready on this computer. This takes a couple of minutes "
-        "and everything in it can be changed later. You can close this window at any point and the "
-        "desktop stays usable.",
+        "Hi. I'm Bunny. I'll help you get ready on this computer. This takes a minute, "
+        "and everything in it can be changed later. You can close this window at any point "
+        "and the desktop stays usable.",
         action="Get started", skip="", required=True,
     ),
     OnboardingStep(
+        "name", "What should I call you?",
+        "A name is enough. This is how Bunny greets you — not a Linux username, "
+        "and not an account password.",
+        action="Continue", skip="Skip — no name yet",
+    ),
+    OnboardingStep(
+        "timezone", "When is it where you are?",
+        "The clock and calendar follow this. You can change it later in Date and Time.",
+        action="Continue", skip="Skip — keep the system clock",
+    ),
+    OnboardingStep(
+        "accessibility", "Make this comfortable",
+        "Larger text, more contrast, less movement, captions, or a screen reader. "
+        "You can change all of this later. Bunny is never required to use the OS.",
+        action="Continue", skip="Skip — keep defaults",
+    ),
+    OnboardingStep(
+        "companion", "Meet Bunny",
+        "This is how Bunny will appear: Full 3D, Lightweight 2D, or Minimal. "
+        "This computer recommends one from what it can draw; you can choose another, "
+        "or hide the figure. Everything Bunny says is also available as text.",
+        action="Looks good", skip="Skip — hide Bunny", survey="character",
+    ),
+    OnboardingStep(
+        "voice", "Voice, if you want it",
+        "Bunny listens only while you hold the push-to-talk key. There is no wake word "
+        "and no continuous listening in this release — those are not switched off, they "
+        "are not built. Choose a microphone and play a speaker test, or skip and type. "
+        "Captions always appear.",
+        action="Use voice", skip="Skip — I'll type", survey="speech",
+    ),
+    OnboardingStep(
         "privacy", "Local first, and it means it",
-        "Bunny answers using AI that runs on this machine whenever one is available. Nothing "
-        "leaves this computer unless you configure a remote provider yourself and approve the "
-        "transfer. Session, durable and cloud memory stay off until you turn them on. There is "
-        "no telemetry in Bunny OS: no usage counters, no crash uploads, nothing sent in the "
-        "background. Diagnostics are exported to a file you read first.",
+        "Bunny answers on this computer. Automatic is the default: pick a local model, "
+        "and never go online because local is slower. No online models ever is Local only — "
+        "not Cloud memory off. Cloud memory and a one-time online answer are two different "
+        "consents; both stay off until you turn them on. There is no telemetry.",
         action="Continue", skip="Skip — I'll read this later",
     ),
     OnboardingStep(
-        "character", "Meet Bunny",
-        "This is how Bunny will appear on your machine: Full 3D, Lightweight 2D, or Minimal. "
-        "This computer recommends one from what it can draw; you can choose another, and the "
-        "drawing never goes above what the graphics can honour. Everything Bunny says is also "
-        "available as text.",
-        action="Looks good", skip="", survey="character",
-    ),
-    OnboardingStep(
-        "microphone", "Microphone",
-        "Bunny listens only while you hold the push-to-talk key. There is no wake word and no "
-        "continuous listening in this release — those are not switched off, they are not built. "
-        "Choose a microphone, or skip this and type instead.",
-        action="Use this microphone", skip="Skip — I'll type", survey="speech",
-    ),
-    OnboardingStep(
-        "speaker", "Speaker test",
-        "Bunny can read replies aloud. Play the test sound and tell us whether you heard it — "
-        "nothing this program can measure tells us that for you. Captions always appear "
-        "whether or not audio works.",
-        action="I heard it", skip="Skip — no sound", survey="audio",
-    ),
-    OnboardingStep(
-        "providers", "Where answers come from",
-        "Bunny needs an AI provider to answer questions. Local providers run on this machine "
-        "and are preferred whenever one is available. You choose an outcome, not an engine.",
-        action="Continue", skip="Set this up later", survey="providers",
-    ),
-    OnboardingStep(
-        "local_model", "Local models",
-        "This is what was found on your machine. Bunny does not download models: they are "
-        "several gigabytes of your disk and your connection, and that is your decision to make.",
-        action="Continue", skip="Continue without a local model", survey="providers",
-    ),
-    OnboardingStep(
-        "remote_provider", "Remote providers (optional)",
-        "You can add a provider that runs somewhere else. It stays off until you configure it, "
-        "Bunny shows an indicator before anything is transmitted, and content classified as "
-        "secret is never sent. Most people should skip this.",
-        action="Add a provider", skip="Skip — local only",
-    ),
-    OnboardingStep(
-        "permissions", "What Bunny may do to this computer",
-        "Bunny can open applications, change the volume, copy text, show notifications and open "
-        "links — and every one of those stops and asks you first, showing exactly what will "
-        "happen. Bunny cannot run shell commands, control your keyboard or mouse, or act on a "
-        "web page. Those are not permissions you can grant; they do not exist in this release.",
-        action="Understood", skip="",
-    ),
-    OnboardingStep(
         "finish", "Ready",
-        "Ready. Bunny starts automatically when you log in. If it ever fails to start you will get a "
-        "recovery window rather than nothing, with a safe mode that turns off 3D, audio and "
-        "desktop actions.",
+        "Ready. I'll be in the corner if you need me. If you hid Bunny, Search, Settings, "
+        "and Trust still work. If Bunny ever fails to start you will get a recovery window "
+        "rather than nothing.",
         action="Finish", skip="", required=True,
     ),
 )
 
 _BY_ID = {step.step_id: step for step in ONBOARDING_STEPS}
 
-#: The path a person must walk: hello, how Bunny looks, what Bunny may do, ready.
-#: Everything else is skippable. The ten steps stay so nothing is hidden; this
-#: tuple is which of them a first-run can treat as the progressive spine.
-ONBOARDING_ESSENTIAL_IDS = ("welcome", "character", "permissions", "finish")
+#: Older first-run files used the ten-step Linux-shaped ids. Resume onto the
+#: cinematic spine rather than restarting the wizard.
+_RESUME_ALIASES = {
+    "character": "companion",
+    "microphone": "voice",
+    "speaker": "voice",
+    "providers": "privacy",
+    "local_model": "privacy",
+    "remote_provider": "privacy",
+    "permissions": "privacy",
+}
+
+#: Hello, companion, privacy, ready. Name, timezone, accessibility, and voice
+#: stay skippable. The eight steps stay so nothing is hidden; this tuple is
+#: which of them a first-run can treat as the progressive spine.
+ONBOARDING_ESSENTIAL_IDS = ("welcome", "companion", "privacy", "finish")
 
 
 @dataclass(frozen=True)
@@ -275,8 +263,9 @@ class OnboardingModel:
         return self.step
 
     def go_to(self, step_id: str) -> OnboardingStep:
+        target = _RESUME_ALIASES.get(step_id, step_id)
         for position, step in enumerate(self._steps):
-            if step.step_id == step_id:
+            if step.step_id == target:
                 self._index = position
                 return step
         raise KeyError(f"unknown onboarding step {step_id!r}")
@@ -311,10 +300,12 @@ class OnboardingModel:
         the cost of ignoring it is that one page is shown again.
         """
         for key, value in (answers or {}).items():
-            if key in _BY_ID and value in ("answered", "skipped"):
-                self._answered[key] = value
-        if step_id in _BY_ID:
-            self.go_to(step_id)
+            mapped = _RESUME_ALIASES.get(key, key)
+            if mapped in _BY_ID and value in ("answered", "skipped"):
+                self._answered[mapped] = value
+        current = _RESUME_ALIASES.get(step_id, step_id)
+        if current in _BY_ID:
+            self.go_to(current)
 
     def to_json(self) -> dict[str, Any]:
         return {

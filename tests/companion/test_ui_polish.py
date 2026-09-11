@@ -85,10 +85,14 @@ class SettingsCatalogTests(unittest.TestCase):
         self.assertEqual(
             titles,
             [
-                "Appearance", "Bunny", "Voice", "AI", "Privacy", "Memory",
-                "Apps", "Permissions", "Accessibility", "System", "Updates",
+                "Bunny", "AI & Models", "Privacy", "Accessibility",
+                "Appearance", "Apps", "Permissions", "System", "Updates",
             ],
         )
+        groups = [item["group"] for item in settings_nav()]
+        self.assertEqual(groups[0], "you")
+        self.assertIn("device", groups)
+        self.assertIn("system", groups)
 
 
 class AccessibleNameRegressionTests(unittest.TestCase):

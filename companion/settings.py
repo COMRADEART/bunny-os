@@ -71,18 +71,19 @@ SETTINGS_SCHEMA_VERSION = 1
 #: Settings as a person looks for them. Each row names existing fields; it does
 #: not invent a second document. Apps, Permissions, System and Updates live in
 #: the desktop shell store and are listed here so the catalog is complete.
-SETTINGS_NAV: tuple[tuple[str, str, str, tuple[str, ...]], ...] = (
-    ("appearance", "Appearance", "How Bunny looks: Full 3D, Lightweight 2D, or Minimal.", ("character",)),
-    ("bunny", "Bunny", "Where Bunny sits, how large, and whether Bunny is visible.", ("character",)),
-    ("voice", "Voice", "Spoken replies. Off until you want them.", ("voice",)),
-    ("ai", "AI", "Where answers come from. Local first. No model shop.", ("ai",)),
-    ("privacy", "Privacy", "What may leave this computer, and what never does.", ("privacy",)),
-    ("memory", "Memory", "What Bunny may remember. Working memory only, until you say otherwise.", ("privacy",)),
-    ("apps", "Apps", "Installed applications and their sandboxes.", ()),
-    ("permissions", "Permissions", "What Bunny and apps may do, asked each time.", ()),
-    ("accessibility", "Accessibility", "Motion, contrast, text size, captions, text-only.", ("accessibility",)),
-    ("system", "System", "This computer: network, display, power, updates of the OS.", ()),
-    ("updates", "Updates", "OS updates, rollback, and recovery. Separate from app updates.", ()),
+#:
+#: Phase 3 groups these for a calm sidebar (You / This computer / System).
+#: Voice lives under Bunny; AI is "AI & Models"; Memory is nested under Privacy.
+SETTINGS_NAV: tuple[tuple[str, str, str, str, tuple[str, ...]], ...] = (
+    ("bunny", "you", "Bunny", "Where Bunny sits, how large, voice, personality, and whether Bunny is visible.", ("character", "voice")),
+    ("ai", "you", "AI & Models", "Where answers come from. Local first. No model shop.", ("ai",)),
+    ("privacy", "you", "Privacy", "What may leave this computer, and what never does. Memory lives here.", ("privacy",)),
+    ("accessibility", "you", "Accessibility", "Motion, contrast, text size, captions, text-only.", ("accessibility",)),
+    ("appearance", "device", "Appearance", "How this computer looks: wallpaper and GNOME appearance.", ()),
+    ("apps", "device", "Apps", "Installed applications and their sandboxes.", ()),
+    ("permissions", "system", "Permissions", "What Bunny and apps may do, asked each time.", ()),
+    ("system", "system", "System", "This computer: network, display, power, updates of the OS.", ()),
+    ("updates", "system", "Updates", "OS updates, rollback, and recovery. Separate from app updates.", ()),
 )
 
 
@@ -91,11 +92,12 @@ def settings_nav() -> tuple[dict[str, object], ...]:
     return tuple(
         {
             "id": item_id,
+            "group": group,
             "title": title,
             "blurb": blurb,
             "sources": list(sources),
         }
-        for item_id, title, blurb, sources in SETTINGS_NAV
+        for item_id, group, title, blurb, sources in SETTINGS_NAV
     )
 
 _MAX_FILE_BYTES = 64 * 1024
@@ -259,6 +261,11 @@ class CharacterSettings:
     #: placement), and the transient window shapes in
     #: :mod:`companion.presentation` (phase-derived, never persisted).
     companion_mode: str = "full"
+    #: Presentation-only tone. Never a vendor or model name (D8 / ADR 0013).
+    personality: str = "bunny"
+    #: Whether Bunny may *offer* unprompted. ``gentle`` never acts and never
+    #: grants. There is no autonomous "on".
+    proactivity: str = "off"
 
     def __post_init__(self) -> None:
         if self.three_d not in ("auto", "off"):
@@ -282,6 +289,20 @@ class CharacterSettings:
                 "'off' is character.visible and 'text-only' is "
                 "accessibility.textOnly"
             )
+        personality = str(self.personality or "bunny").strip().casefold()
+        if personality in {
+            "openai", "anthropic", "claude", "gpt", "chatgpt", "gemini", "llama",
+            "mistral", "grok", "copilot", "siri", "alexa", "bard",
+        }:
+            raise SettingsError(
+                "character.personality is presentation only and may not name a "
+                "vendor or model"
+            )
+        if personality not in ("bunny", "focused", "playful"):
+            raise SettingsError("character.personality is 'bunny', 'focused' or 'playful'")
+        object.__setattr__(self, "personality", personality)
+        if self.proactivity not in ("off", "gentle"):
+            raise SettingsError("character.proactivity is 'off' or 'gentle'")
         object.__setattr__(self, "scale", _clamp(self.scale, 0.5, 3.0))
         object.__setattr__(self, "animation_intensity", _clamp(self.animation_intensity, 0.0, 1.0))
 
@@ -557,6 +578,8 @@ class Settings:
                 "contextualReactions": self.character.contextual_reactions,
                 "animationIntensity": self.character.animation_intensity,
                 "companionMode": self.character.companion_mode,
+                "personality": self.character.personality,
+                "proactivity": self.character.proactivity,
             },
             "voice": {
                 "enabled": self.voice.enabled,
@@ -664,6 +687,8 @@ class Settings:
                 # companion, which is what every such desktop was already
                 # showing — an upgrade never changes what is on screen.
                 companion_mode=text(character, "companionMode", "full"),
+                personality=text(character, "personality", "bunny"),
+                proactivity=text(character, "proactivity", "off"),
             ),
             voice=VoiceSettings(
                 enabled=flag(voice, "enabled", True),

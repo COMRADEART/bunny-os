@@ -20,7 +20,7 @@ from bunny_shell.settings import DEFINITIONS, SECTIONS, SettingsStore
 
 class VoiceAiDefinitionTests(unittest.TestCase):
     def test_voice_section_is_listed_in_sections(self) -> None:
-        self.assertIn("Voice & AI", SECTIONS)
+        self.assertIn("AI & Models", SECTIONS)
 
     def test_every_new_key_has_scope_owner_and_default(self) -> None:
         for key in ("voiceEnabled", "microphoneEnabled", "speechRecognizerModel",

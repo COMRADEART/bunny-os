@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+from html import escape as html_escape
 import tempfile
 import unittest
 from pathlib import Path
@@ -289,18 +290,19 @@ class OnboardingCopyTests(unittest.TestCase):
         self.assertEqual(ONBOARDING_STEPS[0].title, "Hi. I'm Bunny.")
         self.assertEqual(ONBOARDING_STEPS[-1].title, "Ready")
         self.assertTrue(ONBOARDING_STEPS[-1].body.startswith("Ready."))
-        character = next(step for step in ONBOARDING_STEPS if step.step_id == "character")
-        self.assertIn("Full 3D", character.body)
-        self.assertIn("Lightweight 2D", character.body)
-        self.assertIn("Minimal", character.body)
+        self.assertIn("corner", ONBOARDING_STEPS[-1].body.casefold())
+        companion = next(step for step in ONBOARDING_STEPS if step.step_id == "companion")
+        self.assertIn("Full 3D", companion.body)
+        self.assertIn("Lightweight 2D", companion.body)
+        self.assertIn("Minimal", companion.body)
         privacy = next(step for step in ONBOARDING_STEPS if step.step_id == "privacy")
-        self.assertIn("memory stay off", privacy.body)
+        self.assertIn("Local only", privacy.body)
         self.assertTrue(privacy.skip)
         self.assertFalse(privacy.required)
 
-    def test_essential_spine_is_hello_look_permissions_ready(self) -> None:
+    def test_essential_spine_is_hello_companion_privacy_ready(self) -> None:
         from companion.onboarding.model import ONBOARDING_ESSENTIAL_IDS
-        self.assertEqual(ONBOARDING_ESSENTIAL_IDS, ("welcome", "character", "permissions", "finish"))
+        self.assertEqual(ONBOARDING_ESSENTIAL_IDS, ("welcome", "companion", "privacy", "finish"))
 
     def test_the_installer_and_first_run_say_the_same_hello_and_ready(self) -> None:
         self.assertIn("I'm Bunny", INSTALL_STAGES[0].says)
@@ -354,10 +356,10 @@ class SecurityInvariantsTests(unittest.TestCase):
     def test_settings_are_named_for_people(self) -> None:
         html = render_settings_html()
         for title in (
-            "Appearance", "Bunny", "Voice", "AI", "Privacy", "Memory",
+            "Appearance", "Bunny", "AI & Models", "Privacy",
             "Apps", "Permissions", "Accessibility", "System", "Updates",
         ):
-            self.assertIn(title, html)
+            self.assertIn(html_escape(title), html)
         self.assertNotIn("GGUF", html)
 
     def test_errors_say_what_happened_what_to_do_and_what_changed(self) -> None:

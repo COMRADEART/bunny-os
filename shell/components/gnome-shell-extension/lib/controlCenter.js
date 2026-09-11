@@ -17,6 +17,7 @@ import {
     NETWORK_ALLOWLIST_NOTE,
     NETWORK_FULL_INTERNET,
     NETWORK_OFF,
+    NO_ONLINE_MODELS_IS_LOCAL_ONLY,
 } from './trustPrompt.js';
 
 /** One AI control. Never High/Ultra. Default is Automatic (local-first). */
@@ -189,12 +190,15 @@ export function buildAiModule({
     const warnings = {
         automatic: [
             'Automatic never goes online just because a local model is slower.',
+            NO_ONLINE_MODELS_IS_LOCAL_ONLY,
         ],
         'local-only': [
             'Local only refuses hosted providers. Bunny will not ask to generate online.',
+            NO_ONLINE_MODELS_IS_LOCAL_ONLY,
         ],
         'online-enhanced': [
             'Online enhanced is still local-first. Cloud generate needs Allow once for this request — not always cloud.',
+            NO_ONLINE_MODELS_IS_LOCAL_ONLY,
         ],
     }[mode];
     return moduleModel({
