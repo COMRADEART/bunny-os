@@ -386,6 +386,14 @@ export function renderStylesheet(theme) {
     rule(`.bunny-toast:hover { background-color: ${c.surfaceOverlay}; }`);
     focus('.bunny-toast');
 
+    rule(`.bunny-notification-center { padding: ${px(s.md)}; spacing: ${px(s.sm)}; }`);
+    rule(`.bunny-task-overlay { width: ${px(m.notificationWidth + 60)}; }`);
+    rule(`.bunny-task-overlay-column { padding: ${px(s.lg)}; spacing: ${px(s.md)}; }`);
+    rule(`.bunny-task-timeline { spacing: ${px(s.xs)}; }`);
+    rule(`.bunny-task-stage { ${type(theme, 'bodySmall')} color: ${c.textSecondary}; }`);
+    rule(`.bunny-task-stage-current { ${type(theme, 'bodySmall')} font-weight: 600; color: ${c.textPrimary}; }`);
+    rule(`.bunny-cc-module { spacing: ${px(s.md)}; }`);
+
     out.push(renderComponents(theme));
     return out.join('\n');
 }

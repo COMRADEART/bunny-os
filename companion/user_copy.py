@@ -26,6 +26,10 @@ from typing import Mapping
 __all__ = [
     "SCREEN_QUESTIONS",
     "UserMessage",
+    "CLOUD_MEMORY_STAYS_OFF",
+    "NETWORK_ALLOWLIST_NOTE",
+    "NETWORK_FULL_INTERNET",
+    "NETWORK_OFF",
     "disconnected_message",
     "error_message",
     "offline_message",
@@ -36,6 +40,19 @@ SCREEN_QUESTIONS = (
     "What am I doing?",
     "What is Bunny doing?",
     "What can I do next?",
+)
+
+#: Security #47 — fail-closed network chrome. Never a per-domain allowlist.
+NETWORK_OFF = "Off"
+NETWORK_FULL_INTERNET = "Full internet"
+NETWORK_ALLOWLIST_NOTE = (
+    "Site allowlists aren’t available yet — Full internet or Off."
+)
+
+#: Security #52 — remote_dispatch is not cloud_context.
+CLOUD_MEMORY_STAYS_OFF = (
+    "Cloud memory stays off. Allowing this sends only what you asked this time "
+    "to an online service — not your saved memory, session memory, or a conversation summary."
 )
 
 

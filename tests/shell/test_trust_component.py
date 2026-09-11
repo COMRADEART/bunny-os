@@ -228,12 +228,51 @@ class GenericityTests(NodeBackedTestCase):
                 with self.subTest(module=name, word=word):
                     self.assertNotIn(word, code)
 
-    def test_the_network_row_distinguishes_off_from_on(self) -> None:
-        """§19: "Network off — enforced" must not look like "Network on"."""
+    def test_the_network_row_distinguishes_off_from_full_internet(self) -> None:
+        """§19 and Security #47: Off vs Full internet; never a site list."""
         off = model_for({"requestId": "r", "prompt": {"network": "Off"}})
         on = model_for({"requestId": "r", "prompt": {"network": "On"}})
+        listed = model_for({"requestId": "r", "prompt": {"network": "api.example.com"}})
         self.assertEqual(off["confinement"][0]["standing"], "blocked")
+        self.assertEqual(off["confinement"][0]["value"], "Off")
         self.assertEqual(on["confinement"][0]["standing"], "granted")
+        self.assertEqual(on["confinement"][0]["value"], "Full internet")
+        self.assertEqual(listed["confinement"][0]["value"], "Full internet")
+        body = " ".join(line["text"] for line in on["body"])
+        self.assertIn("Site allowlists aren’t available yet", body)
+        self.assertNotIn("api.example.com", json.dumps(listed))
+
+    def test_remote_dispatch_with_cloud_memory_off_says_the_hop_is_not_memory(self) -> None:
+        """Security #52: remote_dispatch is not cloud_context."""
+        shown = model_for({
+            "requestId": "r",
+            "action": "remote_dispatch",
+            "cloudContext": "none",
+            "prompt": {"network": "Off", "kind": "remote_dispatch"},
+        })
+        hidden = model_for({
+            "requestId": "r",
+            "action": "launch_application",
+            "cloudContext": "none",
+            "prompt": {"network": "Off"},
+        })
+        minimized = model_for({
+            "requestId": "r",
+            "action": "remote_dispatch",
+            "cloudContext": "minimized",
+            "prompt": {"kind": "remote_dispatch"},
+        })
+        shown_body = " ".join(line["text"] for line in shown["body"])
+        hidden_body = " ".join(line["text"] for line in hidden["body"])
+        minimized_body = " ".join(line["text"] for line in minimized["body"])
+        self.assertIn("Cloud memory stays off", shown_body)
+        self.assertIn("not your saved memory", shown_body)
+        self.assertNotIn("Cloud memory stays off", hidden_body)
+        self.assertNotIn("Cloud memory stays off", minimized_body)
+        self.assertEqual(shown["initialFocus"], "deny")
+        self.assertEqual(shown["defaultAction"], "deny")
+        self.assertEqual(shown["buttons"][0]["label"], "Allow once")
+        self.assertEqual(shown["buttons"][1]["label"], "Don't allow")
 
 
 class DegradationTests(NodeBackedTestCase):

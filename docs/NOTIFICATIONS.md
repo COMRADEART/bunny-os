@@ -6,4 +6,6 @@ Bunny's bounded Core summary can expose notification metadata, running/queued/co
 
 Lock-screen projection hides every notification body and all actions. Notifications marked sensitive (the conservative default) also replace the title with `Sensitive notification`. This prevents prompt, filename, artifact, and file-content disclosure. Do Not Disturb and application notification preferences are user settings; GNOME owns actual delivery suppression.
 
+Bunny's own tray defaults to quiet: at most three toasts, duplicate info collapsed within eight seconds, and an optional Bunny summary so step-by-step work does not ping once per stage. Errors still appear. This is not a second freedesktop daemon.
+
 History is bounded to 500 projected items per collection. Flood control, grouping, dismissal, actions, pause/resume/cancel, and real notification daemon interaction require the GNOME/Bunny VM suite before they can be marked runtime-verified.

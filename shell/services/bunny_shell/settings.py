@@ -63,6 +63,7 @@ DEFINITIONS: dict[str, dict[str, Any]] = {
     "unattendedJobs": {"default": False, "scope": "user", "owner": "bunny-core", "validate": _boolean},
     "notifications": {"default": True, "scope": "user", "owner": "bunny-shell", "validate": _boolean},
     "doNotDisturb": {"default": False, "scope": "user", "owner": "bunny-shell", "validate": _boolean},
+    "bunnyNotificationSummary": {"default": True, "scope": "user", "owner": "bunny-shell", "validate": _boolean},
     "checkpointRetentionDays": {"default": 30, "scope": "user", "owner": "bunny-core", "validate": _bounded_int(1, 365)},
     "modelStoragePath": {"default": "default", "scope": "user", "owner": "bunny-core", "validate": _alias},
     "voiceEnabled": {"default": True, "scope": "user", "owner": "bunny-core", "validate": _boolean},

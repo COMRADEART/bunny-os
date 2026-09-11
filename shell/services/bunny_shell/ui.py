@@ -14,11 +14,18 @@ import subprocess
 import sys
 from typing import Any
 
+from .command_surface import build_command_surface, route_command_answer
+from .control_center import ai_module, bunny_module, privacy_module
 from .core_state import read_snapshot, shell_status
 from .launcher import LauncherState, application_search, route_intent
+from .notification_center import build_notification_center
 from .project import project_status
 from .search import SearchIndex
 from .settings import SECTIONS, SettingsStore
+from .trust_copy import (
+    CLOUD_MEMORY_STAYS_OFF,
+    NETWORK_ALLOWLIST_NOTE,
+)
 from .workspaces import WorkspaceStore
 
 
@@ -58,6 +65,18 @@ GNOME_PANELS = {
     "Date and Time": "datetime", "Storage": "info-overview", "Accessibility": "universal-access",
     "System Information": "info-overview",
 }
+
+
+def _cloud_context() -> str:
+    """Companion PrivacySettings.cloud_context, or the Alpha default ``none``."""
+    try:
+        _make_the_companion_importable()
+        from companion.settings import load_settings
+
+        return str(load_settings().privacy.cloud_context or "none")
+    except Exception:  # noqa: BLE001 - settings remain usable without Core
+        return "none"
+
 
 
 def _gtk() -> tuple[Any, Any, Any]:
@@ -125,7 +144,7 @@ class BunnyApplication:
             "plans": lambda: self._core_list("plans", "Plans"),
             "project": self._project,
             "privacy": self._privacy,
-            "notifications": lambda: self._core_list("notifications", "Notification centre"),
+            "notifications": self._notifications,
             "quick-settings": self._quick_settings,
             "command": self._command,
         }
@@ -191,7 +210,19 @@ class BunnyApplication:
                 detail.remove(child)
             name = row.section_name
             detail.append(self._label(name, "title-1"))
-            if name in GNOME_PANELS:
+            if name == "Bunny":
+                self._render_module(detail, bunny_module(settings))
+            elif name == "Voice & AI":
+                self._render_module(detail, ai_module(settings))
+                self._voice_settings(detail)
+            elif name == "Privacy":
+                self._render_module(detail, privacy_module(settings, cloud_context=_cloud_context()))
+                detail.append(self._label("Device camera, microphone, and screen sharing stay in GNOME."))
+                detail.append(self._button("Open GNOME device privacy", lambda _b: _fixed_spawn(["/usr/bin/gnome-control-center", "privacy"])))
+            elif name == "Notifications":
+                self._render_notifications(detail, settings)
+                detail.append(self._button("Open GNOME Notifications", lambda _b: _fixed_spawn(["/usr/bin/gnome-control-center", "notifications"])))
+            elif name in GNOME_PANELS:
                 detail.append(self._label("This stable system section is provided by GNOME Settings."))
                 detail.append(self._button("Open GNOME Settings", lambda _b: _fixed_spawn(["/usr/bin/gnome-control-center", GNOME_PANELS[name]])))
                 if name == "Appearance":
@@ -229,6 +260,30 @@ class BunnyApplication:
         split.set_end_child(detail)
         navigation.select_row(selected_row or navigation.get_row_at_index(0))
         return split
+
+    def _render_module(self, detail: Any, module: Any) -> None:
+        detail.append(self._label(module.summary))
+        for row in module.rows:
+            line = f"{row.label}: {row.value}"
+            if row.hint:
+                line = f"{line}\n{row.hint}"
+            detail.append(self._label(line))
+        for warning in module.warnings:
+            detail.append(self._label(warning))
+
+    def _render_notifications(self, detail: Any, settings: dict[str, Any]) -> None:
+        center = build_notification_center(
+            quiet=True,
+            bunny_summary=bool(settings.get("bunnyNotificationSummary", True)),
+            do_not_disturb=bool(settings.get("doNotDisturb")),
+        )
+        detail.append(self._label(center["emptyCopy"] if not center["items"] else "Recent Bunny notices."))
+        detail.append(self._label(
+            f"Quiet defaults: at most {center['maxVisibleToasts']} toasts. "
+            f"Bunny summary: {'On' if center['bunnySummary'] else 'Off'}."
+        ))
+        if center.get("summary"):
+            detail.append(self._label(str(center["summary"])))
 
     def _voice_settings(self, detail: Any) -> None:
         """The focused voice page, backed by the running companion service."""
@@ -497,13 +552,29 @@ class BunnyApplication:
 
     def _command(self) -> Any:
         box = self.Gtk.Box(orientation=self.Gtk.Orientation.VERTICAL, spacing=12)
+        surface = build_command_surface(trigger="search-entry")
         box.append(self._label("Bunny command surface", "title-1"))
+        box.append(self._label(
+            f"Super+Space, the companion, or Search all open this field. "
+            f"The companion is not required. Shortcut: {surface.accelerator}."
+        ))
         status = shell_status()
         box.append(self._label(f"Bunny: {status['bunny']} · Broker: {status['broker']} · Security evidence: {status['securitySummary']}"))
-        mode = self.Gtk.DropDown.new_from_strings(["Ask", "Command", "Plan", "Explain", "System"])
-        prompt = self.Gtk.Entry(placeholder_text="What would you like to do?")
-        box.append(mode); box.append(prompt)
-        box.append(self._label("Only user-visible plans, action summaries, permissions, outputs, and errors appear here. Hidden reasoning is never exposed."))
+        prompt = self.Gtk.SearchEntry(placeholder_text="Search or ask Bunny")
+        prompt.update_property([self.Gtk.AccessibleProperty.LABEL], [surface.accessible_name])
+        reply = self._label("Short answers stay beside Bunny. Longer work opens a task card — not a chat log.")
+        box.append(prompt)
+        box.append(reply)
+
+        def submit(_entry: Any) -> None:
+            routed = route_command_answer(prompt.get_text())
+            if routed.surface == "task-card":
+                reply.set_label(f"Task card: {routed.task_title}. {routed.bubble_text}")
+            else:
+                reply.set_label(routed.bubble_text or "Ask Bunny, or search for an app.")
+
+        prompt.connect("activate", submit)
+        box.append(self._label("Hidden reasoning is never shown. Pause and Cancel live on the task card."))
         return box
 
     def _project(self) -> Any:
@@ -523,18 +594,44 @@ class BunnyApplication:
 
     def _privacy(self) -> Any:
         box = self.Gtk.Box(orientation=self.Gtk.Orientation.VERTICAL, spacing=12)
-        box.append(self._label("Privacy dashboard", "title-1"))
+        box.append(self._label("Privacy", "title-1"))
         settings = SettingsStore().get_all()
+        module = privacy_module(settings, cloud_context=_cloud_context())
+        self._render_module(box, module)
         search = SearchIndex().status()
         status = shell_status()
-        for label, value in (
-            ("Bunny", status["bunny"]), ("Local-only AI", settings["localOnlyMode"]),
-            ("Offline", settings["offlineMode"]), ("Telemetry", "Enabled" if settings["telemetryEnabled"] else "Disabled"),
-            ("Clipboard history", settings["clipboardHistory"]), ("Approved search locations", search["approvedLocationCount"]),
-            ("Broker", status["broker"]), ("Security evidence", status["securitySummary"]),
-        ):
-            box.append(self._label(f"{label}: {value}"))
+        box.append(self._label(
+            f"Approved search locations: {search['approvedLocationCount']} · "
+            f"Broker: {status['broker']}"
+        ))
+        box.append(self._label(NETWORK_ALLOWLIST_NOTE))
+        box.append(self._label(CLOUD_MEMORY_STAYS_OFF))
         box.append(self._button("Open GNOME device privacy", lambda _b: _fixed_spawn(["/usr/bin/gnome-control-center", "privacy"])))
+        return box
+
+    def _notifications(self) -> Any:
+        box = self.Gtk.Box(orientation=self.Gtk.Orientation.VERTICAL, spacing=12)
+        box.append(self._label("Notification centre", "title-1"))
+        settings = SettingsStore().get_all()
+        snapshot_items: list[dict[str, Any]] = []
+        try:
+            snapshot = read_snapshot()
+        except (OSError, PermissionError, ValueError, json.JSONDecodeError):
+            snapshot = None
+        if snapshot:
+            snapshot_items = list(snapshot.get("notifications") or [])
+        center = build_notification_center(
+            snapshot_items,
+            quiet=True,
+            bunny_summary=bool(settings.get("bunnyNotificationSummary", True)),
+            do_not_disturb=bool(settings.get("doNotDisturb")),
+        )
+        box.append(self._label(center["emptyCopy"] if not center["items"] else f"{len(center['items'])} notices."))
+        if center.get("summary"):
+            box.append(self._label(str(center["summary"])))
+        for item in center["items"][:12]:
+            box.append(self._label(f"{item['title']}\n{item['body']}"))
+        box.append(self._label("GNOME still delivers application notifications. Bunny stays quiet unless something needs you."))
         return box
 
     def _quick_settings(self) -> Any:

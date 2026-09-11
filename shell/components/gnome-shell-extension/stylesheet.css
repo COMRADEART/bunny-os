@@ -257,6 +257,13 @@
 .bunny-toast-severity-error { color: #EF4444; }
 .bunny-toast:hover { background-color: rgba(17, 21, 32, 0.94); }
 .bunny-toast:focus { outline: 2px solid #A78BFA; outline-offset: 2px; }
+.bunny-notification-center { padding: 12px; spacing: 8px; }
+.bunny-task-overlay { width: 420px; }
+.bunny-task-overlay-column { padding: 16px; spacing: 12px; }
+.bunny-task-timeline { spacing: 4px; }
+.bunny-task-stage { font-size: 12px; font-weight: 400; color: #B4BAC6; }
+.bunny-task-stage-current { font-size: 12px; font-weight: 400; font-weight: 600; color: #F7F8FA; }
+.bunny-cc-module { spacing: 12px; }
 .bunny-trust { border-radius: 28px; box-shadow: 0 24px 64px rgba(0, 0, 0, 0.66); border: 1px solid #A78BFA; }
 .bunny-trust-column { padding: 16px; spacing: 12px; }
 .bunny-trust-scrim { background-color: rgba(8, 11, 18, 0.72); }

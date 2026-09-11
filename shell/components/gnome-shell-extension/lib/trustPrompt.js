@@ -84,8 +84,74 @@ export const CONFINEMENT_ROWS = [
     {key: 'privateAppData', label: 'App data'},
 ];
 
+/** Security #47: this build can only hold Off or Full internet. */
+export const NETWORK_OFF = 'Off';
+export const NETWORK_FULL_INTERNET = 'Full internet';
+export const NETWORK_ALLOWLIST_NOTE =
+    "Site allowlists aren’t available yet — Full internet or Off.";
+
+/** Security #52: remote_dispatch is not cloud memory. */
+export const CLOUD_MEMORY_STAYS_OFF =
+    'Cloud memory stays off. Allowing this sends only what you asked this time '
+    + 'to an online service — not your saved memory, session memory, or a conversation summary.';
+
+export const ALLOW_ONCE_LABEL = 'Allow once';
+export const DONT_ALLOW_LABEL = "Don't allow";
+
 function nonEmpty(value) {
     return typeof value === 'string' && value.trim().length > 0;
+}
+
+/**
+ * Person-facing network label. Domain lists are not a boundary.
+ *
+ * `On` from older prompts is Full internet. A stored allowlisted identifier
+ * is also Full internet or Off — never a hostname pretending to be a filter.
+ */
+export function networkFacingLabel(value) {
+    const text = String(value ?? '').trim();
+    if (!text)
+        return '';
+    const lower = text.toLowerCase();
+    if (lower === 'off' || lower === 'none' || lower === 'blocked'
+            || lower === 'nothing on the network')
+        return NETWORK_OFF;
+    if (lower === 'on' || lower === 'internet' || lower === 'full internet'
+            || lower === 'the internet' || lower === 'granted')
+        return NETWORK_FULL_INTERNET;
+    // allowlisted / loopback / local-network / a hostname: do not reprint it.
+    if (lower === 'allowlisted' || lower === 'named destinations'
+            || lower.includes('allowlist') || lower.includes('allow-list')
+            || lower.includes('.'))
+        return NETWORK_FULL_INTERNET;
+    return NETWORK_FULL_INTERNET;
+}
+
+export function remoteDispatchDisclosure({
+    cloudContext = 'none', offeringRemoteDispatch = false,
+} = {}) {
+    if (!offeringRemoteDispatch)
+        return '';
+    const cloud = String(cloudContext ?? 'none').trim().toLowerCase();
+    if (cloud === 'none' || cloud === '')
+        return CLOUD_MEMORY_STAYS_OFF;
+    return '';
+}
+
+function offersRemoteDispatch(approval, prompt) {
+    if (approval?.offeringRemoteDispatch === true || prompt?.offeringRemoteDispatch === true)
+        return true;
+    const tokens = [
+        approval?.action, approval?.capability, approval?.category,
+        prompt?.kind, prompt?.operationId, prompt?.capability,
+    ].map(value => String(value ?? '').toLowerCase().replace(/-/g, '_'));
+    return tokens.some(token => token.includes('remote_dispatch'));
+}
+
+function cloudContextOf(approval, prompt) {
+    const raw = approval?.cloudContext ?? prompt?.cloudContext
+        ?? approval?.cloud_context ?? prompt?.cloud_context ?? 'none';
+    return String(raw ?? 'none').trim().toLowerCase() || 'none';
 }
 
 function standingFor(key, value) {
@@ -93,7 +159,7 @@ function standingFor(key, value) {
     if (!text)
         return 'unavailable';
     if (key === 'network')
-        return text.toLowerCase() === 'off' ? 'blocked' : 'granted';
+        return networkFacingLabel(text) === NETWORK_OFF ? 'blocked' : 'granted';
     return 'granted';
 }
 
@@ -121,6 +187,12 @@ export function buildPrompt(record, options = {}) {
         else if (key === 'enforcement' && nonEmpty(record.enforcementNote))
             body.push({key, text: record.enforcementNote, emphasis: 'warning'});
     }
+    const capabilityDisclosure = remoteDispatchDisclosure({
+        cloudContext: cloudContextOf(record, record),
+        offeringRemoteDispatch: offersRemoteDispatch(record, record),
+    });
+    if (capabilityDisclosure)
+        body.push({key: 'remote-dispatch', text: capabilityDisclosure, emphasis: 'warning'});
 
     // Reading order: the allow options in escalating order, then deny.
     const buttons = (record.options || []).map((option, index) => ({
@@ -218,12 +290,22 @@ export function buildApproval(approval, options = {}) {
     if (body.length === 0 && nonEmpty(approval.reason) && approval.reason !== heading)
         body.push({key: 'reason', text: approval.reason, emphasis: 'quiet'});
 
+    const networkShown = nonEmpty(prompt.network);
+    if (networkShown)
+        body.push({key: 'enforcement', text: NETWORK_ALLOWLIST_NOTE, emphasis: 'warning'});
+    const disclosure = remoteDispatchDisclosure({
+        cloudContext: cloudContextOf(approval, prompt),
+        offeringRemoteDispatch: offersRemoteDispatch(approval, prompt),
+    });
+    if (disclosure)
+        body.push({key: 'remote-dispatch', text: disclosure, emphasis: 'warning'});
+
     const confinement = CONFINEMENT_ROWS
         .filter(row => nonEmpty(prompt[row.key]))
         .map(row => ({
             key: row.key,
             label: row.label,
-            value: prompt[row.key],
+            value: row.key === 'network' ? networkFacingLabel(prompt[row.key]) : prompt[row.key],
             standing: standingFor(row.key, prompt[row.key]),
             // Every restriction shown here is one the capsule runtime holds. A
             // row this surface could not verify would need `enforced: false`
@@ -235,7 +317,7 @@ export function buildApproval(approval, options = {}) {
     const buttons = [
         {
             id: 'allow',
-            label: 'Allow once',
+            label: ALLOW_ONCE_LABEL,
             verdict: 'allow',
             scope: 'once',
             role: 'suggested-weak',
@@ -246,7 +328,7 @@ export function buildApproval(approval, options = {}) {
         },
         {
             id: 'deny',
-            label: "Don't allow",
+            label: DONT_ALLOW_LABEL,
             verdict: 'deny',
             scope: null,
             role: 'safe-default',

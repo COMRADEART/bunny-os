@@ -99,6 +99,16 @@ The story harness live copy is `shell/themes/story-manifest.json`.
 `qualification/design/story-manifest.json` remains Phase 7 frozen evidence
 and is not retargeted by this phase.
 
+## Phase 2 surfaces (draft)
+
+Super+Space, a character click, and Search open one command field. Short
+answers stay in the companion bubble; longer work is a task card/timeline —
+not a chatbot transcript. Control Center adds Bunny, AI, and Privacy modules
+on top of GNOME device panels. Notifications stay quiet by default and can
+fold Bunny chatter into one summary. Trust chrome is Allow once / Don't
+allow, Don't allow focused, and fail-closed network copy: Full internet or
+Off, never a site allowlist. Live GNOME remains **not verified**.
+
 ## Primitives
 
 Button, IconButton, Card, Panel, Sheet, Dialog, Popover, Tooltip, TextField,
