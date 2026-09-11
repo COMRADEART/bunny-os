@@ -273,6 +273,13 @@ class BunnyApplication:
             detail.append(self._label(line))
         for warning in module.warnings:
             detail.append(self._label(warning))
+        if getattr(module, "advanced", ()):
+            detail.append(self._label(getattr(module, "advanced_title", None) or "Advanced"))
+            for row in module.advanced:
+                line = f"{row.label}: {row.value}"
+                if row.hint:
+                    line = f"{line}\n{row.hint}"
+                detail.append(self._label(line))
 
     def _render_notifications(self, detail: Any, settings: dict[str, Any]) -> None:
         center = build_notification_center(

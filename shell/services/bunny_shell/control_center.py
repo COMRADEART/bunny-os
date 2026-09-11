@@ -63,6 +63,53 @@ _AI_WARNINGS = {
     ),
 }
 
+ADVANCED_TITLE = "Advanced"
+THROUGHPUT_NOT_MEASURED = "Not measured"
+ACCELERATOR_UNKNOWN = "Unknown"
+ACCELERATOR_ABSENT = "Absent"
+ACCELERATOR_UNUSABLE = "Unusable"
+MODEL_UNKNOWN = "Unknown"
+WHY_THIS_MODEL_UNAVAILABLE = "Not available"
+CONVERSATION_SUMMARY_UNWIRED = "Unwired"
+
+_ACCELERATOR_LABELS = {
+    "unknown": ACCELERATOR_UNKNOWN,
+    "absent": ACCELERATOR_ABSENT,
+    "none": ACCELERATOR_ABSENT,
+    "unusable": ACCELERATOR_UNUSABLE,
+    "present-unusable": ACCELERATOR_UNUSABLE,
+    "not-usable": ACCELERATOR_UNUSABLE,
+}
+
+
+def accelerator_facing_label(value: Any = None) -> str:
+    token = str(value or "unknown").strip().casefold().replace("_", "-")
+    return _ACCELERATOR_LABELS.get(token, ACCELERATOR_UNKNOWN)
+
+
+def throughput_facing_label(value: Any = None) -> str:
+    if isinstance(value, bool) or value is None:
+        return THROUGHPUT_NOT_MEASURED
+    if isinstance(value, int) and not isinstance(value, bool) and value >= 0:
+        return f"{value} tok/s"
+    if isinstance(value, float) and value >= 0 and value != float("inf") and value == value:
+        if value.is_integer():
+            return f"{int(value)} tok/s"
+        return f"{value} tok/s"
+    return THROUGHPUT_NOT_MEASURED
+
+
+def model_facing_label(value: Any = None) -> str:
+    text = str(value or "").strip()
+    if not text or text.casefold() in {"automatic", "unknown", "none"}:
+        return MODEL_UNKNOWN
+    return text
+
+
+def why_this_model_label(value: Any = None) -> str:
+    text = str(value or "").strip()
+    return text or WHY_THIS_MODEL_UNAVAILABLE
+
 
 def resolve_ai_mode(values: Mapping[str, Any] | None = None, **kwargs: Any) -> str:
     settings = dict(values or {})
@@ -91,6 +138,8 @@ class ControlModule:
     summary: str
     rows: tuple[ControlRow, ...]
     warnings: tuple[str, ...] = ()
+    advanced: tuple[ControlRow, ...] = ()
+    advanced_title: str = ""
     companion_required: bool = False
 
 
@@ -115,6 +164,45 @@ def bunny_module(values: Mapping[str, Any] | None = None, *, companion_hidden: b
                 hint="Hiding the figure does not hide Search, Settings, or Trust.",
                 control="toggle",
             ),
+        ),
+    )
+
+
+def _ai_advanced_rows(settings: Mapping[str, Any]) -> tuple[ControlRow, ...]:
+    return (
+        ControlRow("modelId", "Model", model_facing_label(settings.get("modelId") or settings.get("adapter"))),
+        ControlRow("adapter", "Adapter", model_facing_label(settings.get("adapter"))),
+        ControlRow("throughput", "Throughput", throughput_facing_label(settings.get("tokensPerSecond"))),
+        ControlRow("gpu", "GPU", accelerator_facing_label(settings.get("gpu"))),
+        ControlRow("vram", "VRAM", accelerator_facing_label(settings.get("vram"))),
+        ControlRow("npu", "NPU", accelerator_facing_label(settings.get("npu"))),
+        ControlRow(
+            "whyThisModel",
+            "Why this model",
+            why_this_model_label(settings.get("whyThisModel")),
+        ),
+    )
+
+
+def _privacy_advanced_rows() -> tuple[ControlRow, ...]:
+    return (
+        ControlRow(
+            "cloudContextSession",
+            "Session memory online",
+            "Off",
+            hint="cloud_context does not send session memory online.",
+        ),
+        ControlRow(
+            "cloudContextDurable",
+            "Durable memory online",
+            "Off",
+            hint="Durable memory is never dumped online.",
+        ),
+        ControlRow(
+            "conversationSummary",
+            "Conversation summary",
+            CONVERSATION_SUMMARY_UNWIRED,
+            hint="Conversation summary is not wired.",
         ),
     )
 
@@ -154,6 +242,8 @@ def ai_module(values: Mapping[str, Any] | None = None) -> ControlModule:
             ),
         ),
         warnings=_AI_WARNINGS[mode],
+        advanced=_ai_advanced_rows(settings),
+        advanced_title=ADVANCED_TITLE,
     )
 
 
@@ -227,6 +317,8 @@ def privacy_module(
             ),
         ),
         warnings=tuple(warnings),
+        advanced=_privacy_advanced_rows(),
+        advanced_title=ADVANCED_TITLE,
     )
 
 

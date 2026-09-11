@@ -108,7 +108,7 @@ export const CLOUD_MEMORY_IS_OFF =
 /** Security #52: remote_dispatch is not cloud memory. */
 export const CLOUD_MEMORY_STAYS_OFF =
     'Cloud memory stays off. Allowing this sends only what you asked this time '
-    + 'to an online service — not your saved memory, session memory, or a conversation summary.';
+    + 'to that online service — not your saved memory, session memory, or a conversation summary.';
 
 export const ALLOW_ONCE_LABEL = 'Allow once';
 export const DONT_ALLOW_LABEL = "Don't allow";

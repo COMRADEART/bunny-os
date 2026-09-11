@@ -110,7 +110,9 @@ allow, Don't allow focused, and fail-closed network copy: Off or On
 (full internet), never a site allowlist. Allowlisted ceilings (LibreOffice)
 read as no network until a filter ships. Control Center AI is one control
 (Automatic / Local only / Online enhanced). Privacy keeps cloud memory and
-a one-time online hop as two consents. Live GNOME remains **not verified**.
+a one-time online hop as two consents. Model id, measured tok/s or “not
+measured”, and GPU/VRAM/NPU as unknown/absent/unusable live under Advanced
+only — never invented in normal chrome. Live GNOME remains **not verified**.
 
 ## Primitives
 

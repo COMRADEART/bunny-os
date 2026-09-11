@@ -126,6 +126,8 @@ class HonestyCopyTests(NodeBackedTestCase):
         self.assertEqual(USER_CLIPBOARD_BT, CLIPBOARD_BLUETOOTH_NOTE)
         self.assertEqual(NETWORK_FULL_INTERNET, "On (full internet)")
         self.assertNotEqual(CLOUD_MEMORY_IS_OFF, CLOUD_MEMORY_STAYS_OFF)
+        self.assertIn("that online service", CLOUD_MEMORY_STAYS_OFF)
+        self.assertNotIn("an online service", CLOUD_MEMORY_STAYS_OFF)
 
     def test_permission_card_reuses_the_allowlist_sentence(self) -> None:
         card = run_node(
@@ -331,12 +333,15 @@ class ControlCenterTests(NodeBackedTestCase):
         ids = {item["id"] for item in js["module"]["rows"]}
         self.assertNotIn("localAiEnabled", ids)
         self.assertNotIn("localOnlyMode", ids)
-        blob = json.dumps(js).casefold()
-        self.assertNotIn("high/ultra", blob)
-        self.assertNotIn("gguf", blob)
-        self.assertNotIn("tok/s", blob)
-        self.assertNotIn("vram", blob)
-        self.assertNotIn("always cloud", json.dumps(js["online"]).casefold().replace("not always cloud", ""))
+        self.assertEqual(set(AI_MODE_LABELS.values()), {"Automatic", "Local only", "Online enhanced"})
+        self.assertNotIn("High", AI_MODE_LABELS.values())
+        self.assertNotIn("Ultra", AI_MODE_LABELS.values())
+        normal = json.dumps(js["module"]["rows"]).casefold()
+        self.assertNotIn("gguf", normal)
+        self.assertNotIn("tok/s", normal)
+        self.assertNotIn("vram", normal)
+        self.assertNotIn("npu", normal)
+        self.assertNotIn("always cloud", json.dumps(js["online"]["rows"] + js["online"]["warnings"]).casefold().replace("not always cloud", ""))
         self.assertIn("not always cloud", json.dumps(js["online"]).casefold())
         self.assertEqual(
             next(item for item in js["online"]["rows"] if item["id"] == "aiMode")["value"],
@@ -345,6 +350,62 @@ class ControlCenterTests(NodeBackedTestCase):
         local_py = control_center({"localOnlyMode": True})["ai"]
         self.assertEqual(next(row for row in local_py.rows if row.id == "aiMode").value, "Local only")
         self.assertTrue(any("will not ask to generate online" in note for note in local_py.warnings))
+
+    def test_advanced_ai_stays_unknown_until_measured(self) -> None:
+        from bunny_shell.control_center import (
+            ACCELERATOR_UNKNOWN,
+            CONVERSATION_SUMMARY_UNWIRED,
+            THROUGHPUT_NOT_MEASURED,
+            WHY_THIS_MODEL_UNAVAILABLE,
+            accelerator_facing_label,
+            throughput_facing_label,
+        )
+        py = control_center()["ai"]
+        by_id = {row.id: row.value for row in py.advanced}
+        self.assertEqual(py.advanced_title, "Advanced")
+        self.assertEqual(by_id["modelId"], "Unknown")
+        self.assertEqual(by_id["throughput"], THROUGHPUT_NOT_MEASURED)
+        self.assertEqual(by_id["gpu"], ACCELERATOR_UNKNOWN)
+        self.assertEqual(by_id["vram"], ACCELERATOR_UNKNOWN)
+        self.assertEqual(by_id["npu"], ACCELERATOR_UNKNOWN)
+        self.assertEqual(by_id["whyThisModel"], WHY_THIS_MODEL_UNAVAILABLE)
+        self.assertEqual(throughput_facing_label("fast"), THROUGHPUT_NOT_MEASURED)
+        self.assertEqual(throughput_facing_label(12), "12 tok/s")
+        self.assertEqual(accelerator_facing_label("present-unusable"), "Unusable")
+        self.assertEqual(accelerator_facing_label("nvidia"), ACCELERATOR_UNKNOWN)
+        measured = control_center({"tokensPerSecond": 12, "gpu": "absent", "whyThisModel": "fits RAM"})["ai"]
+        measured_ids = {row.id: row.value for row in measured.advanced}
+        self.assertEqual(measured_ids["throughput"], "12 tok/s")
+        self.assertEqual(measured_ids["gpu"], "Absent")
+        self.assertEqual(measured_ids["whyThisModel"], "fits RAM")
+        self.assertNotIn("tok/s", json.dumps([{"id": row.id, "value": row.value} for row in measured.rows]))
+        privacy = control_center()["privacy"]
+        privacy_ids = {row.id: row.value for row in privacy.advanced}
+        self.assertEqual(privacy_ids["cloudContextSession"], "Off")
+        self.assertEqual(privacy_ids["cloudContextDurable"], "Off")
+        self.assertEqual(privacy_ids["conversationSummary"], CONVERSATION_SUMMARY_UNWIRED)
+        js = run_node(
+            f"import {{buildAiModule, buildPrivacyModule, THROUGHPUT_NOT_MEASURED, "
+            f"ACCELERATOR_UNKNOWN, CONVERSATION_SUMMARY_UNWIRED}} "
+            f"from '{(LIB / 'controlCenter.js').as_uri()}';\n"
+            "console.log(JSON.stringify({"
+            "ai: buildAiModule({}),"
+            "measured: buildAiModule({tokensPerSecond: 12, gpu: 'absent'}),"
+            "privacy: buildPrivacyModule({cloudContext: 'none'}),"
+            "THROUGHPUT_NOT_MEASURED, ACCELERATOR_UNKNOWN, CONVERSATION_SUMMARY_UNWIRED}));\n"
+        )
+        js_ai = {row["id"]: row["value"] for row in js["ai"]["advanced"]}
+        self.assertEqual(js_ai["throughput"], js["THROUGHPUT_NOT_MEASURED"])
+        self.assertEqual(js_ai["gpu"], js["ACCELERATOR_UNKNOWN"])
+        self.assertEqual(js["ai"]["advancedTitle"], "Advanced")
+        self.assertEqual(
+            next(row["value"] for row in js["measured"]["advanced"] if row["id"] == "throughput"),
+            "12 tok/s",
+        )
+        self.assertEqual(
+            next(row["value"] for row in js["privacy"]["advanced"] if row["id"] == "conversationSummary"),
+            js["CONVERSATION_SUMMARY_UNWIRED"],
+        )
 
 
 class NotificationCenterTests(NodeBackedTestCase):
@@ -474,6 +535,7 @@ class PermissionChromeTests(NodeBackedTestCase):
         self.assertIn("CLIPBOARD_BLUETOOTH_NOTE", ui)
         self.assertIn("CLOUD_MEMORY_IS_OFF", ui)
         self.assertIn("CLOUD_MEMORY_STAYS_OFF", ui)
+        self.assertIn("advanced", ui)
         self.assertIn("privacy_module", ui)
         self.assertIn("route_command_answer", ui)
         self.assertIn("build_notification_center", ui)

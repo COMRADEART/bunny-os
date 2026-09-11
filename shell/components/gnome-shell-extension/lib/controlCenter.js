@@ -50,6 +50,79 @@ export function resolveAiMode({localOnlyMode = false, aiMode = 'automatic'} = {}
     return 'automatic';
 }
 
+export const ADVANCED_TITLE = 'Advanced';
+export const THROUGHPUT_NOT_MEASURED = 'Not measured';
+export const ACCELERATOR_UNKNOWN = 'Unknown';
+export const ACCELERATOR_ABSENT = 'Absent';
+export const ACCELERATOR_UNUSABLE = 'Unusable';
+export const MODEL_UNKNOWN = 'Unknown';
+export const WHY_THIS_MODEL_UNAVAILABLE = 'Not available';
+export const CONVERSATION_SUMMARY_UNWIRED = 'Unwired';
+
+const ACCELERATOR_LABELS = Object.freeze({
+    unknown: ACCELERATOR_UNKNOWN,
+    absent: ACCELERATOR_ABSENT,
+    none: ACCELERATOR_ABSENT,
+    unusable: ACCELERATOR_UNUSABLE,
+    'present-unusable': ACCELERATOR_UNUSABLE,
+    'not-usable': ACCELERATOR_UNUSABLE,
+});
+
+export function acceleratorFacingLabel(value) {
+    const token = String(value ?? 'unknown').trim().toLowerCase().replace(/_/g, '-');
+    return ACCELERATOR_LABELS[token] || ACCELERATOR_UNKNOWN;
+}
+
+export function throughputFacingLabel(value) {
+    if (typeof value === 'number' && Number.isFinite(value) && value >= 0)
+        return Number.isInteger(value) ? `${value} tok/s` : `${value} tok/s`;
+    return THROUGHPUT_NOT_MEASURED;
+}
+
+export function modelFacingLabel(value) {
+    const text = String(value ?? '').trim();
+    if (!text)
+        return MODEL_UNKNOWN;
+    const lower = text.toLowerCase();
+    if (lower === 'automatic' || lower === 'unknown' || lower === 'none')
+        return MODEL_UNKNOWN;
+    return text;
+}
+
+export function whyThisModelLabel(value) {
+    const text = String(value ?? '').trim();
+    return text || WHY_THIS_MODEL_UNAVAILABLE;
+}
+
+function aiAdvancedRows({
+    modelId = '', adapter = '', tokensPerSecond = null,
+    gpu = 'unknown', vram = 'unknown', npu = 'unknown', whyThisModel = '',
+} = {}) {
+    return [
+        row('modelId', 'Model', modelFacingLabel(modelId || adapter)),
+        row('adapter', 'Adapter', modelFacingLabel(adapter)),
+        row('throughput', 'Throughput', throughputFacingLabel(tokensPerSecond)),
+        row('gpu', 'GPU', acceleratorFacingLabel(gpu)),
+        row('vram', 'VRAM', acceleratorFacingLabel(vram)),
+        row('npu', 'NPU', acceleratorFacingLabel(npu)),
+        row('whyThisModel', 'Why this model', whyThisModelLabel(whyThisModel)),
+    ];
+}
+
+function privacyAdvancedRows() {
+    return [
+        row('cloudContextSession', 'Session memory online', 'Off', {
+            hint: 'cloud_context does not send session memory online.',
+        }),
+        row('cloudContextDurable', 'Durable memory online', 'Off', {
+            hint: 'Durable memory is never dumped online.',
+        }),
+        row('conversationSummary', 'Conversation summary', CONVERSATION_SUMMARY_UNWIRED, {
+            hint: 'Conversation summary is not wired.',
+        }),
+    ];
+}
+
 export const CONTROL_CENTER_MODULES = Object.freeze(['bunny', 'ai', 'privacy']);
 
 const CLOUD_CONTEXT_LABELS = Object.freeze({
@@ -69,7 +142,7 @@ function row(id, label, value, {hint = '', control = 'label'} = {}) {
     };
 }
 
-function moduleModel({id, title, summary, rows, warnings = []}) {
+function moduleModel({id, title, summary, rows, warnings = [], advanced = []}) {
     return {
         kind: 'ControlCenterModule',
         id,
@@ -77,6 +150,8 @@ function moduleModel({id, title, summary, rows, warnings = []}) {
         summary,
         rows,
         warnings,
+        advanced,
+        advancedTitle: advanced.length ? ADVANCED_TITLE : '',
         questions: SCREEN_QUESTIONS,
         companionRequired: false,
         styleClass: `bunny-cc-module bunny-cc-module-${id}`,
@@ -107,6 +182,8 @@ export function buildBunnyModule({
 export function buildAiModule({
     localOnlyMode = false, aiMode = 'automatic', voiceEnabled = true,
     microphoneEnabled = true,
+    modelId = '', adapter = '', tokensPerSecond = null,
+    gpu = 'unknown', vram = 'unknown', npu = 'unknown', whyThisModel = '',
 } = {}) {
     const mode = resolveAiMode({localOnlyMode, aiMode});
     const warnings = {
@@ -140,6 +217,9 @@ export function buildAiModule({
             }),
         ],
         warnings,
+        advanced: aiAdvancedRows({
+            modelId, adapter, tokensPerSecond, gpu, vram, npu, whyThisModel,
+        }),
     });
 }
 
@@ -187,6 +267,7 @@ export function buildPrivacyModule({
             cloud === 'none' ? CLOUD_MEMORY_IS_OFF : '',
             CLOUD_MEMORY_STAYS_OFF,
         ].filter(Boolean),
+        advanced: privacyAdvancedRows(),
     });
 }
 

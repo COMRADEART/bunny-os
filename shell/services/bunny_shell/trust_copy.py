@@ -27,7 +27,7 @@ CLOUD_MEMORY_IS_OFF = (
 )
 CLOUD_MEMORY_STAYS_OFF = (
     "Cloud memory stays off. Allowing this sends only what you asked this time "
-    "to an online service — not your saved memory, session memory, or a conversation summary."
+    "to that online service — not your saved memory, session memory, or a conversation summary."
 )
 ALLOW_ONCE_LABEL = "Allow once"
 DONT_ALLOW_LABEL = "Don't allow"
