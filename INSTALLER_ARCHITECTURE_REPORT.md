@@ -67,13 +67,17 @@ behind the gate so nothing was written:
 
 | Attempt | Result |
 |---|---|
-| Connect from a different UID | refused (`SO_PEERCRED`) |
 | Request with a wrong session token | refused — `authentication` |
 | Replayed request (same nonce) | refused — `authentication` |
 | `install.start` with a wrong confirmation phrase | refused — *"destructive confirmation does not match the selected disk"* |
 | `install.start` with the correct phrase | accepted, status `installing` |
 | Socket file mode | `0o600` |
 | Disks named in the rendered kickstart | `--drives=vda`, `--ondisk=vda`, and nothing else |
+
+A second-UID `SO_PEERCRED` refusal is **not** what that probe measured (one
+process, one uid). Host unit tests in `tests/installer/test_trust_channel.py`
+drive the foreign-uid and unreadable-credential paths; live guest E2E remains
+unverified. See `SECURITY_INSTALLER_TRUST_EVIDENCE.md`.
 
 The fourth row is §12 demonstrated rather than asserted. The phrase is
 `ERASE /dev/vda 7D5628`, derived by `storage.safety.confirmation_phrase` from

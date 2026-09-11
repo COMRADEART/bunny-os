@@ -3,6 +3,8 @@
 Date: 2026-07-28  
 Disposition: source/static design accepted for destructive-fixture implementation review; beta approval denied
 
+> **2026-09-11 supersession (CODE only):** The High finding “service peer credentials/token-file delivery not implemented end to end” is stale as a *code-absence* claim. `installer/backend/server.py` implements AF_UNIX + `SO_PEERCRED` + a 0400 token file + a nonce window. See `SECURITY_INSTALLER_TRUST_EVIDENCE.md`. Guest E2E of that channel, live Anaconda execution, and physical UEFI/LUKS/Secure Boot remain unverified (`INTEGRATION` / `IMAGE` / `BOOT`). This historical review is otherwise unchanged.
+
 ## Positive controls
 
 - Anaconda/Blivet/cryptsetup/bootc/Fedora bootloader are selected instead of a Bunny raw-disk command engine.

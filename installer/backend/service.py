@@ -58,6 +58,8 @@ class InstallerService:
     def _authenticate(self, request: InstallerRequest, *, peer_uid: int, session_token: str) -> None:
         if peer_uid != self.live_uid:
             raise AuthenticationError("request is not from the live installer user")
+        if not session_token:
+            raise AuthenticationError("invalid installer session")
         if not secrets.compare_digest(session_token, self._session_token):
             raise AuthenticationError("invalid installer session")
         if request.nonce in self._nonces:

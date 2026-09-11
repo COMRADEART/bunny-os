@@ -11,7 +11,6 @@ behind the gate, so the whole path is exercised and no disk is touched.
 What it can establish, on any Linux machine with no installer ISO:
 
 * the socket is created, and its mode and owner are what the design claims;
-* ``SO_PEERCRED`` refuses a connection from a different UID;
 * a request with the wrong session token is refused;
 * a replayed request is refused;
 * a plan is validated before it can be started;
@@ -19,6 +18,11 @@ What it can establish, on any Linux machine with no installer ISO:
   it re-derives from the disk in the validated plan — a client that sends the
   wrong one is refused, and one that sends the right one proceeds;
 * the kickstart the executor receives names one disk.
+
+What it does **not** establish here: a second-UID ``SO_PEERCRED`` refusal. This
+process is one user; that refusal is a host unit test
+(``tests/installer/test_trust_channel.py``) and remains ``INTEGRATION`` on a
+live image. Do not read this probe as guest E2E.
 
 What it cannot establish: that Anaconda does any of it. That needs §44's VM run.
 
@@ -128,8 +132,10 @@ def probe() -> dict[str, Any]:
 
         plan = automatic_plan(TARGET, mode="erase_disk", encryption=True)
         plan["installationId"] = session.installation_id
+        password_ref = "installer-secret:" + "a" * 20
+        passphrase_ref = "installer-secret:" + "b" * 20
         plan["user"] = {"username": "alex", "displayName": "Alex",
-                        "passwordSecretRef": "installer-secret:" + "a" * 20,
+                        "passwordSecretRef": password_ref,
                         "administrator": True, "autologin": False, "groups": []}
         plan["locale"] = {"language": "en-GB"}
         plan["network"] = {}
@@ -188,7 +194,11 @@ def probe() -> dict[str, Any]:
         try:
             observed["start"] = dict(session.start(
                 acknowledgement=phrase, second_confirmation=True,
-                recovery_key_confirmed=True))
+                recovery_key_confirmed=True,
+                passphrase_secret_ref=passphrase_ref,
+                secret_values={password_ref: "probe-account-password",
+                               passphrase_ref: "probe-disk-passphrase"},
+            ))
         except InstallerRefused as error:
             findings.append(f"the correct confirmation phrase was refused: {error}")
             return {"findings": findings, "observed": observed}
