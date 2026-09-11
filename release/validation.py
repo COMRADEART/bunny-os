@@ -275,6 +275,39 @@ def _python_compilation(root: Path) -> ValidatorOutcome:
     return outcome
 
 
+def _frozen_shell_scripts(root: Path) -> frozenset[str]:
+    """Shell scripts pinned by the Phase 7 frozen-evidence record.
+
+    Those files are records, not live source. ShellCheck must not demand a
+    rewrite of their bytes: the immutability guard then fails, and the source
+    gate cannot be greened by editing history.
+    """
+    record = root / "qualification" / "phase7" / "immutability" / "frozen-evidence.json"
+    if not record.is_file():
+        return frozenset()
+    try:
+        payload = json.loads(record.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+        return frozenset()
+    frozen = payload.get("frozenEvidence") if isinstance(payload, dict) else None
+    if not isinstance(frozen, dict):
+        return frozenset()
+    return frozenset(
+        name for name in frozen
+        if isinstance(name, str) and name.endswith(".sh")
+    )
+
+
+def _is_record_shell_script(root: Path, path: Path, frozen: frozenset[str]) -> bool:
+    if "qualification" in path.parts and "evidence" in path.parts:
+        return True
+    try:
+        name = path.resolve().relative_to(root.resolve()).as_posix()
+    except ValueError:
+        return False
+    return name in frozen
+
+
 def _shell_paths(root: Path) -> list[Path]:
     """Every maintained shell script — not the ones inside evidence trees.
 
@@ -286,10 +319,16 @@ def _shell_paths(root: Path) -> list[Path]:
     reason. Evidence has its own validator ("Committed evidence
     consistency"); the shell validators cover the code the repository
     maintains.
+
+    The frozen-evidence record additionally pins scripts that do not live
+    under an ``evidence/`` directory — the Phase 5 isolation certification
+    harness is the one that turned GitHub ``host-gate`` red on SC2002. Those
+    are the same kind of record and are excluded by name.
     """
+    frozen = _frozen_shell_scripts(root)
     return [
         path for path in _walk(root, "*.sh")
-        if not ("qualification" in path.parts and "evidence" in path.parts)
+        if not _is_record_shell_script(root, path, frozen)
     ]
 
 

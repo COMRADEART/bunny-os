@@ -83,14 +83,14 @@ def probe_host() -> dict[str, object]:
         "display": display,
         "gtk4": gtk,
         "chrome": chrome or "",
-        "canBootGuest": bool(kvm and qemu),
-        "guestBoot": "NOT_RUN" if not (kvm and qemu) else "AVAILABLE",
+        "canBootGuest": False,
+        "guestBoot": "NOT_RUN",
         "guestBootReason": (
-            "QEMU is not installed on this host"
-            if kvm and not qemu
+            "this demo does not start a guest"
+            if kvm and qemu
+            else "QEMU is not installed on this host"
+            if kvm
             else "no /dev/kvm"
-            if not kvm
-            else "QEMU/KVM present; this demo still does not start a guest"
         ),
         "releaseState": "NO-GO",
         "pilots": "BLOCKED",

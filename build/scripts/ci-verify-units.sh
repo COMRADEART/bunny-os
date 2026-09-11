@@ -43,11 +43,20 @@ for dropin in "${SRC}"/systemd/*.service.d; do
     cp "$dropin"/*.conf "/etc/systemd/system/$(basename "$dropin")/"
 done
 
-# Exactly what install-root.py installs, to the paths it installs them to.
+# Exactly what install-root.py / install_routes.py installs, to the paths
+# it installs them to. Companion and the capability supervisor used to be
+# missing here: systemd-analyze verify then failed with "Command ... is not
+# executable" for three units the image actually ships.
 install -m 0755 "${SRC}/services/bunny-system-broker/bin/bunny-system-broker" \
     /usr/libexec/bunny-system-broker
 install -m 0755 "${SRC}/services/bunny-update-agent/bunny_update_agent.py" \
     /usr/libexec/bunny-update-agent
+install -m 0755 "${SRC}/services/bunny-capability-supervisor/bunny_capability_supervisor.py" \
+    /usr/libexec/bunny-capability-supervisor
+install -m 0755 "${SRC}/services/bunny-companion/bunny_companion_service.py" \
+    /usr/libexec/bunny-companion-service
+install -m 0755 "${SRC}/scripts/bunny-companion-window.py" \
+    /usr/libexec/bunny-companion-window
 for name in bunny-health-check bunny-recovery-prepare bunny-recovery \
             bunny-first-boot bunny-config-dir bunny-brlapi-key \
             bunny-safe-graphics bunny-live-session; do

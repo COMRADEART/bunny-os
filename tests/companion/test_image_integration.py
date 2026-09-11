@@ -104,6 +104,19 @@ class CompanionInstalledImageTests(unittest.TestCase):
         # shipped but never enabled is the defect "a preset is not an enablement".
         self.assertIn('"bunny-companion.service"', installer)
 
+    def test_ci_unit_verify_installs_the_companion_and_supervisor_programs(self) -> None:
+        """systemd-analyze verify resolves ExecStart against the container
+        filesystem. A fixture that copies the units but not these three
+        programs fails CI with "Command ... is not executable" while the
+        image build itself is fine."""
+        ci = (ROOT / "build/scripts/ci-verify-units.sh").read_text(encoding="utf-8")
+        for name in (
+            "bunny-capability-supervisor",
+            "bunny-companion-service",
+            "bunny-companion-window",
+        ):
+            self.assertIn(f"/usr/libexec/{name}", ci, name)
+
     def test_user_service_is_private_bounded_and_local_only(self) -> None:
         unit = (ROOT / "systemd/user/bunny-companion.service").read_text(encoding="utf-8")
         for directive in (
@@ -149,8 +162,18 @@ class CompanionInstalledImageTests(unittest.TestCase):
 
     def test_no_companion_runtime_state_is_committed(self) -> None:
         forbidden = {"companion.sqlite3", "approvals.json", "runtime.sock"}
-        found = {path.name for path in ROOT.rglob("*") if path.is_file() and path.name in forbidden}
-        self.assertEqual(found, set())
+        found = []
+        for path in ROOT.rglob("*"):
+            if not path.is_file() or path.name not in forbidden:
+                continue
+            relative = path.relative_to(ROOT)
+            # Host demos write gitignored runtime under demos/*/out and
+            # build/out. Those are not the committed image; scanning them
+            # made this test fail after a local demo run.
+            if "out" in relative.parts:
+                continue
+            found.append(str(relative))
+        self.assertEqual(found, [])
 
 
 class ActivationAndRouteGuardTests(unittest.TestCase):

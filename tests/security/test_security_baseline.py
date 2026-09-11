@@ -21,8 +21,10 @@ class SecurityBaselineTests(unittest.TestCase):
     def test_start_limits_are_unit_directives(self) -> None:
         for relative in (
             "systemd/bunny-system-broker.service",
+            "systemd/bunny-capability-supervisor.service",
             "systemd/user/bunny-desktop.service",
             "systemd/user/bunny-shell-status.service",
+            "systemd/user/bunny-companion.service",
         ):
             value = (ROOT / relative).read_text(encoding="utf-8")
             unit, service = value.split("[Service]", 1)

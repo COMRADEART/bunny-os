@@ -99,5 +99,29 @@ class GateDriveTests(unittest.TestCase):
         self.assertFalse(leaked.allowed)
 
 
+class HostDemoHonestyTests(unittest.TestCase):
+    def test_host_demos_do_not_label_a_guest_they_never_boot_available(self) -> None:
+        """Demos 08 and 10 photograph host surfaces. QEMU/KVM present is not
+        a guest Trust PASS, and must not be recorded as guestBoot=AVAILABLE."""
+        for relative in (
+            "demos/08-visible-trust/run.py",
+            "demos/10-product-vision/run.py",
+        ):
+            text = (ROOT / relative).read_text(encoding="utf-8")
+            with self.subTest(relative):
+                self.assertIn('"guestBoot": "NOT_RUN"', text)
+                self.assertNotIn('else "AVAILABLE"', text)
+                self.assertIn("this demo does not start a guest", text)
+
+    def test_the_gtk_window_pins_gdk_before_importing_it(self) -> None:
+        source = (ROOT / "companion/gtk_shell.py").read_text(encoding="utf-8")
+        self.assertIn('gi.require_version("Gdk", "4.0")', source)
+        gtk = source.index('gi.require_version("Gtk", "4.0")')
+        gdk = source.index('gi.require_version("Gdk", "4.0")')
+        imported = source.index("from gi.repository import Gdk")
+        self.assertLess(gtk, gdk)
+        self.assertLess(gdk, imported)
+
+
 if __name__ == "__main__":
     unittest.main()

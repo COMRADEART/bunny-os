@@ -99,6 +99,8 @@ def probe_host() -> dict[str, object]:
     missing: list[str] = []
     if not kvm:
         missing.append("/dev/kvm")
+    elif not kvm_rw:
+        missing.append("writable /dev/kvm")
     if not qemu:
         missing.append("qemu-system-x86_64")
     if not firmware:
@@ -109,7 +111,7 @@ def probe_host() -> dict[str, object]:
         missing.append("shell-test qcow2")
     if not image_builder and not qcow:
         missing.append("image-builder")
-    can_boot = bool(kvm and qemu and firmware and guestfish and qcow)
+    can_boot = bool(kvm and kvm_rw and qemu and firmware and guestfish and qcow)
     if can_boot:
         guest_boot = "AVAILABLE"
         reason = "QEMU/KVM, firmware, guestfish and a QCOW2 are present; this demo will boot"
@@ -459,8 +461,8 @@ def main(argv: list[str] | None = None) -> int:
     if build.get("qcow"):
         host["qcow"] = build["qcow"]
         host["canBootGuest"] = bool(
-            host.get("kvmDevice") and host.get("qemu") and host.get("firmware")
-            and host.get("guestfish") and host.get("qcow")
+            host.get("kvmDevice") and host.get("kvmWritable") and host.get("qemu")
+            and host.get("firmware") and host.get("guestfish") and host.get("qcow")
         )
         if host["canBootGuest"]:
             host["guestBoot"] = "AVAILABLE"

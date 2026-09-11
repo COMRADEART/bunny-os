@@ -176,7 +176,13 @@ class SearchPipelineTests(unittest.TestCase):
         temporary = tempfile.TemporaryDirectory()
         self.addCleanup(temporary.cleanup)
         root = Path(temporary.name)
-        (root / "index.json").write_text("not valid json", encoding="utf-8")
-        index = SearchIndex(root / "config.json", root / "index.json")
+        index_path = root / "index.json"
+        index_path.write_text("not valid json", encoding="utf-8")
+        # JsonStore refuses group/other-readable state before it parses JSON.
+        # write_text follows the process umask (0644 on a typical 0022 host),
+        # so without this chmod the test never reaches the malformed-index
+        # path it exists to prove.
+        index_path.chmod(0o600)
+        index = SearchIndex(root / "config.json", index_path)
         with self.assertRaises(ValueError):
             index.query("anything")

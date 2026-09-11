@@ -95,6 +95,18 @@ class GuestTrustHarnessTests(unittest.TestCase):
         self.assertIn("resolve_approval", text)
         self.assertNotIn('guestBoot": "PASS"', text)
 
+    def test_a_guest_boot_requires_writable_kvm(self) -> None:
+        """`/dev/kvm` existing is not permission to use it.
+
+        The probe used to set canBootGuest from the device node alone, so a
+        host whose kvm group the operator is not in would attempt QEMU and
+        FAIL instead of recording BLOCKED.
+        """
+        text = DEMO.read_text(encoding="utf-8")
+        self.assertIn("kvm and kvm_rw and qemu", text)
+        self.assertIn("writable /dev/kvm", text)
+        self.assertIn('host.get("kvmWritable")', text)
+
     def test_vm_desktop_story_refuses_without_a_disk(self) -> None:
         result = subprocess.run(
             ["bash", str(STORY), "--journey", "granted", "harness-no-disk"],
