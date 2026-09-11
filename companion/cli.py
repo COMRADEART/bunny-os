@@ -1443,8 +1443,8 @@ def _voice_pipeline_inventory(_args: argparse.Namespace) -> dict[str, Any]:
     construction = construct_speech_and_voice_safely()
     document = report.to_json()
     document["effect"] = (
-        "inventoried the spoken pipeline on this host; STT/mic/TTS live steps "
-        "are NOT_RUN; spoken e2e is NOT_RUN"
+        "inventoried the spoken pipeline on this host; every voice stage is "
+        "NOT_RUN; no Fedora image on the horizon; package lists are not image evidence"
     )
     document["construction"] = construction
     return document

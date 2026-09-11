@@ -1,20 +1,14 @@
 # SPDX-FileCopyrightText: 2026 ComradeArt
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Host-honest inventory of the spoken pipeline. Never a spoken e2e PASS.
+"""Host-honest inventory of the spoken pipeline. Every voice stage is NOT_RUN.
 
-The product path is:
+Platform confirmed there is no Fedora 44 builder/image on the horizon.
+Package lists may name ``llama-cpp``, ``espeak-ng``, and ``vosk-api-devel``;
+that is not evidence they land in an image. Finding a binary on this host
+is not spoken e2e and is not IMAGE/BOOT.
 
-    push-to-talk → STT (Vosk) → intent/model → tool/task → response → TTS
-    (Pocket / Kitten / eSpeak)
-
-This module *probes* that path on the development host. A missing
-``libvosk.so``, Vosk model directory, microphone, ``llama-cli``/GGUF, or TTS
-binary is ``NOT_RUN``. A labelled fixture transcript is never live speech.
-Spoken end-to-end on a Fedora image is ``IMAGE_BOOT`` and stays ``NOT_RUN``
-until Platform produces that evidence.
-
-``passed`` is true when nothing failed. ``NOT_RUN`` is not ``FAIL``, and it is
-not spoken ``PASS`` either.
+A labelled fixture transcript is never live speech. Spoken e2e is NOT_RUN.
+Do not wait for image evidence.
 """
 
 from __future__ import annotations
@@ -24,10 +18,8 @@ from pathlib import Path
 import shutil
 from typing import Any
 
-from companion.executor import TaskContext
 from companion.gtk_shell import CompanionViewModel
 from companion.intents import recognise
-from companion.local_intent import LocalIntentExecutor
 from companion.model import CompanionPhase
 from companion.speech.recognizers import MODEL_DIRECTORIES
 from companion.speech.vosk_runtime import (
@@ -41,15 +33,26 @@ from companion.voice_story import VOICE_STORY_UTTERANCE
 
 __all__ = [
     "CODE",
-    "IMAGE_BOOT",
     "NOT_RUN",
+    "VOICE_STAGES",
     "VoicePipelineReport",
     "run_voice_pipeline_inventory",
 ]
 
 CODE = "CODE"
 NOT_RUN = "NOT_RUN"
-IMAGE_BOOT = "IMAGE_BOOT"
+
+#: Every spoken-pipeline stage. Host label is always NOT_RUN.
+VOICE_STAGES: tuple[str, ...] = (
+    "push-to-talk",
+    "microphone",
+    "STT (Vosk)",
+    "intent / model",
+    "tool / task",
+    "response",
+    "TTS (Pocket/Kitten/eSpeak)",
+    "spoken e2e",
+)
 
 _CAPTURE_HELPERS = ("pw-record", "parec", "arecord")
 _LLAMA_CANDIDATES = ("/usr/bin/llama-cli", "/bin/llama-cli")
@@ -59,42 +62,65 @@ _GGUF_DIRECTORIES = (
 )
 _POCKET_ROOT = Path("/usr/share/bunny-os/voice/pocket/english")
 _KITTEN_ROOT = Path("/usr/share/bunny-os/voice/kitten/nano-int8")
+_NO_IMAGE = (
+    "Platform: no Fedora 44 builder/image on the horizon. "
+    "A package-list name is not image evidence. Host label is NOT_RUN."
+)
+
+
+def _not_image(detail: str) -> str:
+    return detail.rstrip(".") + ". " + _NO_IMAGE
 
 
 @dataclass
 class VoicePipelineReport:
     stages: list[dict[str, Any]] = field(default_factory=list)
+    isolation: list[dict[str, Any]] = field(default_factory=list)
     transcript: str = ""
     transcript_source: str = "labelled-fixture"
     intent_kind: str = ""
     planned_tool: str = ""
     spoken_e2e: str = NOT_RUN
     ai_status: str = "PARTIAL"
+    typed_fallback: dict[str, Any] = field(default_factory=dict)
 
-    def record(
+    def record_voice_stage(
         self,
         number: int,
         name: str,
         *,
-        evidence: str,
-        status: str,
-        detail: str = "",
+        detail: str,
         **extra: Any,
     ) -> None:
-        if status == "PASS" and evidence in {IMAGE_BOOT, NOT_RUN}:
+        if name not in VOICE_STAGES:
+            raise ValueError(f"{name!r} is not a voice stage")
+        if extra.get("status") == "PASS":
             raise ValueError(
-                f"{name}: {evidence} evidence cannot be recorded as PASS "
-                "(host harness must not mint spoken or image success)"
+                f"{name}: host harness labels every voice stage NOT_RUN"
             )
-        if name == "spoken e2e" and status == "PASS":
-            raise ValueError("spoken e2e must never be PASS from this host harness")
         self.stages.append({
             "step": number,
             "name": name,
-            "evidence": evidence,
-            "status": status,
+            "evidence": NOT_RUN,
+            "status": NOT_RUN,
             "detail": detail,
             **extra,
+        })
+
+    def record_isolation(
+        self,
+        failure: str,
+        *,
+        code: str,
+        contract: str,
+        detail: str,
+    ) -> None:
+        self.isolation.append({
+            "failure": failure,
+            "code": code,
+            "contract": contract,
+            "hostStatus": NOT_RUN,
+            "detail": detail,
         })
 
     @property
@@ -114,35 +140,37 @@ class VoicePipelineReport:
             "aiStatus": self.ai_status,
             "passed": self.passed,
             "spokenE2e": self.spoken_e2e,
+            "fedoraImageOnHorizon": False,
+            "packageListIsNotImageEvidence": True,
             "physicalMicrophoneValidated": False,
             "modelBytesVendored": False,
             "gpuClaimed": False,
             "npuClaimed": False,
+            "conversationSummaryWired": False,
+            "cloudContextNoneTightened": False,
             "transcript": self.transcript,
             "transcriptSource": self.transcript_source,
             "intentKind": self.intent_kind,
             "plannedTool": self.planned_tool,
             "typedInputPreserved": True,
+            "typedFallback": dict(self.typed_fallback),
             "stages": list(self.stages),
+            "failureIsolation": list(self.isolation),
             "notRun": list(self.not_run),
         }
 
 
-def _status(present: bool, *, missing: str, present_detail: str) -> tuple[str, str]:
-    if present:
-        return "PASS", present_detail
-    return NOT_RUN, missing
-
-
-def _vosk_runtime() -> tuple[str, str]:
+def _vosk_note() -> str:
     try:
         origin = probe_vosk()
     except (VoskRuntimeUnavailable, OSError) as exc:
-        return NOT_RUN, str(exc)
-    return "PASS", f"packaged Vosk C runtime at {origin}"
+        return _not_image(f"libvosk probe: {exc}")
+    return _not_image(
+        f"this host mapped {origin}; that is not Fedora image evidence and is not spoken e2e"
+    )
 
 
-def _vosk_model() -> tuple[str, str]:
+def _model_note() -> str:
     searched: list[str] = []
     for raw in MODEL_DIRECTORIES:
         root = Path(raw).expanduser()
@@ -155,29 +183,41 @@ def _vosk_model() -> tuple[str, str]:
                 if path.is_dir() and path.name.startswith("vosk-model")
             )
         except OSError as exc:
-            return NOT_RUN, f"{root} could not be listed: {exc}"
+            return _not_image(f"{root} could not be listed: {exc}")
         if matches:
-            return "PASS", str(matches[0])
-    return NOT_RUN, (
+            return _not_image(
+                f"this host has {matches[0]}; model bytes on a cloud host are not image evidence"
+            )
+    return _not_image(
         "no vosk-model-* directory under "
         + ", ".join(searched)
         + "; this repo does not vendor model bytes"
     )
 
 
-def _capture_helpers() -> tuple[tuple[str, ...], bool]:
-    found = tuple(name for name in _CAPTURE_HELPERS if shutil.which(name))
-    return found, Path("/dev/snd").is_dir()
+def _capture_note() -> str:
+    helpers = tuple(name for name in _CAPTURE_HELPERS if shutil.which(name))
+    snd = Path("/dev/snd").is_dir()
+    bits = []
+    if helpers:
+        bits.append("capture helper " + ",".join(helpers))
+    if snd:
+        bits.append("/dev/snd present")
+    if not bits:
+        bits.append("no pw-record/parec/arecord and no /dev/snd")
+    return _not_image("; ".join(bits) + "; live microphone is NOT_RUN")
 
 
-def _llama_cli() -> tuple[str, str]:
+def _llama_note() -> str:
     for path in _LLAMA_CANDIDATES:
         if Path(path).is_file():
-            return "PASS", path
-    return NOT_RUN, "llama-cli is not at /usr/bin or /bin; this host does not search PATH"
+            return _not_image(
+                f"{path} exists on this host; llama-cpp in a package list is not image evidence"
+            )
+    return _not_image("llama-cli is not at /usr/bin or /bin")
 
 
-def _gguf() -> tuple[str, str]:
+def _gguf_note() -> str:
     searched: list[str] = []
     for raw in _GGUF_DIRECTORIES:
         root = Path(raw).expanduser()
@@ -186,241 +226,156 @@ def _gguf() -> tuple[str, str]:
             continue
         matches = sorted(root.glob("*.gguf"))
         if matches:
-            return "PASS", str(matches[0])
-    return NOT_RUN, "no GGUF under " + ", ".join(searched)
+            return _not_image(f"this host has {matches[0]}; GGUF on a cloud host is not image evidence")
+    return _not_image("no GGUF under " + ", ".join(searched))
+
+
+def _tts_note() -> str:
+    pocket = _POCKET_ROOT.is_dir()
+    kitten = _KITTEN_ROOT.is_dir()
+    espeak = local_voice_available()
+    return _not_image(
+        f"pocket weights {'present' if pocket else 'absent'}; "
+        f"kitten weights {'present' if kitten else 'absent'}; "
+        f"espeak/spd-say {'present' if espeak else 'absent'}; "
+        "espeak-ng in a package list is not image evidence"
+    )
 
 
 def run_voice_pipeline_inventory(
     *, utterance: str = VOICE_STORY_UTTERANCE,
 ) -> VoicePipelineReport:
-    """Probe each spoken-pipeline stage. Never invents a spoken PASS."""
+    """Label every voice stage NOT_RUN. Never invents a spoken PASS."""
     report = VoicePipelineReport()
     report.transcript = utterance
     report.transcript_source = "labelled-fixture"
+    report.spoken_e2e = NOT_RUN
+    report.ai_status = "PARTIAL"
 
-    report.record(
-        1, "push-to-talk activation",
-        evidence=CODE,
-        status="PASS",
-        detail=(
-            "SpeechInputRequest activationSource is a closed set; "
-            "wake-word enable() raises; protocol op speech_input_start"
-        ),
-        paths=["companion/speech/request.py", "companion/speech/wakeword.py"],
-    )
+    intent = recognise(utterance)
+    report.intent_kind = intent.kind if intent is not None else ""
+    report.planned_tool = ""
+    # Typed grammar is exercised so the keyboard path stays honest, but it is
+    # not a spoken-stage PASS. Voice intent/model stays NOT_RUN.
 
-    helpers, snd = _capture_helpers()
-    report.record(
-        2, "microphone capture helper",
-        evidence=CODE,
-        status="PASS" if helpers else NOT_RUN,
-        detail=(
-            "capture helper " + ",".join(helpers)
-            if helpers else
-            "no pw-record/parec/arecord on PATH"
+    report.record_voice_stage(
+        1, "push-to-talk",
+        detail=_not_image(
+            "source has closed activationSource and press_to_talk; "
+            "this host did not run a live PTT capture"
         ),
-        soundDeviceNode=snd,
-        liveMicrophone=NOT_RUN,
+        paths=["companion/speech/request.py", "companion/gtk_shell.py"],
     )
-    report.record(
-        3, "live microphone journey",
-        evidence=IMAGE_BOOT,
-        status=NOT_RUN,
-        detail=(
-            "guest microphone on a Fedora image is required; "
-            f"/dev/snd {'present' if snd else 'absent'} on this host is not that journey"
-        ),
+    report.record_voice_stage(
+        2, "microphone",
+        detail=_capture_note(),
+        candidates=list(_CAPTURE_HELPERS),
     )
-
-    vosk_status, vosk_detail = _vosk_runtime()
-    report.record(
-        4, "STT runtime (libvosk)",
-        evidence=CODE,
-        status=vosk_status,
-        detail=vosk_detail,
+    report.record_voice_stage(
+        3, "STT (Vosk)",
+        detail=_vosk_note() + " " + _model_note(),
         candidates=list(LIBRARY_CANDIDATES),
-    )
-    model_status, model_detail = _vosk_model()
-    report.record(
-        5, "STT Vosk model directory",
-        evidence=CODE,
-        status=model_status,
-        detail=model_detail,
         directories=list(MODEL_DIRECTORIES),
-    )
-    report.record(
-        6, "STT live recognition",
-        evidence=IMAGE_BOOT,
-        status=NOT_RUN,
-        detail=(
-            "STT not live; using a labelled fixture transcript, not a recorded microphone. "
-            "Do not treat fixture text as spoken e2e."
-        ),
         fixture=True,
         transcript=utterance,
     )
-
-    report.record(
-        7, "silence / no-speech isolation",
-        evidence=CODE,
-        status="PASS",
-        detail="CaptureWorker settles pure silence as no-speech with no transcript",
-        tests=["tests.companion.test_speech_worker.Endings.test_pure_silence_settles_as_no_speech_with_no_transcript"],
-    )
-    report.record(
-        8, "malformed transcript isolation",
-        evidence=CODE,
-        status="PASS",
-        detail="control characters and oversize text are refused; partials cannot become tasks",
-        tests=[
-            "tests.companion.test_speech_security.OversizedAndMalformedInput.test_a_malformed_frame_cannot_crash_the_detector",
-            "companion/speech/transcript.py bounded_transcript_text",
-        ],
-    )
-
-    intent = recognise(utterance)
-    report.record(
-        9, "intent (fixture transcript)",
-        evidence=CODE,
-        status="PASS" if intent is not None else "FAIL",
-        detail="" if intent is None else intent.kind,
+    report.record_voice_stage(
+        4, "intent / model",
+        detail=_not_image(
+            "spoken intent→model is NOT_RUN. Typed grammar on a labelled fixture "
+            f"is {report.intent_kind or 'unrecognised'}; that is not live speech. "
+            + _llama_note() + " " + _gguf_note()
+        ),
         fixture=True,
+        typedGrammar=report.intent_kind,
     )
-    if intent is None:
-        report.intent_kind = ""
-        report.record(10, "tool/task plan (fixture transcript)", evidence=CODE, status="FAIL",
-                      detail="no intent recognised")
-    else:
-        report.intent_kind = intent.kind
-        executor = LocalIntentExecutor()
-        context = TaskContext(
-            task={"taskId": "voice-pipeline", "originalRequest": utterance},
-            classification="internal",
-            plan_revision=1,
-        )
-        plan = executor.plan(context)
-        operation = plan.operations[0] if plan.operations else None
-        local = operation is not None and operation.destination == "local"
-        report.planned_tool = operation.tool if operation is not None else ""
-        report.record(
-            10, "tool/task plan (fixture transcript)",
-            evidence=CODE,
-            status="PASS" if local else "FAIL",
-            detail=report.planned_tool if local else "no local operation",
-            fixture=True,
-            requiresApproval=bool(operation.requires_approval) if operation else False,
-        )
-
-    llama_status, llama_detail = _llama_cli()
-    gguf_status, gguf_detail = _gguf()
-    report.record(
-        11, "local model (llama-cli)",
-        evidence=CODE,
-        status=llama_status,
-        detail=llama_detail,
-    )
-    report.record(
-        12, "local model (GGUF weights)",
-        evidence=CODE,
-        status=gguf_status,
-        detail=gguf_detail,
-    )
-    report.record(
-        13, "model timeout / crash isolation",
-        evidence=CODE,
-        status="PASS",
-        detail=(
-            "llamacli watchdog uses GenerationRequest.deadline_seconds "
-            "(agent bridge 120s); adapter returns GenerationOutcome(ok=False) "
-            "rather than raising into the companion process"
+    report.record_voice_stage(
+        5, "tool / task",
+        detail=_not_image(
+            "spoken confirm→submit_task→tool is NOT_RUN. "
+            "Typed submit_task remains the keyboard door."
         ),
-        liveGeneration=NOT_RUN,
-        tests=["companion/agents/adapters/llamacli.py"],
     )
-    report.record(
-        14, "tool failure isolation",
-        evidence=CODE,
-        status="PASS",
-        detail="ToolBroker.invoke catches Exception and records a failed outcome; the companion stays up",
-        tests=["companion/tools.py"],
-    )
-
-    pocket = _POCKET_ROOT.is_dir()
-    kitten = _KITTEN_ROOT.is_dir()
-    espeak = local_voice_available()
-    report.record(
-        15, "TTS binary / weights probe",
-        evidence=CODE,
-        status="PASS" if (pocket or kitten or espeak) else NOT_RUN,
-        detail=(
-            f"pocket weights {'present' if pocket else 'absent'}; "
-            f"kitten weights {'present' if kitten else 'absent'}; "
-            f"espeak/spd-say {'present' if espeak else 'absent'}"
+    report.record_voice_stage(
+        6, "response",
+        detail=_not_image(
+            "spoken caption playback is NOT_RUN. Captions stay authoritative in source"
         ),
+    )
+    report.record_voice_stage(
+        7, "TTS (Pocket/Kitten/eSpeak)",
+        detail=_tts_note(),
         candidates=[item[0] for item in VOICE_CANDIDATES],
-        livePlayback=NOT_RUN,
     )
-    report.record(
-        16, "TTS live playback",
-        evidence=IMAGE_BOOT,
-        status=NOT_RUN,
-        detail="unattended host must not play speech; Fedora image + speakers are required",
-    )
-
-    report.record(
-        17, "text / keyboard fallback",
-        evidence=CODE,
-        status="PASS",
-        detail=(
-            "CompanionViewModel.submit() is the typed path; speech_input_* "
-            "unavailable answers set typedInputPreserved=true and taskAffected=false"
+    report.record_voice_stage(
+        8, "spoken e2e",
+        detail=_not_image(
+            "host unit tests are not spoken e2e. Do not wait for IMAGE evidence"
         ),
-        paths=["companion/gtk_shell.py", "companion/service.py"],
-    )
-    missing_client_ops = [
-        name for name in ("submit", "press_to_talk", "confirm_speech")
-        if not hasattr(CompanionViewModel, name)
-    ]
-    report.record(
-        18, "keyboard path remains callable",
-        evidence=CODE,
-        status="PASS" if not missing_client_ops else "FAIL",
-        detail="CompanionViewModel still exposes submit/press_to_talk/confirm_speech"
-        if not missing_client_ops else f"missing {missing_client_ops}",
     )
 
-    required_phases = {
-        "listening": CompanionPhase.LISTENING.value,
-        "understanding": CompanionPhase.UNDERSTANDING.value,
-        "executing": CompanionPhase.WORKING.value,
-        "failed": CompanionPhase.ERROR.value,
+    report.record_isolation(
+        "mic unavailable",
+        code="companion/speech/service.py AUDIO_UNAVAILABLE; typedInputPreserved",
+        contract="tests.companion.test_speech_service_protocol",
+        detail="scripted host contract only; live mic isolation NOT_RUN",
+    )
+    report.record_isolation(
+        "STT / libvosk missing",
+        code="companion/speech/vosk_runtime.py STT_RUNTIME_MISSING; _build_speech swallows",
+        contract="tests.companion.test_speech_recognizers.Availability.test_no_library_reports_unavailable_with_the_reason",
+        detail="missing libvosk must not crash the companion; live STT NOT_RUN",
+    )
+    report.record_isolation(
+        "STT failure",
+        code="recognition_failed / STT_PROVIDER_FAILED; worker finally releases mic",
+        contract="tests.companion.test_speech_worker.Endings.test_a_recognizer_crash_at_finalisation_offers_retry_and_typing",
+        detail="scripted crash path; native libvosk crash NOT_RUN",
+    )
+    report.record_isolation(
+        "silence",
+        code="disposition no-speech; no empty transcript submitted",
+        contract="tests.companion.test_speech_worker.Endings.test_pure_silence_settles_as_no_speech_with_no_transcript",
+        detail="scripted PCM; room silence NOT_RUN",
+    )
+    report.record_isolation(
+        "malformed transcript",
+        code="companion/speech/transcript.py bounded_transcript_text refuses; confirm refused",
+        contract="tests.companion.test_speech_security.OversizedAndMalformedInput.test_a_malformed_frame_cannot_crash_the_detector",
+        detail="hostile text is refused; live malformed speech NOT_RUN",
+    )
+    report.record_isolation(
+        "model timeout / crash",
+        code="llamacli watchdog deadline_seconds=120; GenerationOutcome(ok=False)",
+        contract="companion/agents/adapters/llamacli.py",
+        detail="adapter path exists; live llama-cli hang NOT_RUN; llama-cpp in a package list is not image evidence",
+    )
+    report.record_isolation(
+        "tool failure",
+        code="companion/tools.py ToolBroker.invoke catches Exception",
+        contract="tests.companion.test_executors_reviewers",
+        detail="broker records a failed outcome; spoken-tool journey NOT_RUN",
+    )
+    report.record_isolation(
+        "TTS unavailable",
+        code="voiceFailureFailsTask false; caption remains; _build_voice swallows",
+        contract="tests.companion.test_voice_worker",
+        detail="unavailable provider must not crash companion; live playback NOT_RUN; espeak-ng in a package list is not image evidence",
+    )
+
+    report.typed_fallback = {
+        "submit": hasattr(CompanionViewModel, "submit"),
+        "pressToTalk": hasattr(CompanionViewModel, "press_to_talk"),
+        "confirmSpeech": hasattr(CompanionViewModel, "confirm_speech"),
+        "phases": {
+            "listening": CompanionPhase.LISTENING.value,
+            "understanding": CompanionPhase.UNDERSTANDING.value,
+            "executing": CompanionPhase.WORKING.value,
+            "failed": CompanionPhase.ERROR.value,
+        },
+        "thinkingIsNotChainOfThought": True,
+        "visualKeys": list(VISUAL_KEYS),
     }
-    report.record(
-        19, "companion AI states (real pipeline)",
-        evidence=CODE,
-        status="PASS",
-        detail=(
-            "listening/transcribing/understanding/working/error are real "
-            "CompanionPhase values. Visual Key 'thinking' is a projection of "
-            "understanding/planning/starting/recovering, not chain-of-thought "
-            "and not a fake spinner over missing STT."
-        ),
-        phases=required_phases,
-        visualKeys=list(VISUAL_KEYS),
-        thinkingIsNotChainOfThought=True,
-    )
-
-    report.spoken_e2e = NOT_RUN
-    report.ai_status = "PARTIAL"
-    report.record(
-        20, "spoken e2e",
-        evidence=IMAGE_BOOT,
-        status=NOT_RUN,
-        detail=(
-            "BLOCKED on Fedora image evidence: libvosk, vosk-model dir, guest mic, "
-            "llama-cli/GGUF, TTS weights or espeak-ng, speakers. Host unit tests are not that."
-        ),
-    )
     return report
 
 
@@ -438,6 +393,7 @@ def construct_speech_and_voice_safely() -> dict[str, Any]:
         "voiceAvailable": False,
         "typedInputPreserved": True,
         "spokenE2e": NOT_RUN,
+        "fedoraImageOnHorizon": False,
     }
     speech_root = Path(tempfile.mkdtemp(prefix="bunny-voice-pipeline-speech-"))
     voice_root = Path(tempfile.mkdtemp(prefix="bunny-voice-pipeline-voice-"))

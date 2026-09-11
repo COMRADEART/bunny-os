@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2026 ComradeArt
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Host-honest voice pipeline inventory. Never a spoken e2e PASS."""
+"""Host-honest voice pipeline inventory. Every voice stage is NOT_RUN."""
 
 from __future__ import annotations
 
@@ -8,8 +8,8 @@ import json
 import unittest
 
 from companion.voice_pipeline import (
-    IMAGE_BOOT,
     NOT_RUN,
+    VOICE_STAGES,
     construct_speech_and_voice_safely,
     run_voice_pipeline_inventory,
 )
@@ -18,78 +18,73 @@ from companion.voice_story import VOICE_STORY_UTTERANCE, run_voice_story
 from .test_cli import parse
 
 
-LIVE_STAGES = frozenset({
-    "live microphone journey",
-    "STT live recognition",
-    "TTS live playback",
-    "spoken e2e",
-})
-
-
 class VoicePipelineInventoryTests(unittest.TestCase):
-    def test_spoken_e2e_is_never_pass(self) -> None:
+    def test_every_voice_stage_is_not_run(self) -> None:
         report = run_voice_pipeline_inventory()
         document = report.to_json()
         json.dumps(document)
         self.assertEqual(document["spokenE2e"], NOT_RUN)
-        self.assertEqual(document["transcriptSource"], "labelled-fixture")
-        self.assertEqual(document["transcript"], VOICE_STORY_UTTERANCE)
+        self.assertFalse(document["fedoraImageOnHorizon"])
+        self.assertTrue(document["packageListIsNotImageEvidence"])
+        self.assertFalse(document["conversationSummaryWired"])
+        self.assertFalse(document["cloudContextNoneTightened"])
         self.assertFalse(document["modelBytesVendored"])
         self.assertFalse(document["gpuClaimed"])
         self.assertFalse(document["npuClaimed"])
-        self.assertFalse(document["physicalMicrophoneValidated"])
+        self.assertEqual(document["transcriptSource"], "labelled-fixture")
+        self.assertEqual(document["transcript"], VOICE_STORY_UTTERANCE)
+        names = [item["name"] for item in document["stages"]]
+        self.assertEqual(tuple(names), VOICE_STAGES)
+        for item in document["stages"]:
+            self.assertEqual(item["status"], NOT_RUN, item["name"])
+            self.assertEqual(item["evidence"], NOT_RUN, item["name"])
+            self.assertNotEqual(item["status"], "PASS", item["name"])
+            self.assertIn("NOT_RUN", item["detail"])
+            self.assertIn("horizon", item["detail"].lower())
+
+    def test_failure_isolation_is_not_run_live(self) -> None:
+        report = run_voice_pipeline_inventory()
+        failures = {row["failure"] for row in report.isolation}
+        self.assertGreaterEqual(len(failures), 8)
+        for row in report.isolation:
+            self.assertEqual(row["hostStatus"], NOT_RUN, row["failure"])
+            self.assertNotEqual(row["hostStatus"], "PASS", row["failure"])
+        expected = {
+            "mic unavailable",
+            "STT / libvosk missing",
+            "STT failure",
+            "silence",
+            "malformed transcript",
+            "model timeout / crash",
+            "tool failure",
+            "TTS unavailable",
+        }
+        self.assertTrue(expected <= failures)
+
+    def test_package_list_names_are_not_image_claims(self) -> None:
+        report = run_voice_pipeline_inventory()
+        blob = json.dumps(report.to_json())
+        self.assertIn("package list", blob.lower())
+        self.assertFalse(report.to_json()["fedoraImageOnHorizon"])
+
+    def test_typed_path_is_not_a_voice_stage_pass(self) -> None:
+        report = run_voice_pipeline_inventory()
+        document = report.to_json()
         self.assertTrue(document["typedInputPreserved"])
-        self.assertEqual(document["aiStatus"], "PARTIAL")
-        self.assertNotEqual(document["spokenE2e"], "PASS")
-        by_name = {item["name"]: item for item in document["stages"]}
-        self.assertEqual(by_name["spoken e2e"]["status"], NOT_RUN)
-        self.assertEqual(by_name["spoken e2e"]["evidence"], IMAGE_BOOT)
-        self.assertNotEqual(by_name["spoken e2e"]["status"], "PASS")
-
-    def test_live_stt_mic_and_tts_stay_not_run(self) -> None:
-        report = run_voice_pipeline_inventory()
-        by_name = {item["name"]: item for item in report.stages}
-        for name in LIVE_STAGES:
-            self.assertIn(name, by_name)
-            self.assertEqual(by_name[name]["status"], NOT_RUN, name)
-            self.assertNotEqual(by_name[name]["status"], "PASS", name)
-        stt = by_name["STT live recognition"]
-        self.assertTrue(stt.get("fixture"))
-        self.assertIn("labelled fixture", stt["detail"])
-
-    def test_missing_libvosk_is_not_run_not_a_crash(self) -> None:
-        report = run_voice_pipeline_inventory()
-        by_name = {item["name"]: item for item in report.stages}
-        runtime = by_name["STT runtime (libvosk)"]
-        self.assertIn(runtime["status"], {"PASS", NOT_RUN})
-        if runtime["status"] == NOT_RUN:
-            detail = runtime["detail"].lower()
-            self.assertTrue("vosk" in detail or "libvosk" in detail, runtime["detail"])
-        model = by_name["STT Vosk model directory"]
-        self.assertIn(model["status"], {"PASS", NOT_RUN})
-        if model["status"] == NOT_RUN:
-            self.assertIn("does not vendor model bytes", model["detail"])
-
-    def test_text_path_still_plans_from_a_labelled_fixture(self) -> None:
-        report = run_voice_pipeline_inventory()
+        self.assertTrue(document["typedFallback"]["submit"])
+        self.assertTrue(document["typedFallback"]["thinkingIsNotChainOfThought"])
+        names = {item["name"] for item in document["stages"]}
+        self.assertNotIn("text / keyboard fallback", names)
         self.assertTrue(report.passed)
-        self.assertEqual(report.intent_kind, "system_metric")
-        self.assertEqual(report.planned_tool, "system.get_metric")
-        by_name = {item["name"]: item for item in report.stages}
-        self.assertEqual(by_name["text / keyboard fallback"]["status"], "PASS")
-        self.assertEqual(by_name["keyboard path remains callable"]["status"], "PASS")
-        self.assertEqual(by_name["companion AI states (real pipeline)"]["status"], "PASS")
-        self.assertTrue(by_name["companion AI states (real pipeline)"]["thinkingIsNotChainOfThought"])
 
-    def test_inventory_refuses_to_record_spoken_pass(self) -> None:
+    def test_inventory_refuses_a_voice_stage_pass(self) -> None:
         report = run_voice_pipeline_inventory()
         with self.assertRaises(ValueError):
-            report.record(99, "spoken e2e", evidence=IMAGE_BOOT, status="PASS", detail="no")
-        with self.assertRaises(ValueError):
-            report.record(
-                99, "live microphone journey",
-                evidence=IMAGE_BOOT, status="PASS", detail="no",
+            report.record_voice_stage(
+                99, "spoken e2e", detail="no", status="PASS",
             )
+        with self.assertRaises(ValueError):
+            report.record_voice_stage(99, "not a stage", detail="no")
 
 
 class ConstructionBoundaryTests(unittest.TestCase):
@@ -99,6 +94,7 @@ class ConstructionBoundaryTests(unittest.TestCase):
         self.assertFalse(result["voiceRaised"], result.get("voiceError"))
         self.assertTrue(result["typedInputPreserved"])
         self.assertEqual(result["spokenE2e"], NOT_RUN)
+        self.assertFalse(result["fedoraImageOnHorizon"])
         self.assertTrue(result["speechAvailable"])
         self.assertTrue(result["voiceAvailable"])
         if "speechReadiness" in result:
@@ -113,6 +109,7 @@ class VoiceStoryHonestyTests(unittest.TestCase):
         self.assertTrue(statuses["speech-to-text"].get("fixture"))
         self.assertEqual(statuses["local TTS"]["status"], NOT_RUN)
         self.assertEqual(statuses["probe microphone capture"]["status"], NOT_RUN)
+        self.assertEqual(statuses["probe packaged Vosk runtime"]["status"], NOT_RUN)
         document = report.to_json()
         self.assertEqual(document["spokenE2e"], NOT_RUN)
         self.assertEqual(document["transcriptSource"], "labelled-fixture")
@@ -134,15 +131,12 @@ class InventoryCliTests(unittest.TestCase):
         document = companion_cli.dispatch(parse("voice-pipeline-inventory", root=root))
         json.dumps(document)
         self.assertEqual(document["spokenE2e"], NOT_RUN)
-        self.assertNotEqual(document["spokenE2e"], "PASS")
+        self.assertFalse(document["fedoraImageOnHorizon"])
+        self.assertTrue(document["packageListIsNotImageEvidence"])
         self.assertFalse(document["construction"]["speechRaised"])
         self.assertFalse(document["construction"]["voiceRaised"])
-        live = [
-            item for item in document["stages"]
-            if item["name"] in LIVE_STAGES
-        ]
-        self.assertEqual(len(live), len(LIVE_STAGES))
-        self.assertTrue(all(item["status"] == NOT_RUN for item in live))
+        self.assertTrue(all(item["status"] == NOT_RUN for item in document["stages"]))
+        self.assertEqual(len(document["stages"]), len(VOICE_STAGES))
 
 
 if __name__ == "__main__":
