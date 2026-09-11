@@ -166,39 +166,54 @@ class DefaultMachineResources(unittest.TestCase):
             (pressure / "memory").write_text(files["memory"], encoding="utf-8")
         return base
 
+    def _empty_tree(self) -> Path:
+        root = TemporaryDirectory()
+        self.addCleanup(root.cleanup)
+        return Path(root.name)
+
+    def _isolated(self, proc: Path) -> MachineResources:
+        return default_machine_resources(
+            proc_root=proc,
+            sys_root=self._empty_tree(),
+            dev_root=self._empty_tree(),
+            usr_bin=self._empty_tree(),
+        )
+
     def test_reads_memavailable_and_a_nominal_pressure(self) -> None:
         proc = self._proc(
             meminfo="MemTotal:       8000000 kB\nMemAvailable:   4000000 kB\n",
             memory="some avg10=5.00 avg60=5.00 avg300=5.00 total=123\n"
                    "full avg10=5.00 avg60=5.00 avg300=5.00 total=123\n",
         )
-        resources = default_machine_resources(proc_root=proc)
+        resources = self._isolated(proc)
         self.assertTrue(resources.known)
         self.assertEqual(resources.available_ram_bytes, 4000000 * 1024)
         self.assertEqual(resources.memory_pressure_level, "nominal")
+        self.assertFalse(resources.gpu_usable)
+        self.assertEqual(resources.vram_state, "unknown")
 
     def test_full_avg10_above_60_is_critical(self) -> None:
         proc = self._proc(
             meminfo="MemAvailable:   4000000 kB\n",
             memory="full avg10=70.00 avg60=70.00 avg300=70.00 total=123\n",
         )
-        self.assertEqual(default_machine_resources(proc_root=proc).memory_pressure_level, "critical")
+        self.assertEqual(self._isolated(proc).memory_pressure_level, "critical")
 
     def test_full_avg10_above_30_is_elevated(self) -> None:
         proc = self._proc(
             meminfo="MemAvailable:   4000000 kB\n",
             memory="full avg10=40.00 avg60=40.00 avg300=40.00 total=123\n",
         )
-        self.assertEqual(default_machine_resources(proc_root=proc).memory_pressure_level, "elevated")
+        self.assertEqual(self._isolated(proc).memory_pressure_level, "elevated")
 
     def test_a_missing_proc_is_unknown_and_disables_the_guard(self) -> None:
-        resources = default_machine_resources(proc_root=Path("/this/does/not/exist"))
+        resources = self._isolated(Path("/this/does/not/exist"))
         self.assertFalse(resources.known)
         self.assertEqual(resources.memory_pressure_level, "unknown")
 
     def test_no_memavailable_line_is_unknown(self) -> None:
         proc = self._proc(meminfo="MemTotal:       8000000 kB\n")
-        resources = default_machine_resources(proc_root=proc)
+        resources = self._isolated(proc)
         self.assertFalse(resources.known)
 
 

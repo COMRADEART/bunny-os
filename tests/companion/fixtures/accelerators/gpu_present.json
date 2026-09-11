@@ -1,0 +1,13 @@
+{
+  "kind": "fixture",
+  "source": "injected",
+  "note": "CI fixture: a usable CUDA GPU with measured VRAM. Not live-host evidence.",
+  "gpu_usable": true,
+  "gpu_runtime": "cuda",
+  "gpu_kind": "discrete",
+  "vram_state": "measured",
+  "vram_available_bytes": 8589934592,
+  "vram_total_bytes": 17179869184,
+  "npu_state": "absent",
+  "throughput_tokens_per_second": null
+}

@@ -146,6 +146,41 @@ def measure(*, generations: int, cancellations: int, root: Path) -> dict[str, An
             "it is never added to the companion's own figure"
         )
 
+        from companion.agents.resources import llama_cli_gpu_layers, tier_product
+
+        resources = service.registry.machine_resources
+        accel: dict[str, Any] = {
+            "gpuUsable": bool(resources.gpu_usable) if resources is not None else False,
+            "gpuRuntime": (resources.gpu_runtime or None) if resources is not None else None,
+            "gpuKind": resources.gpu_kind if resources is not None else "unknown",
+            "vramState": resources.vram_state if resources is not None else "unknown",
+            "npuState": resources.npu_state if resources is not None else "unknown",
+            "evidence": resources.accelerator_evidence if resources is not None else "unknown",
+            "llamaCliGpuLayers": llama_cli_gpu_layers(resources),
+            "tierProduct": tier_product(resources) if resources is not None else None,
+            "throughputTokensPerSecond": (
+                resources.throughput_tokens_per_second if resources is not None else None
+            ),
+        }
+        if resources is None or not resources.vram_known:
+            accel["vramAvailableBytes"] = None
+            accel["vramResult"] = "NOT_RUN" if resources is None or resources.vram_state == "unknown" else resources.vram_state
+            accel["vramReason"] = (
+                "no trustworthy VRAM source on this host; a number is not invented"
+            )
+        else:
+            accel["vramAvailableBytes"] = resources.vram_available_bytes
+        if resources is None or not resources.gpu_usable:
+            accel["gpuResult"] = "unknown" if resources is None or resources.gpu_kind == "unknown" else "absent"
+            accel["gpuReason"] = accel["evidence"]
+        if resources is None or not resources.throughput_known:
+            accel["throughputResult"] = "NOT_RUN"
+            accel["throughputReason"] = (
+                "tok/s is measured from a real generation; this host did not "
+                "provide one, so the figure is absent rather than zero"
+            )
+        report["accelerators"] = accel
+
         # -- selection and context, which need no model ---------------------
         selection: list[float] = []
         for _ in range(20):

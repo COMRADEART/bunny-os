@@ -56,6 +56,7 @@ from .agents.errors import (
     GenerationBudgetExceeded,
     StructuredOutputInvalid,
 )
+from .agents.escalation import assess_escalation, observables_from_descriptor
 from .agents.registry import SelectionExplanation, SelectionRequirement
 from .agents.request import GenerationMessage, GenerationRequest
 from .agents.service import AgentProviderService
@@ -82,6 +83,7 @@ from .executor import (
     TaskPlan,
     TaskResult,
 )
+from .memory_boundary import authorize_remote_generate
 from .privacy import display_summary
 from .reviewer import ReviewContext, ReviewObservation, observation_from_json
 from .tools import ToolDeclaration
@@ -351,11 +353,36 @@ class ProviderBackedExecutor:
                 failures.append(f"{provider_id}: empty output")
                 continue
             failures.append(f"{provider_id}: {outcome.failure_kind or 'failed'}: {outcome.detail}")
+        schema_failures = sum(
+            1 for item in failures
+            if "malformed" in item or "schema" in item or "structured" in item
+            or "invalid-response" in item
+        )
+        requirement = self._requirement(context, purpose=purpose)
+        assessment = assess_escalation(
+            observables_from_descriptor(
+                context_limit_tokens=self.declaration.context_limit_tokens,
+                estimated_context_tokens=requirement.estimated_context_tokens,
+                provider_healthy=False,
+                plan_step_count=len(tuple(context.task.get("operations", ()))),
+                tool_schema_failures=schema_failures,
+                local_generation_failed=True,
+                current_locality="device-only",
+                candidate_locality="hosted",
+                user_consented=False,
+            ),
+            local_feasible=False,
+        )
         # §10: the ladder ends in a blocked task with the explanation — never
         # in a quiet promotion to remote.
         raise CapabilityRefused(
             "every eligible local provider failed this generation",
-            reasons=tuple(failures) or ("no candidates",),
+            reasons=(
+                tuple(failures) or ("no candidates",)
+            ) + assessment.reasons + (
+                ("silent cross-boundary failover is refused",)
+                if assessment.silent_failover_refused else ()
+            ),
         )
 
     def _is_local(self, provider_id: str) -> bool:
@@ -705,6 +732,29 @@ class RemoteProviderExecutor(ProviderBackedExecutor):
             maximum_input_tokens=max(1, descriptor.context_limit_tokens),
             instruction="Write the final answer for the user. Plain text, one short paragraph.",
         )
+        if any(item.source == "conversation-summary" for item in built.items):
+            raise CapabilityRefused(
+                "remote generate refuses conversation-summary context",
+                reasons=("persistent memory must not dump online",),
+            )
+        cloud = authorize_remote_generate(
+            {
+                "user_request": str(view.get("originalRequest", "")),
+                "instruction": "Write the final answer for the user. Plain text, one short paragraph.",
+                "system_policy_reference": SYSTEM_POLICY_REFERENCE,
+                "classification": str(context.classification),
+                "task_id": task_id,
+                "purpose": "result",
+            },
+            classification=str(context.classification),
+            remote_transfer_ceiling=self.declaration.maximum_privacy_class,
+            remote_dispatch_granted=bool(approval_reference),
+        )
+        if not cloud.allowed:
+            raise CapabilityRefused(
+                "cloud context is not authorised for this remote generate",
+                reasons=(cloud.reason,),
+            )
         request = GenerationRequest(
             request_id=self._service.ids.next("gen"),
             session_id=session_id,

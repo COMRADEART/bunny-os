@@ -43,7 +43,12 @@ from .descriptor import ProviderDescriptor, ProviderStanding, ResourceEstimate
 from .errors import AgentSchemaError
 from .health import ProviderHealthMonitor
 from .request import LOCALITY_REQUIREMENTS
-from .resources import MachineResources, model_memory_budget, model_runtime_footprint
+from .resources import (
+    MachineResources,
+    llama_cli_gpu_layers,
+    model_runtime_footprint,
+    selection_memory_budget,
+)
 
 __all__ = [
     "AgentProviderRegistry",
@@ -177,6 +182,10 @@ class AgentProviderRegistry:
     def configuration(self) -> AgentConfiguration:
         return self._configuration
 
+    @property
+    def machine_resources(self) -> MachineResources | None:
+        return self._machine_resources
+
     def provider_ids(self) -> tuple[str, ...]:
         return tuple(item.provider_id for item in self._configuration.providers)
 
@@ -257,7 +266,9 @@ class AgentProviderRegistry:
         offered = sorted(probe.models, key=lambda item: item.model_id)
         if not offered:
             return "", "", context, 0
-        budget = model_memory_budget(self._machine_resources) if self._machine_resources is not None else 0
+        budget = 0
+        if self._machine_resources is not None:
+            budget, _axis = selection_memory_budget(self._machine_resources)
         if budget > 0:
             fitting = [
                 listing for listing in offered
@@ -267,12 +278,32 @@ class AgentProviderRegistry:
                 ) <= budget
             ]
             if fitting:
-                chosen = max(fitting, key=lambda item: item.size_bytes)
+                chosen = self._pick_fitting(fitting)
             else:
                 chosen = min(offered, key=lambda item: item.size_bytes)
         else:
             chosen = offered[0]
         return chosen.model_id, chosen.revision, context, chosen.size_bytes
+
+    def _pick_fitting(self, fitting: list) -> object:
+        """Largest that fits, unless every fitter has a measured tok/s.
+
+        Mixed measured/unmeasured lists keep the size rule: an unmeasured
+        model is not given a fake zero rate that would make it lose.
+        """
+        resources = self._machine_resources
+        rates = []
+        if resources is not None:
+            rates = [resources.throughput_for(item.model_id) for item in fitting]
+        if rates and all(rate is not None for rate in rates):
+            return max(
+                fitting,
+                key=lambda item: (
+                    (resources.throughput_for(item.model_id) or 0.0) * max(1, item.size_bytes),
+                    item.size_bytes,
+                ),
+            )
+        return max(fitting, key=lambda item: item.size_bytes)
 
     def descriptor(self, provider_id: str, *, monotonic: float, refresh: bool = False) -> ProviderDescriptor:
         config = self.configuration_for(provider_id)
@@ -385,16 +416,16 @@ class AgentProviderRegistry:
             reasons.append("not fully declared: no model is configured or discovered")
         if (
             self._machine_resources is not None
-            and self._machine_resources.known
             and descriptor.resource_estimate.memory_bytes > 0
         ):
-            budget = model_memory_budget(self._machine_resources)
+            budget, axis = selection_memory_budget(self._machine_resources)
             need = descriptor.resource_estimate.memory_bytes
-            if need > budget:
+            if budget > 0 and need > budget:
+                pressure = self._machine_resources.memory_pressure_level
                 reasons.append(
                     f"model needs ~{need // (1024 * 1024)} MiB resident; "
-                    f"~{budget // (1024 * 1024)} MiB available under "
-                    f"{self._machine_resources.memory_pressure_level} pressure"
+                    f"~{budget // (1024 * 1024)} MiB {axis} available under "
+                    f"{pressure} pressure"
                 )
         if not descriptor.handles(requirement.task_class):
             reasons.append(
@@ -477,6 +508,37 @@ class AgentProviderRegistry:
             "local before remote" if selected_descriptor.local
             else "no local provider is eligible; remote requires approval"
         )
+        resources = self._machine_resources
+        if resources is not None and selected_descriptor.local:
+            if resources.gpu_usable:
+                layers = llama_cli_gpu_layers(resources)
+                runtime = resources.gpu_runtime or "gpu"
+                factors.append(
+                    f"GPU runtime {runtime} is usable; llama-cli will request "
+                    f"--n-gpu-layers {layers}"
+                    if layers is not None else
+                    f"GPU runtime {runtime} is usable"
+                )
+                if resources.vram_known:
+                    factors.append(
+                        f"measured VRAM {resources.vram_available_bytes // (1024 * 1024)} MiB "
+                        "is the selection budget"
+                    )
+                else:
+                    factors.append(
+                        f"VRAM is {resources.vram_state}; not invented; RAM remains the CPU budget"
+                    )
+            else:
+                factors.append(
+                    f"GPU not usable ({resources.accelerator_evidence or 'unknown'}); CPU path"
+                )
+            if resources.npu_state == "present-unusable":
+                factors.append("NPU present but unusable; nothing is scheduled on it")
+            if resources.throughput_known:
+                factors.append(
+                    f"measured throughput {resources.throughput_tokens_per_second} tok/s "
+                    "is labelled measurement, not TOPS"
+                )
         if selected_config.provider_id == requirement.preferred_provider_id:
             factors.append("explicitly preferred by the request")
         if selected_config.user_preferred:
@@ -489,6 +551,26 @@ class AgentProviderRegistry:
                 approval_actions.append("send_sensitive_data")
         if selected_descriptor.cost_class == "paid":
             approval_actions.append("paid_provider")
+        fallback = ordered_ids[1:]
+        if selected_descriptor.local:
+            local_fallback = tuple(
+                provider_id for provider_id in fallback
+                if (config := self.configuration_for(provider_id)) is not None and config.local
+            )
+            if local_fallback != fallback:
+                factors.append(
+                    "remote providers excluded from fallback; locality is a security boundary"
+                )
+            fallback = local_fallback
+        else:
+            # A different remote is a different approval. Never chain hosted
+            # destinations as a failover list.
+            if fallback:
+                factors.append(
+                    "additional remotes excluded from fallback; a different destination "
+                    "needs its own consent"
+                )
+            fallback = ()
         return SelectionExplanation(
             requirement=requirement.to_json(),
             eligible=ordered_ids,
@@ -496,7 +578,7 @@ class AgentProviderRegistry:
             selected=selected_config.provider_id,
             selected_local=selected_descriptor.local,
             decisive_factors=tuple(factors),
-            fallback_order=ordered_ids[1:],
+            fallback_order=fallback,
             requires_approval=bool(approval_actions),
             approval_actions=tuple(approval_actions),
             detail=f"selected {selected_config.provider_id!r} of {len(ordered_ids)} eligible",

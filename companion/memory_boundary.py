@@ -35,9 +35,11 @@ __all__ = [
     "CLOUD_MODES",
     "MEMORY_SCOPE_TITLES",
     "MEMORY_SCOPES",
+    "REMOTE_GENERATE_ALLOWED_FIELDS",
     "MemoryDecision",
     "MemoryPolicy",
     "authorize_cloud_context",
+    "authorize_remote_generate",
     "may_store",
 ]
 
@@ -204,4 +206,82 @@ def authorize_cloud_context(
         "only the authorised, minimised fields would leave this computer",
         classification,
         released=released if isinstance(released, Mapping) else {"value": released},
+    )
+
+
+#: Keys a remote generate may carry. Current interaction only — never session
+#: or durable memory, never a conversation-summary slot.
+REMOTE_GENERATE_ALLOWED_FIELDS = (
+    "user_request",
+    "instruction",
+    "system_policy_reference",
+    "classification",
+    "task_id",
+    "purpose",
+)
+
+_FORBIDDEN_REMOTE_MARKERS = (
+    "conversation-summary",
+    "conversation_summary",
+    "summary_text",
+    "durable",
+    "session_memory",
+    "memory_record",
+    "memory_records",
+)
+
+
+def authorize_remote_generate(
+    payload: Mapping[str, object],
+    *,
+    classification: str,
+    remote_transfer_ceiling: str,
+    remote_dispatch_granted: bool,
+    policy: MemoryPolicy | None = None,
+) -> MemoryDecision:
+    """Gate one remote generate: current request only, never durable memory.
+
+    ``remote_dispatch`` is the consent for *this* interaction's allow-listed
+    fields. Session and durable memory stay off regardless of the person's
+    cloud_context setting — persistent memory must not dump online. Forbidden
+    keys (conversation-summary, durable records, summary_text) refuse the
+    whole payload rather than being stripped into a quiet leak.
+
+    ``authorize_cloud_context`` still runs so the field allow-list and remote
+    audience projection are on the generation wire.
+    """
+    if not remote_dispatch_granted:
+        return MemoryDecision(
+            False, "cloud",
+            "remote generate requires a granted remote_dispatch approval",
+            classification,
+        )
+    for key in payload:
+        lowered = str(key).lower().replace(" ", "-")
+        for marker in _FORBIDDEN_REMOTE_MARKERS:
+            if marker in lowered:
+                return MemoryDecision(
+                    False, "cloud",
+                    f"remote generate refuses {key!r}; persistent or summary "
+                    "context must not leave this computer",
+                    classification,
+                )
+    # Working-scope current request only. Session/durable never ride along,
+    # even if the person later enables those scopes for local storage.
+    effective = MemoryPolicy(
+        session=False,
+        durable=False,
+        cloud_context="minimized",
+    )
+    if policy is not None and policy.cloud_context == "none":
+        # The person's cloud-memory control is recorded; it does not widen
+        # this payload, and it does not block the already-approved current
+        # request. Memory Core will consult it when a store exists.
+        pass
+    return authorize_cloud_context(
+        payload,
+        classification=classification,
+        policy=effective,
+        remote_transfer_ceiling=remote_transfer_ceiling,
+        allowed_fields=REMOTE_GENERATE_ALLOWED_FIELDS,
     )

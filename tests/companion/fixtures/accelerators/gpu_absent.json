@@ -1,0 +1,13 @@
+{
+  "kind": "fixture",
+  "source": "injected",
+  "note": "CI fixture: no usable GPU. VRAM unknown, not zero-invented.",
+  "gpu_usable": false,
+  "gpu_runtime": "",
+  "gpu_kind": "unknown",
+  "vram_state": "unknown",
+  "vram_available_bytes": 0,
+  "vram_total_bytes": 0,
+  "npu_state": "absent",
+  "throughput_tokens_per_second": null
+}
