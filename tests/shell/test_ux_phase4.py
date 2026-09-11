@@ -48,6 +48,8 @@ from bunny_shell.trust_copy import (
     FILE_NOT_UPLOADED,
     FILE_OPEN_BUBBLE,
     FILE_OPEN_DENIED,
+    FILE_OPEN_DRIFT,
+    FILE_OPEN_EXPIRED,
     FILE_OPEN_FAILED,
     FILE_OPEN_GRANTED,
     FILE_OPEN_HEADLINE,
@@ -320,10 +322,12 @@ class WiringAndHonestyTests(NodeBackedTestCase):
     def test_file_open_copy_is_byte_identical(self) -> None:
         measured = run_node(
             f"import {{FILE_OPEN_BUBBLE, FILE_NOT_UPLOADED, FILE_OPEN_HEADLINE, "
-            f"FILE_OPEN_GRANTED, FILE_OPEN_DENIED, FILE_OPEN_FAILED}} "
+            f"FILE_OPEN_GRANTED, FILE_OPEN_DENIED, FILE_OPEN_FAILED, "
+            f"FILE_OPEN_DRIFT, FILE_OPEN_EXPIRED}} "
             f"from '{(LIB / 'trustPrompt.js').as_uri()}';\n"
             "console.log(JSON.stringify({FILE_OPEN_BUBBLE, FILE_NOT_UPLOADED, FILE_OPEN_HEADLINE, "
-            "FILE_OPEN_GRANTED, FILE_OPEN_DENIED, FILE_OPEN_FAILED}));\n"
+            "FILE_OPEN_GRANTED, FILE_OPEN_DENIED, FILE_OPEN_FAILED, "
+            "FILE_OPEN_DRIFT, FILE_OPEN_EXPIRED}));\n"
         )
         self.assertEqual(measured["FILE_OPEN_BUBBLE"], FILE_OPEN_BUBBLE)
         self.assertEqual(measured["FILE_NOT_UPLOADED"], FILE_NOT_UPLOADED)
@@ -331,6 +335,8 @@ class WiringAndHonestyTests(NodeBackedTestCase):
         self.assertEqual(measured["FILE_OPEN_GRANTED"], FILE_OPEN_GRANTED)
         self.assertEqual(measured["FILE_OPEN_DENIED"], FILE_OPEN_DENIED)
         self.assertEqual(measured["FILE_OPEN_FAILED"], FILE_OPEN_FAILED)
+        self.assertEqual(measured["FILE_OPEN_DRIFT"], FILE_OPEN_DRIFT)
+        self.assertEqual(measured["FILE_OPEN_EXPIRED"], FILE_OPEN_EXPIRED)
 
 
 class FileOpenGrantTests(NodeBackedTestCase):
@@ -389,7 +395,21 @@ class FileOpenGrantTests(NodeBackedTestCase):
             decision="always", path="/tmp/a.txt", opener=opener,
         )
         self.assertFalse(always["shouldOpen"])
+        session = apply_file_open_after_trust(
+            decision="session", path="/tmp/a.txt", opener=opener,
+        )
+        self.assertFalse(session["shouldOpen"])
+        for verdict in ("close", "timeout", "expired", "escape"):
+            refused = apply_file_open_after_trust(
+                decision=verdict, path="/tmp/a.txt", opener=opener,
+            )
+            self.assertFalse(refused["shouldOpen"], verdict)
+            self.assertFalse(refused["launched"], verdict)
         self.assertEqual(opened, [])
+        self.assertEqual(
+            apply_file_open_after_trust(decision="timeout", path="/tmp/a.txt")["message"],
+            FILE_OPEN_EXPIRED,
+        )
 
     def test_placeholder_and_non_open_actions_do_not_launch(self) -> None:
         opened: list[object] = []
@@ -476,6 +496,69 @@ class FileOpenGrantTests(NodeBackedTestCase):
         self.assertIn("openGrantedFile", launcher)
         self.assertIn("gio", launcher)
         self.assertNotIn("Always allow everything", region)
+        self.assertIn("approvedPath", region)
+        self.assertIn("approvedApplication", region)
+
+    def test_path_or_app_drift_after_allow_is_fail_closed(self) -> None:
+        opened: list[object] = []
+
+        def opener(command: list[str], path: str, application: str = "") -> bool:
+            opened.append((command, path, application))
+            return True
+
+        path_drift = apply_file_open_after_trust(
+            decision="allow",
+            path="/home/ravi/Pictures/other.jpg",
+            approved_path="/home/ravi/docs/notes.txt",
+            application="Text Editor",
+            approved_application="Text Editor",
+            opener=opener,
+        )
+        self.assertFalse(path_drift["shouldOpen"])
+        self.assertFalse(path_drift["launched"])
+        self.assertEqual(path_drift["message"], FILE_OPEN_DRIFT)
+        self.assertFalse(path_drift["uploaded"])
+        app_drift = apply_file_open_after_trust(
+            decision="allow",
+            path="/home/ravi/docs/notes.txt",
+            approved_path="/home/ravi/docs/notes.txt",
+            application="GIMP",
+            approved_application="Text Editor",
+            opener=opener,
+        )
+        self.assertFalse(app_drift["shouldOpen"])
+        self.assertEqual(app_drift["message"], FILE_OPEN_DRIFT)
+        scoped = apply_file_open_after_trust(
+            decision="allow",
+            path="/home/ravi/docs/notes.txt",
+            approved_path="/home/ravi/docs/notes.txt",
+            application="Text Editor",
+            approved_application="Text Editor",
+            opener=opener,
+        )
+        self.assertTrue(scoped["launched"])
+        self.assertEqual(scoped["application"], "Text Editor")
+        self.assertEqual(opened, [(
+            ["gio", "open", "/home/ravi/docs/notes.txt"],
+            "/home/ravi/docs/notes.txt",
+            "Text Editor",
+        )])
+        js = run_node(
+            f"import {{applyFileOpenAfterTrust}} from '{(LIB / 'bunnyFiles.js').as_uri()}';\n"
+            "const opened = [];\n"
+            "const drift = applyFileOpenAfterTrust(\n"
+            "  {decision: 'allow', path: '/tmp/b.txt', approvedPath: '/tmp/a.txt',\n"
+            "   application: 'GIMP', approvedApplication: 'Text Editor'},\n"
+            "  (command, path, application) => { opened.push({command, path, application}); return true; });\n"
+            "const timeout = applyFileOpenAfterTrust(\n"
+            "  {decision: 'timeout', path: '/tmp/a.txt', approvedPath: '/tmp/a.txt'},\n"
+            "  () => true);\n"
+            "console.log(JSON.stringify({drift, timeout, opened}));\n"
+        )
+        self.assertFalse(js["drift"]["launched"])
+        self.assertEqual(js["drift"]["message"], FILE_OPEN_DRIFT)
+        self.assertEqual(js["timeout"]["message"], FILE_OPEN_EXPIRED)
+        self.assertEqual(js["opened"], [])
 
 
 class FrozenEvidenceTests(unittest.TestCase):

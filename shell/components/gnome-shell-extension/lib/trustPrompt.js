@@ -129,6 +129,11 @@ export const FILE_OPEN_DENIED =
     "Don't allow. The file was not opened. "
     + 'Ask again and choose Allow once if that was a mistake.';
 export const FILE_OPEN_FAILED = 'Allow once was recorded, but Bunny could not open this file.';
+export const FILE_OPEN_DRIFT =
+    'The file or application changed after Allow once. Bunny did not open it.';
+export const FILE_OPEN_EXPIRED =
+    'The question timed out. The file was not opened. '
+    + 'Ask again if you still want this.';
 
 function nonEmpty(value) {
     return typeof value === 'string' && value.trim().length > 0;

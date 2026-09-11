@@ -127,15 +127,37 @@ export class ApplicationLauncher {
     }
 
     /**
-     * Open one Trust-granted file with the session handler.
+     * Open one Trust-granted file with the approved handler.
      *
-     * That path only — not a folder walk, not Pictures. `gio open` is the
-     * fallback when the default handler cannot start.
+     * That path and app only — not a folder walk, not Pictures, not a
+     * different application if one was named. `gio open` is the default
+     * handler when no app was approved. A named app that cannot start
+     * fails closed instead of falling back to another handler.
      */
-    openGrantedFile(path) {
+    openGrantedFile(path, application = '') {
         const raw = String(path || '').trim();
         if (!raw.startsWith('/') && !raw.toLowerCase().startsWith('file://'))
             return false;
+        const named = String(application || '').trim();
+        const wantsNamed = named !== '' && named.toLowerCase() !== 'an application'
+            && named.toLowerCase() !== 'application' && named.toLowerCase() !== 'default';
+        if (wantsNamed) {
+            const app = this.resolve(named);
+            if (app === null)
+                return false;
+            try {
+                const file = raw.toLowerCase().startsWith('file://')
+                    ? Gio.File.new_for_uri(raw)
+                    : Gio.File.new_for_path(raw);
+                const info = app.get_app_info?.() ?? null;
+                if (info?.launch([file], null))
+                    return true;
+                return false;
+            } catch (error) {
+                logError_('could not open the granted file in the approved application', error);
+                return false;
+            }
+        }
         try {
             const uri = raw.toLowerCase().startsWith('file://')
                 ? raw

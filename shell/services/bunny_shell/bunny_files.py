@@ -18,6 +18,8 @@ from .trust_copy import (
     FILE_NOT_UPLOADED,
     FILE_OPEN_BUBBLE,
     FILE_OPEN_DENIED,
+    FILE_OPEN_DRIFT,
+    FILE_OPEN_EXPIRED,
     FILE_OPEN_FAILED,
     FILE_OPEN_GRANTED,
     FILE_OPEN_HEADLINE,
@@ -100,49 +102,74 @@ def granted_file_path(path: str) -> str:
     return raw
 
 
+_ONCE_GRANTS = frozenset({"allow", "allow-once", "allow once", "once", "granted"})
+_DENY_VERDICTS = frozenset({
+    "deny", "denied", "don't allow", "dont-allow", "dont allow",
+    "close", "closed", "escape", "dismiss", "cancel",
+})
+_EXPIRED_VERDICTS = frozenset({"timeout", "expired"})
+_BROADEN_VERDICTS = frozenset({
+    "always", "session", "allow-session", "allow while using", "allow-while-using",
+})
+_DEFAULT_APP = frozenset({"", "an application", "application", "default"})
+
+
 def _is_once_grant(decision: str) -> bool:
-    token = str(decision or "").strip().casefold()
-    return token in {"allow", "allow-once", "allow once", "once", "granted"}
+    return str(decision or "").strip().casefold() in _ONCE_GRANTS
+
+
+def _normalize_application(application: str) -> str:
+    token = str(application or "").strip()
+    if token.casefold() in _DEFAULT_APP:
+        return ""
+    return token
 
 
 def resolve_file_open_after_trust(
     *,
     decision: str = "deny",
     path: str = "",
+    approved_path: str = "",
+    application: str = "",
+    approved_application: str = "",
     action: str = "open",
     extra_paths: Sequence[str] | None = None,
 ) -> dict[str, Any]:
-    """Plan the open. Deny-by-default. One path. Nothing uploaded."""
+    """Plan the open. Deny-by-default. One file + app. Nothing uploaded."""
     del extra_paths  # never widened — Pictures and siblings stay closed
-    granted = granted_file_path(path)
-    once = _is_once_grant(decision)
+    offered = granted_file_path(path)
+    approved = granted_file_path(approved_path or path)
+    offered_app = _normalize_application(application)
+    approved_app = _normalize_application(approved_application or application)
+    token = str(decision or "").strip().casefold()
+    once = token in _ONCE_GRANTS
+    closed = {
+        "shouldOpen": False,
+        "uploaded": False,
+        "path": "",
+        "application": "",
+        "command": None,
+        "companionRequired": False,
+        "chatbot": False,
+        "note": FILE_NOT_UPLOADED,
+    }
     if str(action or "open") != "open":
         return {
-            "shouldOpen": False,
-            "uploaded": False,
-            "path": "",
-            "command": None,
-            "companionRequired": False,
-            "chatbot": False,
-            "note": FILE_NOT_UPLOADED,
+            **closed,
             "message": FILE_OPEN_DENIED if not once else "Allow once is recorded for this request.",
         }
-    if not once or not granted:
-        return {
-            "shouldOpen": False,
-            "uploaded": False,
-            "path": "",
-            "command": None,
-            "companionRequired": False,
-            "chatbot": False,
-            "note": FILE_NOT_UPLOADED,
-            "message": FILE_OPEN_DENIED if not once else FILE_OPEN_FAILED,
-        }
+    if token in _EXPIRED_VERDICTS:
+        return {**closed, "message": FILE_OPEN_EXPIRED}
+    if token in _DENY_VERDICTS or token in _BROADEN_VERDICTS or not once:
+        return {**closed, "message": FILE_OPEN_DENIED}
+    if not offered or not approved or offered != approved or offered_app != approved_app:
+        return {**closed, "message": FILE_OPEN_DRIFT if (approved or approved_app) else FILE_OPEN_FAILED}
     return {
         "shouldOpen": True,
         "uploaded": False,
-        "path": granted,
-        "command": ["gio", "open", granted],
+        "path": approved,
+        "application": approved_app,
+        "command": ["gio", "open", approved],
         "companionRequired": False,
         "chatbot": False,
         "note": FILE_NOT_UPLOADED,
@@ -154,20 +181,34 @@ def apply_file_open_after_trust(
     *,
     decision: str = "deny",
     path: str = "",
+    approved_path: str = "",
+    application: str = "",
+    approved_application: str = "",
     action: str = "open",
     extra_paths: Sequence[str] | None = None,
     opener: Any = None,
 ) -> dict[str, Any]:
-    """Grant opens that file. Deny opens nothing. Host-testable via ``opener``."""
+    """Grant opens that file + app. Deny / close / timeout open nothing."""
     plan = resolve_file_open_after_trust(
-        decision=decision, path=path, action=action, extra_paths=extra_paths,
+        decision=decision,
+        path=path,
+        approved_path=approved_path,
+        application=application,
+        approved_application=approved_application,
+        action=action,
+        extra_paths=extra_paths,
     )
     if not plan["shouldOpen"]:
         return {**plan, "launched": False, "paths": []}
     launched = False
     if callable(opener):
         try:
-            launched = opener(plan["command"], plan["path"]) is True
+            launched = opener(plan["command"], plan["path"], plan["application"]) is True
+        except TypeError:
+            try:
+                launched = opener(plan["command"], plan["path"]) is True
+            except Exception:  # noqa: BLE001 - a failed handler is a failed open
+                launched = False
         except Exception:  # noqa: BLE001 - a failed handler is a failed open
             launched = False
     return {
@@ -196,6 +237,7 @@ def build_file_open_trust(
         "heading": heading,
         "category": "files",
         "resource": str(path or name),
+        "application": application,
         "focusSafeAnswer": True,
         "allowLabel": ALLOW_ONCE_LABEL,
         "denyLabel": DONT_ALLOW_LABEL,
@@ -260,6 +302,7 @@ def route_files_action(
     return {
         "action": resolved,
         "paths": list(listed),
+        "application": application,
         "surface": surface,
         "needsTrust": needs_trust,
         "bubbleText": FILE_OPEN_BUBBLE if needs_trust else caption,

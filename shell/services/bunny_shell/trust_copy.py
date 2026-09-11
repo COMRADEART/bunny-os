@@ -45,6 +45,13 @@ FILE_OPEN_DENIED = (
     "Ask again and choose Allow once if that was a mistake."
 )
 FILE_OPEN_FAILED = "Allow once was recorded, but Bunny could not open this file."
+FILE_OPEN_DRIFT = (
+    "The file or application changed after Allow once. Bunny did not open it."
+)
+FILE_OPEN_EXPIRED = (
+    "The question timed out. The file was not opened. "
+    "Ask again if you still want this."
+)
 
 _EXPLICIT_OFF = {"off", "none", "blocked", "nothing on the network"}
 _EXPLICIT_ON = {

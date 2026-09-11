@@ -1433,7 +1433,8 @@ export class DesktopShell {
         const prompt = routed.trust && typeof routed.trust === 'object' ? routed.trust : {};
         const heading = String(prompt.heading || prompt.headline || FILE_OPEN_HEADLINE);
         const requestId = String(prompt.requestId || 'file-open');
-        const grantedPath = String(routed.paths?.[0] || prompt.resource || prompt.fileAccess || '');
+        const approvedPath = String(routed.paths?.[0] || prompt.resource || prompt.fileAccess || '');
+        const approvedApp = String(routed.application || prompt.application || '');
         this._presentApproval({
             requestId,
             reason: routed.note || FILE_NOT_UPLOADED,
@@ -1446,12 +1447,18 @@ export class DesktopShell {
             },
         }, (decision, id) => {
             this._clearPresentedApproval(id);
+            const livePath = String(routed.paths?.[0] || prompt.resource || prompt.fileAccess || '');
+            const liveApp = String(routed.application || prompt.application || '');
             const result = applyFileOpenAfterTrust({
                 decision,
-                path: grantedPath,
+                path: livePath,
+                approvedPath,
+                application: liveApp,
+                approvedApplication: approvedApp,
                 action: routed.action || 'open',
                 extraPaths: Array.isArray(routed.paths) ? routed.paths.slice(1) : [],
-            }, (_command, filePath) => this.launcher?.openGrantedFile?.(filePath) === true);
+            }, (_command, filePath, application) =>
+                this.launcher?.openGrantedFile?.(filePath, application) === true);
             this._bubble?.say(result.message || FILE_OPEN_DENIED, {wave: false});
         });
     }

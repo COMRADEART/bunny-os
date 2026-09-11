@@ -15,14 +15,14 @@ import {
 import {SCREEN_QUESTIONS} from './design/tokens.js';
 import {
     ALLOW_ONCE_LABEL, DONT_ALLOW_LABEL, FILE_NOT_UPLOADED, FILE_OPEN_BUBBLE,
-    FILE_OPEN_DENIED, FILE_OPEN_FAILED, FILE_OPEN_GRANTED, FILE_OPEN_HEADLINE,
-    NETWORK_ALLOWLIST_NOTE, buildPrompt,
+    FILE_OPEN_DENIED, FILE_OPEN_DRIFT, FILE_OPEN_EXPIRED, FILE_OPEN_FAILED,
+    FILE_OPEN_GRANTED, FILE_OPEN_HEADLINE, NETWORK_ALLOWLIST_NOTE, buildPrompt,
 } from './trustPrompt.js';
 import {routeCommandAnswer} from './commandSurface.js';
 
 export {
-    FILE_NOT_UPLOADED, FILE_OPEN_BUBBLE, FILE_OPEN_DENIED, FILE_OPEN_FAILED,
-    FILE_OPEN_GRANTED, FILE_OPEN_HEADLINE,
+    FILE_NOT_UPLOADED, FILE_OPEN_BUBBLE, FILE_OPEN_DENIED, FILE_OPEN_DRIFT,
+    FILE_OPEN_EXPIRED, FILE_OPEN_FAILED, FILE_OPEN_GRANTED, FILE_OPEN_HEADLINE,
 };
 
 export const FILE_ACTIONS = Object.freeze([
@@ -121,50 +121,68 @@ export function grantedFilePath(path) {
     return raw;
 }
 
-function isOnceGrant(decision) {
-    const token = String(decision || '').trim().toLowerCase();
-    return token === 'allow' || token === 'allow-once' || token === 'allow once'
-        || token === 'once' || token === 'granted';
+const ONCE_GRANTS = new Set(['allow', 'allow-once', 'allow once', 'once', 'granted']);
+const DENY_VERDICTS = new Set([
+    'deny', 'denied', "don't allow", 'dont-allow', 'dont allow',
+    'close', 'closed', 'escape', 'dismiss', 'cancel',
+]);
+const EXPIRED_VERDICTS = new Set(['timeout', 'expired']);
+const BROADEN_VERDICTS = new Set([
+    'always', 'session', 'allow-session', 'allow while using', 'allow-while-using',
+]);
+const DEFAULT_APP = new Set(['', 'an application', 'application', 'default']);
+
+function normalizeApplication(application) {
+    const token = String(application || '').trim();
+    return DEFAULT_APP.has(token.toLowerCase()) ? '' : token;
 }
 
 /**
- * Plan the open. Deny-by-default. One path. Nothing uploaded.
+ * Plan the open. Deny-by-default. One file + app. Nothing uploaded.
  */
 export function resolveFileOpenAfterTrust({
-    decision = 'deny', path = '', action = 'open', extraPaths = [],
+    decision = 'deny', path = '', approvedPath = '', application = '',
+    approvedApplication = '', action = 'open', extraPaths = [],
 } = {}) {
     void extraPaths; // never widened — Pictures and siblings stay closed
-    const granted = grantedFilePath(path);
-    const once = isOnceGrant(decision);
+    const offered = grantedFilePath(path);
+    const approved = grantedFilePath(approvedPath || path);
+    const offeredApp = normalizeApplication(application);
+    const approvedApp = normalizeApplication(approvedApplication || application);
+    const token = String(decision || '').trim().toLowerCase();
+    const once = ONCE_GRANTS.has(token);
+    const closed = {
+        shouldOpen: false,
+        uploaded: false,
+        path: '',
+        application: '',
+        command: null,
+        companionRequired: false,
+        chatbot: false,
+        note: FILE_NOT_UPLOADED,
+    };
     if (String(action || 'open') !== 'open') {
         return {
-            shouldOpen: false,
-            uploaded: false,
-            path: '',
-            command: null,
-            companionRequired: false,
-            chatbot: false,
-            note: FILE_NOT_UPLOADED,
+            ...closed,
             message: once ? 'Allow once is recorded for this request.' : FILE_OPEN_DENIED,
         };
     }
-    if (!once || !granted) {
+    if (EXPIRED_VERDICTS.has(token))
+        return {...closed, message: FILE_OPEN_EXPIRED};
+    if (DENY_VERDICTS.has(token) || BROADEN_VERDICTS.has(token) || !once)
+        return {...closed, message: FILE_OPEN_DENIED};
+    if (!offered || !approved || offered !== approved || offeredApp !== approvedApp) {
         return {
-            shouldOpen: false,
-            uploaded: false,
-            path: '',
-            command: null,
-            companionRequired: false,
-            chatbot: false,
-            note: FILE_NOT_UPLOADED,
-            message: !once ? FILE_OPEN_DENIED : FILE_OPEN_FAILED,
+            ...closed,
+            message: (approved || approvedApp) ? FILE_OPEN_DRIFT : FILE_OPEN_FAILED,
         };
     }
     return {
         shouldOpen: true,
         uploaded: false,
-        path: granted,
-        command: ['gio', 'open', granted],
+        path: approved,
+        application: approvedApp,
+        command: ['gio', 'open', approved],
         companionRequired: false,
         chatbot: false,
         note: FILE_NOT_UPLOADED,
@@ -173,7 +191,7 @@ export function resolveFileOpenAfterTrust({
 }
 
 /**
- * Grant opens that file. Deny opens nothing. Host-testable via `opener`.
+ * Grant opens that file + app. Deny / close / timeout open nothing.
  */
 export function applyFileOpenAfterTrust(record = {}, opener = null) {
     const plan = resolveFileOpenAfterTrust(record);
@@ -182,7 +200,7 @@ export function applyFileOpenAfterTrust(record = {}, opener = null) {
     let launched = false;
     if (typeof opener === 'function') {
         try {
-            launched = opener(plan.command, plan.path) === true;
+            launched = opener(plan.command, plan.path, plan.application) === true;
         } catch {
             launched = false;
         }
@@ -209,6 +227,7 @@ export function buildFileOpenTrust({
         category: 'files',
         categoryTitle: 'Files',
         resource: String(path || name),
+        application: String(application || ''),
         capabilityNote: 'Open this file in that application for this request only.',
         reason: FILE_NOT_UPLOADED,
         options: [{scope: 'once', label: ALLOW_ONCE_LABEL}],
@@ -271,6 +290,7 @@ export function routeFilesAction({
     return {
         action: resolved,
         paths: list,
+        application: String(application || ''),
         surface,
         needsTrust,
         bubble: buildBubble({text: needsTrust ? FILE_OPEN_BUBBLE : caption}),
