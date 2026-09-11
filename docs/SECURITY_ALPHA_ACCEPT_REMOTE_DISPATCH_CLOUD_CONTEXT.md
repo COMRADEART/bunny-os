@@ -80,7 +80,7 @@ No existing TrustPrompt string hook covers this split. Companion `remote_dispatc
 
 When Companion offers `remote_dispatch` and the person's `cloud_context` is `none`, say:
 
-> Cloud memory stays off. Allowing this sends only what you asked this time to an online service — not your saved memory, session memory, or a conversation summary.
+> Cloud memory stays off. Allowing this sends only what you asked this time to that online service — not your saved memory, session memory, or a conversation summary.
 
 Pair that sentence with **Allow once** / **Don't allow** (Deny focused). Do not add Always allow, a second prompt, or a new toggle in the same change.
 
