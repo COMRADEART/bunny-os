@@ -20,6 +20,9 @@ BLOCKED: 24 advisory(ies) block a stable release
 
 **All 24 remain `Unknown`, and `Unknown` is blocking.**
 
+Gatekeeper triage (recommended next actions; does **not** convert proof classes):
+`SECURITY_CVE_DISPOSITION_TRIAGE.md`.
+
 Machine-readable: `build/out/qualification/cve-reachability-disposition.json`.
 
 ## The five proof classes
