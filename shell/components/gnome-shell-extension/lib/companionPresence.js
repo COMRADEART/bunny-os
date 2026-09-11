@@ -47,7 +47,9 @@ export const PRESENCE = ['full', 'compact', 'indicator', 'off'];
 export const FIDELITY = ['full-3d', 'lightweight-3d', 'animated-2d', 'static-image', 'text-only'];
 
 /** Phases that mean the user has to do something. Drawn at any presence. */
-export const ATTENTION_PHASES = ['waiting_for_approval', 'blocked', 'error'];
+export const ATTENTION_PHASES = [
+    'waiting_for_approval', 'waiting_for_permission', 'blocked', 'error',
+];
 
 /** Phases that are worth showing but never worth interrupting for. */
 export const QUIET_PHASES = ['idle', 'success', 'disconnected'];
@@ -72,13 +74,21 @@ export const MOTION_BUDGET_MS = {
     'text-only': 0,
 };
 
-/** Phase 1 rendering-tier names, mapped onto the fidelity ladder. */
+/**
+ * Phase 1 rendering-tier names, mapped onto the fidelity ladder.
+ *
+ * FULL is implemented. BALANCED / LIGHT / MINIMAL are named stubs: asking
+ * for them still returns a fidelity rung so callers do not invent a fifth
+ * renderer. It is not a claim that those tiers are live.
+ */
 export const RENDERING_TIER_TO_FIDELITY = {
     FULL: 'full-3d',
     BALANCED: 'lightweight-3d',
     LIGHT: 'static-image',
     MINIMAL: 'text-only',
 };
+
+export const IMPLEMENTED_RENDERING_TIERS = ['FULL'];
 
 function tierIndex(tier) {
     const index = FIDELITY.indexOf(tier);

@@ -22,6 +22,7 @@ __all__ = [
     "RENDERING_TIERS",
     "SCREEN_QUESTIONS",
     "fidelity_for_tier",
+    "tier_is_implemented",
     "limit_bubble_text",
     "os_state_from_phase",
     "pose_for_os_state",
@@ -51,6 +52,7 @@ _PHASE_TO_OS: Mapping[str, str] = {
     "understanding": "understanding",
     "planning": "planning",
     "waiting_for_approval": "asking",
+    "waiting_for_permission": "asking",
     "listening": "listening",
     "transcribing": "listening",
     "speaking": "working",
@@ -130,6 +132,17 @@ def os_state_from_phase(
 
 def pose_for_os_state(state: str) -> str:
     return _POSE.get(state, "idle")
+
+
+def tier_is_implemented(tier: str) -> bool:
+    """Phase 1: only FULL is a live renderer. Other names are stubs."""
+    document = load_tokens()
+    companion = document.get("companion") if isinstance(document, dict) else {}
+    tiers = companion.get("renderingTiers") if isinstance(companion, dict) else {}
+    key = str(tier or "FULL").upper()
+    if isinstance(tiers, dict) and key in tiers and isinstance(tiers[key], dict):
+        return tiers[key].get("implemented") is True
+    return key == "FULL"
 
 
 def fidelity_for_tier(tier: str) -> str:

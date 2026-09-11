@@ -410,6 +410,7 @@ function renderComponents(theme) {
     rule(`.bunny-trust { border-radius: ${px(r.modal)}; box-shadow: ${theme.shadow.dialog}; border: ${px(theme.highContrast ? theme.focus.width : 1)} solid ${theme.highContrast ? c.borderStrong : c.trust}; }`);
     rule(`.bunny-trust-column { padding: ${px(s.lg)}; spacing: ${px(s.md)}; }`);
     rule(`.bunny-trust-scrim { background-color: ${c.scrim}; }`);
+    rule(`.bunny-trust-overlay { width: ${px(440)}; }`);
     rule(`.bunny-trust-heading { ${type(theme, 'title')} color: ${c.textPrimary}; }`);
     rule(`.bunny-trust-subheading { ${type(theme, 'caption')} color: ${c.textSecondary}; text-transform: uppercase; }`);
     rule(`.bunny-trust-identity { spacing: ${px(s.sm)}; padding: ${px(s.sm)} ${px(s.md)}; border-radius: ${px(r.control)}; background-color: ${c.surfaceRaised}; }`);

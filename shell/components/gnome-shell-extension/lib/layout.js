@@ -28,11 +28,11 @@ export const RIGHT_COLUMN = ['agenda', 'systemMonitor', 'assistant'];
 /**
  * Cards that are kept when a column has to shed one.
  *
- * The assistant card is where a task is typed, where its state is shown, and
- * where the permission question appears. Dropping it does not remove a
- * convenience; it removes the ability to answer Trust, which §40 lists among the
- * behaviours a visual refactor must not regress. Everything else in a column is
- * discretionary against that.
+ * The assistant card is where a task is typed and where its state is shown.
+ * Trust itself must not live only on that card: the Phase 1 skeleton drops
+ * every dashboard card, including assistant, so consent is the chrome dialog
+ * (and a bubble caption) from `consentSurfaceForLayout`. Dropping the card
+ * in the `full` profile still must not hide the only answerable prompt.
  */
 export const PROTECTED_CARDS = ['assistant'];
 
@@ -258,6 +258,7 @@ export function solve(screen, {scale = 1, metric = null, profile = 'full'} = {})
 /**
  * Phase 1 chrome: thin system bar, centred dock, companion at bottom-right.
  * Widget cards are dropped on purpose — progressive disclosure, not clutter.
+ * Trust is not one of those cards; see consentSurfaceForLayout.
  */
 function solveSkeleton({width, height, EDGE, GAP, TOP_BAR_HEIGHT, DOCK_HEIGHT, rects, point, scale}) {
     const dropped = ['sidebar', ...LEFT_COLUMN, ...RIGHT_COLUMN];

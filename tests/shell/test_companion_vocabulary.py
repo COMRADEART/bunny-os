@@ -102,6 +102,34 @@ class VocabularyTests(NodeBackedTestCase):
         self.assertEqual(built["questions"]["bunny"], "Waiting for you")
         self.assertIn("Answer", built["questions"]["next"])
 
+    def test_waiting_aliases_project_to_one_trust_wait(self) -> None:
+        projected = run_node(
+            f"import {{projectTrustWait}} from '{(LIB / 'companionVocabulary.js').as_uri()}';\n"
+            "console.log(JSON.stringify({"
+            "approval: projectTrustWait('waiting_for_approval'),"
+            "permission: projectTrustWait('waiting_for_permission'),"
+            "asking: projectTrustWait('asking')}));\n"
+        )
+        self.assertEqual(projected["approval"], projected["permission"])
+        self.assertEqual(projected["approval"], projected["asking"])
+        self.assertEqual(projected["approval"]["osState"], "asking")
+        self.assertEqual(projected["approval"]["pose"], "warning")
+        self.assertEqual(projected["approval"]["visualKey"], "waiting_for_permission")
+        self.assertEqual(projected["approval"]["taskState"], "approval")
+        self.assertEqual(projected["approval"]["label"], "Waiting for you")
+        self.assertTrue(projected["approval"]["needsAnswer"])
+
+    def test_os_companion_asking_matches_the_trust_wait_label(self) -> None:
+        built = run_node(
+            f"import {{buildOsCompanion, projectTrustWait}} from '{(LIB / 'companionVocabulary.js').as_uri()}';\n"
+            "const wait = projectTrustWait('waiting_for_approval');\n"
+            "const companion = buildOsCompanion({phase: 'waiting_for_approval'});\n"
+            "console.log(JSON.stringify({wait, companion}));\n"
+        )
+        self.assertEqual(built["companion"]["state"], built["wait"]["osState"])
+        self.assertEqual(built["companion"]["pose"], built["wait"]["pose"])
+        self.assertEqual(built["companion"]["label"], built["wait"]["label"])
+
 
 class RenderingTierTests(NodeBackedTestCase):
     def test_unimplemented_tiers_still_resolve_to_a_fidelity(self) -> None:
@@ -117,6 +145,21 @@ class RenderingTierTests(NodeBackedTestCase):
         self.assertEqual(mapping["BALANCED"], "lightweight-3d")
         self.assertEqual(mapping["LIGHT"], "static-image")
         self.assertEqual(mapping["MINIMAL"], "text-only")
+
+    def test_only_full_is_implemented(self) -> None:
+        measured = run_node(
+            f"import {{tierIsImplemented, RENDERING_TIER_NAMES}} from '{(LIB / 'companionVocabulary.js').as_uri()}';\n"
+            "const out = {};\n"
+            "for (const name of RENDERING_TIER_NAMES)\n"
+            "  out[name] = tierIsImplemented(name);\n"
+            "console.log(JSON.stringify(out));\n"
+        )
+        self.assertEqual(measured, {
+            "FULL": True,
+            "BALANCED": False,
+            "LIGHT": False,
+            "MINIMAL": False,
+        })
 
 
 class SkeletonLayoutTests(NodeBackedTestCase):
@@ -148,6 +191,59 @@ class SkeletonLayoutTests(NodeBackedTestCase):
         )
         self.assertEqual(solution["profile"], "full")
         self.assertTrue(solution["hasOverview"])
+
+
+class TrustConsentSurfaceTests(NodeBackedTestCase):
+    def test_skeleton_routes_trust_to_a_focusable_dialog(self) -> None:
+        measured = run_node(
+            f"import {{solve}} from '{(LIB / 'layout.js').as_uri()}';\n"
+            f"import {{consentSurfaceForLayout}} from '{(LIB / 'companionVocabulary.js').as_uri()}';\n"
+            "const s = solve({width: 1920, height: 1080}, {profile: 'skeleton'});\n"
+            "const surface = consentSurfaceForLayout({profile: s.profile, dropped: s.dropped});\n"
+            "console.log(JSON.stringify({dropped: s.dropped, surface}));\n"
+        )
+        self.assertIn("assistant", measured["dropped"])
+        self.assertFalse(measured["surface"]["card"])
+        self.assertTrue(measured["surface"]["dialog"])
+        self.assertTrue(measured["surface"]["bubble"])
+        self.assertTrue(measured["surface"]["focusable"])
+        self.assertEqual(measured["surface"]["kind"], "dialog")
+
+    def test_full_profile_keeps_the_card_when_it_is_live(self) -> None:
+        measured = run_node(
+            f"import {{solve}} from '{(LIB / 'layout.js').as_uri()}';\n"
+            f"import {{consentSurfaceForLayout}} from '{(LIB / 'companionVocabulary.js').as_uri()}';\n"
+            "const s = solve({width: 1920, height: 1080});\n"
+            "const surface = consentSurfaceForLayout("
+            "{profile: s.profile, dropped: s.dropped, cardLive: true});\n"
+            "console.log(JSON.stringify({dropped: s.dropped, surface}));\n"
+        )
+        self.assertNotIn("assistant", measured["dropped"])
+        self.assertTrue(measured["surface"]["card"])
+        self.assertFalse(measured["surface"]["dialog"])
+        self.assertEqual(measured["surface"]["kind"], "card")
+
+    def test_a_dropped_assistant_card_does_not_keep_trust(self) -> None:
+        surface = run_node(
+            f"import {{consentSurfaceForLayout}} from '{(LIB / 'companionVocabulary.js').as_uri()}';\n"
+            "console.log(JSON.stringify(consentSurfaceForLayout("
+            "{profile: 'full', dropped: ['assistant'], cardLive: false})));\n"
+        )
+        self.assertEqual(surface["kind"], "dialog")
+        self.assertTrue(surface["focusable"])
+
+    def test_the_live_shell_presents_approval_off_the_hidden_card(self) -> None:
+        shell = (ROOT / "shell/components/gnome-shell-extension/lib/desktopShell.js").read_text(
+            encoding="utf-8")
+        overlay = (ROOT / "shell/components/gnome-shell-extension/lib/assistant/trustOverlay.js").read_text(
+            encoding="utf-8")
+        self.assertIn("_layoutProfile() {\n        return 'skeleton';", shell)
+        self.assertIn("_presentApproval(", shell)
+        self.assertIn("TrustOverlay", shell)
+        self.assertIn("consentSurfaceForLayout", shell)
+        self.assertIn("TrustComponent", overlay)
+        self.assertIn("focusSafeAnswer", overlay)
+        self.assertIn("bunny-trust-scrim", overlay)
 
 
 if __name__ == "__main__":

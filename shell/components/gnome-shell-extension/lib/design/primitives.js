@@ -280,6 +280,7 @@ export function buildPermissionCard({
     application = '', action = '', effect = '', duration = '',
     files = '', network = '', enforced = true,
 } = {}) {
+    const isEnforced = Boolean(enforced);
     return {
         kind: 'PermissionCard',
         application: text(application),
@@ -288,7 +289,9 @@ export function buildPermissionCard({
         duration: text(duration),
         files: text(files),
         network: text(network),
-        enforced: Boolean(enforced),
+        enforced: isEnforced,
+        standing: isEnforced ? 'granted' : 'unenforced',
+        enforcementNote: isEnforced ? 'Enforced' : 'Declared, not enforced',
         styleClass: 'bunny-permission-card',
         radius: RADIUS.card,
         canFocus: true,

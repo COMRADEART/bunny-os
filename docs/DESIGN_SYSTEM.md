@@ -91,7 +91,13 @@ permissions, and Pause / Cancel. There is no “AI is typing…”.
 
 Thin system bar, centred dock, companion anchor, generous whitespace. Widget
 columns are the `full` layout profile and are not the Phase 1 default. The
-live GNOME session is **not verified** in this change.
+live session drops the assistant card; Trust/consent is a chrome dialog plus
+a bubble caption, not a hidden dashboard card. The live GNOME session is
+**not verified** in this change.
+
+The story harness live copy is `shell/themes/story-manifest.json`.
+`qualification/design/story-manifest.json` remains Phase 7 frozen evidence
+and is not retargeted by this phase.
 
 ## Primitives
 

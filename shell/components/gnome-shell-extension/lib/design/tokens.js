@@ -201,7 +201,7 @@ export const RADIUS = {
  */
 export const ELEVATION_LEVELS = ['base', 'raised', 'overlay', 'dialog'];
 
-/** Blur radii for glass panels. High contrast and LIGHT/MINIMAL tiers use 0. */
+/** Blur radii for glass panels. High contrast, and the LIGHT/MINIMAL stub mappings, use 0. */
 export const BLUR = {none: 0, panel: 18, overlay: 28, companion: 24};
 
 // ------------------------------------------------------------------ motion

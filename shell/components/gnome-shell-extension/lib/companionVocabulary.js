@@ -32,6 +32,8 @@ export const PHASE_TO_OS_STATE = {
     understanding: 'understanding',
     planning: 'planning',
     waiting_for_approval: 'asking',
+    // Visual-key name for the same Trust wait. Not a second lifecycle.
+    waiting_for_permission: 'asking',
     listening: 'listening',
     transcribing: 'listening',
     speaking: 'working',
@@ -110,6 +112,69 @@ export function poseForOsState(state) {
 export function fidelityForTier(tier = 'FULL') {
     const entry = RENDERING_TIERS[String(tier).toUpperCase()] ?? RENDERING_TIERS.FULL;
     return entry.fidelity;
+}
+
+/** Whether a named rendering tier is actually drawn. Only FULL is, in Phase 1. */
+export function tierIsImplemented(tier = 'FULL') {
+    const entry = RENDERING_TIERS[String(tier).toUpperCase()] ?? RENDERING_TIERS.FULL;
+    return entry.implemented === true;
+}
+
+const TRUST_WAIT_NAMES = new Set(['waiting_for_approval', 'waiting_for_permission', 'asking']);
+
+/**
+ * One projection for Trust waiting. Bubble, figure and task card must all
+ * consume this rather than each inventing a synonym.
+ *
+ * `waiting_for_approval` is the presentation phase. `waiting_for_permission`
+ * is the Visual Key name. `asking` is the OS companion state. They are one
+ * wait, mapped onto the existing `warning` pose.
+ */
+export function projectTrustWait(name = 'waiting_for_approval') {
+    const key = String(name ?? '');
+    if (!TRUST_WAIT_NAMES.has(key))
+        return null;
+    const presentation = OS_COMPANION_STATES.asking;
+    return {
+        phase: 'waiting_for_approval',
+        osState: 'asking',
+        visualKey: 'waiting_for_permission',
+        companionState: 'waiting-for-approval',
+        taskState: 'approval',
+        pose: poseForOsState('asking'),
+        label: presentation.label,
+        token: presentation.token,
+        needsAnswer: true,
+    };
+}
+
+/**
+ * Where a permission question is drawn for a layout solution.
+ *
+ * The Phase 1 live desktop is `skeleton`, which drops the assistant card.
+ * Trust then cannot live only inside that card: it has to be a chrome dialog
+ * (focusable) with a bubble caption. The `full` profile still uses the card
+ * when that card is actually placed and live.
+ */
+export function consentSurfaceForLayout({
+    profile = 'full',
+    dropped = [],
+    cardLive = null,
+} = {}) {
+    const droppedList = Array.isArray(dropped) ? dropped : [];
+    const cardDropped = profile === 'skeleton' || droppedList.includes('assistant');
+    const live = cardLive === null ? !cardDropped : Boolean(cardLive);
+    const useCard = live && !cardDropped;
+    return {
+        card: useCard,
+        dialog: !useCard,
+        bubble: true,
+        focusable: true,
+        kind: useCard ? 'card' : 'dialog',
+        reason: useCard
+            ? 'assistant card is placed'
+            : 'assistant card is hidden; Trust uses the dialog overlay',
+    };
 }
 
 export function normalisePresentationMode(mode) {

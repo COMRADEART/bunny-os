@@ -151,5 +151,29 @@ class CompanionAnchorTests(NodeBackedTestCase):
         self.assertEqual(call("buildCompanionAnchor", {"scale": 0.1})["scale"], 0.75)
 
 
+class PermissionCardTests(NodeBackedTestCase):
+    def test_unenforced_does_not_claim_a_kernel_boundary(self) -> None:
+        card = call("buildPermissionCard", {
+            "application": "GIMP",
+            "action": "open holiday.png",
+            "network": "Off",
+            "enforced": False,
+        })
+        self.assertFalse(card["enforced"])
+        self.assertEqual(card["standing"], "unenforced")
+        self.assertEqual(card["enforcementNote"], "Declared, not enforced")
+        blob = json.dumps(card).casefold()
+        self.assertNotIn("allowlist", blob)
+        self.assertNotIn("allow-listed", blob)
+        self.assertNotIn("allow listed", blob)
+
+    def test_enforced_is_honest_when_true(self) -> None:
+        card = call("buildPermissionCard", {"enforced": True, "network": "Off"})
+        self.assertTrue(card["enforced"])
+        self.assertEqual(card["standing"], "granted")
+        self.assertEqual(card["enforcementNote"], "Enforced")
+        self.assertEqual(card["network"], "Off")
+
+
 if __name__ == "__main__":
     unittest.main()

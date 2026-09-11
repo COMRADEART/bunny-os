@@ -49,6 +49,9 @@ export const PHASE_TO_STATE = {
     understanding: 'working',
     planning: 'working',
     waiting_for_approval: 'approval',
+    // Visual-key alias of waiting_for_approval. Same task mark so a bubble,
+    // figure and task card cannot disagree about Trust.
+    waiting_for_permission: 'approval',
     listening: 'working',
     // A voice interaction's own phase, not a presentation one: the bridge emits
     // `voice_phase {phase: "transcribing"}` between capture and understanding
