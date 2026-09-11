@@ -1,18 +1,22 @@
 # SPDX-FileCopyrightText: 2026 ComradeArt
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Per-record DEK wrap for sensitive MemoryRecord bodies.
+"""Per-record DEK envelope for sensitive MemoryRecord bodies.
 
 Honest about what this is and is not:
 
 * **This is:** a stdlib SHAKE-256 keystream + HMAC-SHA256 envelope, with a
-  random 32-byte DEK stored as an adjacent ``0600`` file. Erasing one DEK
-  shreds that record and does not touch any other. Indexes, transcripts and
-  recall hits receive refs, hashes and classification — not plaintext.
-* **This is not:** AES-256-GCM under an OS-keystore KEK. That wrap is
-  **NOT VERIFIED** and is not faked. See
-  :data:`companion.memory.record.CRYPTO_STATUS_KEYSTORE_UNVERIFIED`.
+  random 32-byte DEK. When an OS keystore is available the DEK is wrapped
+  by a scoped KEK before the adjacent ``0600`` file is written. Erasing one
+  DEK (wrapped or not) shreds that record and does not touch any other.
+  Indexes, transcripts and recall hits receive refs, hashes and
+  classification — not plaintext.
+* **This is not:** AES-256-GCM. Python stdlib has no AES. OS-keystore wrap
+  is probed at runtime; missing Secret Service is ``NOT_RUN`` /
+  ``unavailable``, not a fake wrap. Live Fedora keystore remains
+  **NOT_RUN** until a real image probe runs. See
+  :mod:`companion.memory.keystore`.
 
-No extra packages. No npm. Do not call this a keystore.
+No extra packages. No npm.
 """
 
 from __future__ import annotations
@@ -25,7 +29,7 @@ from pathlib import Path
 import secrets
 
 from companion.errors import MemoryError
-from companion.memory.record import CRYPTO_STATUS_FILE_DEK, CRYPTO_STATUS_KEYSTORE_UNVERIFIED
+from companion.memory.record import CRYPTO_STATUS_FILE_DEK, CRYPTO_STATUS_KEYSTORE_NOT_RUN
 
 __all__ = [
     "DEK_BYTES",
@@ -33,9 +37,11 @@ __all__ = [
     "dek_path",
     "generate_dek",
     "open_body",
+    "read_dek_material",
     "seal_body",
     "shred_dek",
     "write_dek",
+    "write_dek_material",
 ]
 
 DEK_BYTES = 32
@@ -51,10 +57,10 @@ def generate_dek() -> bytes:
     return secrets.token_bytes(DEK_BYTES)
 
 
-def write_dek(keys_root: Path, record_id: str, dek: bytes) -> Path:
-    """Key-first: the DEK file lands before ciphertext is acknowledged."""
-    if len(dek) != DEK_BYTES:
-        raise MemoryError("DEK must be 32 bytes")
+def write_dek_material(keys_root: Path, record_id: str, blob: bytes) -> Path:
+    """Key-first: DEK material lands before ciphertext is acknowledged."""
+    if not blob:
+        raise MemoryError("DEK material must not be empty")
     keys_root.mkdir(mode=0o700, parents=True, exist_ok=True)
     try:
         keys_root.chmod(0o700)
@@ -65,11 +71,33 @@ def write_dek(keys_root: Path, record_id: str, dek: bytes) -> Path:
     flags |= getattr(os, "O_NOFOLLOW", 0)
     descriptor = os.open(path, flags, 0o600)
     try:
-        os.write(descriptor, dek)
+        os.write(descriptor, blob)
         os.fsync(descriptor)
     finally:
         os.close(descriptor)
     return path
+
+
+def write_dek(keys_root: Path, record_id: str, dek: bytes) -> Path:
+    if len(dek) != DEK_BYTES:
+        raise MemoryError("DEK must be 32 bytes")
+    return write_dek_material(keys_root, record_id, dek)
+
+
+def read_dek_material(keys_root: Path, record_id: str) -> bytes:
+    path = dek_path(keys_root, record_id)
+    flags = os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0)
+    descriptor = os.open(path, flags)
+    try:
+        chunks: list[bytes] = []
+        while True:
+            piece = os.read(descriptor, 4096)
+            if not piece:
+                break
+            chunks.append(piece)
+    finally:
+        os.close(descriptor)
+    return b"".join(chunks)
 
 
 def shred_dek(keys_root: Path, record_id: str) -> bool:
@@ -89,7 +117,12 @@ def shred_dek(keys_root: Path, record_id: str) -> bool:
     return True
 
 
-def seal_body(plaintext: bytes, dek: bytes) -> dict[str, object]:
+def seal_body(
+    plaintext: bytes,
+    dek: bytes,
+    *,
+    keystore_wrap: str = CRYPTO_STATUS_KEYSTORE_NOT_RUN,
+) -> dict[str, object]:
     nonce = secrets.token_bytes(_NONCE_BYTES)
     stream = hashlib.shake_256(dek + nonce).digest(len(plaintext))
     ciphertext = bytes(a ^ b for a, b in zip(plaintext, stream))
@@ -101,7 +134,7 @@ def seal_body(plaintext: bytes, dek: bytes) -> dict[str, object]:
         "iv": base64.b64encode(nonce).decode("ascii"),
         "tag": base64.b64encode(tag).decode("ascii"),
         "cryptoStatus": CRYPTO_STATUS_FILE_DEK,
-        "keystoreWrap": CRYPTO_STATUS_KEYSTORE_UNVERIFIED,
+        "keystoreWrap": keystore_wrap,
     }
 
 

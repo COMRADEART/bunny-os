@@ -25,9 +25,21 @@ from companion.memory.crypto import (
     dek_path,
     generate_dek,
     open_body,
+    read_dek_material,
     seal_body,
     shred_dek,
     write_dek,
+    write_dek_material,
+)
+from companion.memory.keystore import (
+    KEK_SCOPE,
+    KeystoreBackend,
+    KeystoreProbe,
+    encode_wrapped_dek,
+    injected_probe,
+    materialize_dek,
+    probe_os_keystore,
+    wrap_dek,
 )
 from companion.memory.files import (
     iter_record_files,
@@ -38,7 +50,10 @@ from companion.memory.files import (
 )
 from companion.memory.index import INDEX_FILE_NAME, MemoryIndex
 from companion.memory.record import (
+    CRYPTO_STATUS_KEYSTORE_NOT_RUN,
+    CRYPTO_STATUS_KEYSTORE_UNAVAILABLE,
     CRYPTO_STATUS_KEYSTORE_UNVERIFIED,
+    CRYPTO_STATUS_KEYSTORE_WRAPPED,
     PLUGIN_TO_CATEGORY,
     MemoryRecord,
     canonical_body_hash,
@@ -163,6 +178,8 @@ class MemoryService:
         policy: MemoryPolicy | None = None,
         clock: Clock | None = None,
         ids: Callable[[int], str] | None = None,
+        keystore: KeystoreBackend | None = None,
+        keystore_probe: KeystoreProbe | None = None,
     ) -> None:
         self.root = Path(root)
         self.records_root = self.root / "records"
@@ -171,6 +188,16 @@ class MemoryService:
         self.policy = policy or MemoryPolicy()
         self.clock = clock or SystemClock()
         self._ids = ids
+        if keystore is not None:
+            self.keystore = keystore
+            self.keystore_probe = keystore_probe or injected_probe(keystore)
+        elif keystore_probe is not None:
+            self.keystore = None
+            self.keystore_probe = keystore_probe
+        else:
+            probed, backend = probe_os_keystore()
+            self.keystore_probe = probed
+            self.keystore = backend
         self.index.open()
 
     def insert(
@@ -239,8 +266,10 @@ class MemoryService:
         stored_text = text
         if sensitivity in ("personal", "secret"):
             dek = generate_dek()
-            write_dek(self.keys_root, record_id, dek)
-            wrapped = seal_body(text.encode("utf-8"), dek)
+            wrap_status = self._persist_dek(record_id, dek)
+            wrapped = seal_body(
+                text.encode("utf-8"), dek, keystore_wrap=wrap_status
+            )
             stored_text = ""
         record = MemoryRecord(
             id=record_id,
@@ -476,7 +505,9 @@ class MemoryService:
             "dekShredded": shredded,
             "cascaded": [item["id"] for item in receipts],
             "indexCascade": "ON DELETE CASCADE",
-            "keystoreWrap": CRYPTO_STATUS_KEYSTORE_UNVERIFIED,
+            "keystoreWrap": self.keystore_probe.status,
+            "keystoreAesGcm": CRYPTO_STATUS_KEYSTORE_UNVERIFIED,
+            "keystoreLiveFedora": self.keystore_probe.live_fedora,
             "couldNotErase": [],
         }
 
@@ -555,7 +586,11 @@ class MemoryService:
             "ann": False,
             "hnsw": False,
             "vectorService": "deferred",
-            "keystoreWrap": CRYPTO_STATUS_KEYSTORE_UNVERIFIED,
+            "keystoreWrap": self.keystore_probe.status,
+            "keystoreBackend": self.keystore_probe.backend_name,
+            "keystoreDetail": self.keystore_probe.detail,
+            "keystoreAesGcm": CRYPTO_STATUS_KEYSTORE_UNVERIFIED,
+            "keystoreLiveFedora": self.keystore_probe.live_fedora,
             "conversationSummaryUnwired": CONVERSATION_SUMMARY_UNWIRED,
         }
 
@@ -607,9 +642,37 @@ class MemoryService:
                 raise MemoryError(
                     f"DEK for {record.id} is missing; body is crypto-shredded"
                 )
-            plaintext = open_body(dict(record.body_wrapped), dek_file.read_bytes())
+            dek = materialize_dek(
+                read_dek_material(self.keys_root, record.id), self.keystore
+            )
+            plaintext = open_body(dict(record.body_wrapped), dek)
             record = replace(record, body_text=plaintext.decode("utf-8"))
         return record
+
+    def _persist_dek(self, record_id: str, dek: bytes) -> str:
+        """Wrap with the OS keystore when present; otherwise file-adjacent DEK.
+
+        Backend failure degrades. It does not crash, and it does not write a
+        wrap document without a KEK.
+        """
+        if self.keystore is None:
+            write_dek(self.keys_root, record_id, dek)
+            return self.keystore_probe.status or CRYPTO_STATUS_KEYSTORE_NOT_RUN
+        try:
+            kek = self.keystore.get_or_create_kek(KEK_SCOPE)
+            document = wrap_dek(dek, kek, scope=KEK_SCOPE)
+            write_dek_material(
+                self.keys_root, record_id, encode_wrapped_dek(document)
+            )
+            return CRYPTO_STATUS_KEYSTORE_WRAPPED
+        except (MemoryError, OSError):
+            leftover = dek_path(self.keys_root, record_id)
+            try:
+                leftover.unlink()
+            except OSError:
+                pass
+            write_dek(self.keys_root, record_id, dek)
+            return CRYPTO_STATUS_KEYSTORE_UNAVAILABLE
 
     def _file_scan(
         self,

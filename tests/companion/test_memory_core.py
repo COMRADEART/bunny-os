@@ -273,7 +273,16 @@ class MemoryCoreTests(unittest.TestCase):
             self.assertNotIn("123", hit.snippet)
         receipt = self.service.forget(secret.id, by="person-1")
         self.assertTrue(receipt["dekShredded"])
-        self.assertIn("NOT VERIFIED", receipt["keystoreWrap"])
+        self.assertIn(
+            receipt["keystoreWrap"],
+            (
+                "os-keystore-wrap NOT_RUN",
+                "os-keystore-wrap unavailable",
+                "os-keystore-wrapped-dek",
+            ),
+        )
+        self.assertIn("NOT VERIFIED", receipt["keystoreAesGcm"])
+        self.assertEqual(receipt["keystoreLiveFedora"], "NOT_RUN")
         shredded = self.service.read(secret.id, decrypt=True)
         self.assertEqual(shredded.state, "shredded")
         self.assertEqual(shredded.body_text, "")
@@ -450,6 +459,8 @@ class MemoryCliTests(unittest.TestCase):
         self.assertEqual(probe["effect"], "read-only")
         self.assertEqual(probe["layer1"], "files")
         self.assertFalse(probe["hnsw"])
+        self.assertEqual(probe["keystoreLiveFedora"], "NOT_RUN")
+        self.assertIn("NOT VERIFIED", probe["keystoreAesGcm"])
         rebuilt = companion_cli.dispatch(self._parse("memory", "reindex"))
         self.assertIn("REBUILT", rebuilt["effect"])
         recalled = companion_cli.dispatch(

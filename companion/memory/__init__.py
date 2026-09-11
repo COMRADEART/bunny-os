@@ -18,6 +18,10 @@ deferred.
 
 The ``conversation-summary`` context slot is **not** filled here. Retrieval
 returns a taint envelope of refs and snippets; invented summaries are refused.
+
+OS-keystore wrap of per-record DEKs is probed at runtime. Missing Secret
+Service degrades to file-adjacent DEKs and is labelled ``NOT_RUN`` /
+``unavailable``. It is not faked.
 """
 
 from __future__ import annotations

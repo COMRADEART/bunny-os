@@ -22,7 +22,11 @@ __all__ = [
     "CATEGORIES",
     "CONFIRMATION_STATUSES",
     "CRYPTO_STATUS_FILE_DEK",
+    "CRYPTO_STATUS_KEYSTORE_NA",
+    "CRYPTO_STATUS_KEYSTORE_NOT_RUN",
+    "CRYPTO_STATUS_KEYSTORE_UNAVAILABLE",
     "CRYPTO_STATUS_KEYSTORE_UNVERIFIED",
+    "CRYPTO_STATUS_KEYSTORE_WRAPPED",
     "MEMORY_SCHEMA_VERSION",
     "PLUGINS",
     "PLUGIN_TO_CATEGORY",
@@ -109,6 +113,10 @@ SENSITIVITIES = ("public", "personal", "secret")
 
 CRYPTO_STATUS_FILE_DEK = "file-dek-stdlib"
 CRYPTO_STATUS_KEYSTORE_UNVERIFIED = "os-keystore-wrap NOT VERIFIED"
+CRYPTO_STATUS_KEYSTORE_NOT_RUN = "os-keystore-wrap NOT_RUN"
+CRYPTO_STATUS_KEYSTORE_UNAVAILABLE = "os-keystore-wrap unavailable"
+CRYPTO_STATUS_KEYSTORE_WRAPPED = "os-keystore-wrapped-dek"
+CRYPTO_STATUS_KEYSTORE_NA = "os-keystore-wrap n/a"
 
 #: Crockford Base32, ULID alphabet.
 _CROCKFORD = "0123456789ABCDEFGHJKMNPQRSTVWXYZ"
@@ -377,7 +385,11 @@ class MemoryRecord:
                     self.body_wrapped.get("scheme") if self.body_wrapped else None
                 ),
                 "fileDek": CRYPTO_STATUS_FILE_DEK if self.is_sensitive else None,
-                "keystoreWrap": CRYPTO_STATUS_KEYSTORE_UNVERIFIED,
+                "keystoreWrap": (
+                    str(self.body_wrapped.get("keystoreWrap"))
+                    if self.body_wrapped and self.body_wrapped.get("keystoreWrap")
+                    else CRYPTO_STATUS_KEYSTORE_NA
+                ),
             },
             "deletedAt": self.deleted_at,
             "deletedBy": self.deleted_by,
