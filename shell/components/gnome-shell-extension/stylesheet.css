@@ -226,6 +226,8 @@
 .bunny-bubble-more:focus { outline: 2px solid #A78BFA; outline-offset: 2px; }
 .bunny-bubble-warning { border-color: #F59E0B; }
 .bunny-bubble-error { border-color: #EF4444; }
+.bunny-bubble-permission { border-color: #F59E0B; }
+.bunny-bubble-offline { border-color: #8F96A4; opacity: 0.92; }
 .bunny-suggestions-column { padding: 12px 12px; spacing: 2px; }
 .bunny-suggestion-row { spacing: 8px; padding: 4px 8px; border-radius: 12px; }
 .bunny-suggestion-row:hover { background-color: rgba(255, 255, 255, 0.07); }
@@ -268,6 +270,10 @@
 .bunny-trust-line-normal { font-size: 12px; font-weight: 400; color: #F7F8FA; }
 .bunny-trust-line-quiet { font-size: 11px; font-weight: 400; color: #B4BAC6; }
 .bunny-trust-line-warning { font-size: 11px; font-weight: 400; font-weight: 600; color: #F59E0B; }
+.bunny-trust-facts { spacing: 4px; padding: 8px 12px; border-radius: 12px; background-color: rgba(27, 31, 45, 0.65); }
+.bunny-trust-fact { font-size: 11px; font-weight: 400; color: #B4BAC6; }
+.bunny-trust-fact-label { font-size: 10px; font-weight: 500; font-weight: 700; color: #8F96A4; text-transform: uppercase; }
+.bunny-trust-duration { font-size: 10px; font-weight: 500; font-weight: 600; color: #F59E0B; }
 .bunny-trust-risk { spacing: 4px; }
 .bunny-trust-risk-glyph { icon-size: 18px; }
 .bunny-trust-risk-label { font-size: 10px; font-weight: 500; font-weight: 700; text-transform: uppercase; }

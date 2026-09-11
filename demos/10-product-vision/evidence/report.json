@@ -1,43 +1,91 @@
 {
   "demo": "product-vision-host",
   "honest": true,
-  "capturedAt": "20260911T022712Z",
   "stableRelease": "NO-GO",
   "pilots": "BLOCKED",
   "guestBoot": "NOT_RUN",
-  "guestBootReason": "QEMU is not installed on this host",
-  "passed": true,
-  "tests": {"ok": true, "run": 29},
-  "pages": {"ok": true, "forbiddenLabelsSeen": []},
-  "onboarding": {
-    "welcome": "Hi. I'm Bunny.",
-    "finish": "Ready"
+  "host": {
+    "chrome": "/usr/local/bin/google-chrome",
+    "display": ":1",
+    "guestBoot": "NOT_RUN",
+    "guestBootReason": "this demo does not start a guest",
+    "kvmDevice": true,
+    "pilots": "BLOCKED",
+    "platform": "linux",
+    "python": "3.12.3",
+    "qemu": "",
+    "releaseState": "NO-GO"
   },
-  "appearance": {
-    "laptop": {"recommended": "full-3d", "effective": "full-3d", "bounded": false},
-    "embedded-64mb": {"recommended": "minimal", "effective": "minimal", "bounded": true}
+  "tests": {
+    "ok": true,
+    "run": 46,
+    "failures": []
   },
-  "voice": {
-    "intentKind": "system_metric",
-    "plannedTool": "system.get_metric",
-    "stt": "NOT_RUN",
-    "modelBytesVendored": false,
-    "physicalMicrophoneValidated": false,
-    "unrestrictedShell": false
+  "pages": {
+    "ok": true,
+    "forbiddenLabelsSeen": [],
+    "onboarding": {
+      "finish": "Ready",
+      "firstRunReady": "Ready. I'll be in the corner if you need me.",
+      "installerHello": "Hi. I'm Bunny. I'll help set up your computer.",
+      "welcome": "Hi. I'm Bunny."
+    }
   },
-  "screenshots": [
-    "visual-idle.png",
-    "visual-listening.png",
-    "visual-thinking.png",
-    "visual-working.png",
-    "visual-searching.png",
-    "visual-success.png",
-    "appearance-laptop.png",
-    "appearance-embedded-64mb.png",
-    "outcomes.png",
-    "memory.png",
-    "onboarding-hello.png",
-    "onboarding-ready.png",
-    "voice.png"
-  ]
+  "screenshotKeys": [
+    "appearance-embedded-64mb",
+    "appearance-laptop",
+    "error",
+    "error-1366x768",
+    "memory",
+    "offline",
+    "onboarding-hello",
+    "onboarding-hello-1920x1080",
+    "onboarding-ready",
+    "outcomes",
+    "settings",
+    "settings-1366x768",
+    "settings-1920x1080",
+    "trust",
+    "trust-1366x768",
+    "trust-1920x1080",
+    "visual-disconnected",
+    "visual-idle",
+    "visual-listening",
+    "visual-offline",
+    "visual-searching",
+    "visual-success",
+    "visual-thinking",
+    "visual-waiting_for_permission",
+    "visual-working",
+    "voice"
+  ],
+  "screenshotsOk": {
+    "appearance-embedded-64mb": true,
+    "appearance-laptop": true,
+    "error": true,
+    "error-1366x768": true,
+    "memory": true,
+    "offline": true,
+    "onboarding-hello": true,
+    "onboarding-hello-1920x1080": true,
+    "onboarding-ready": true,
+    "outcomes": true,
+    "settings": true,
+    "settings-1366x768": true,
+    "settings-1920x1080": true,
+    "trust": true,
+    "trust-1366x768": true,
+    "trust-1920x1080": true,
+    "visual-disconnected": true,
+    "visual-idle": true,
+    "visual-listening": true,
+    "visual-offline": true,
+    "visual-searching": true,
+    "visual-success": true,
+    "visual-thinking": true,
+    "visual-waiting_for_permission": true,
+    "visual-working": true,
+    "voice": true
+  },
+  "passed": true
 }

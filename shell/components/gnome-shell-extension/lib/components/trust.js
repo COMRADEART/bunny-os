@@ -123,6 +123,9 @@ export class TrustComponent {
         this._heading = wrapping(new St.Label({style_class: 'bunny-trust-heading'}));
         this._column.add_child(this._heading);
 
+        this._facts = box({vertical: true, style_class: 'bunny-trust-facts'});
+        this._column.add_child(this._facts);
+
         this._risk = box({style_class: 'bunny-trust-risk'});
         this._riskGlyph = glyph(Icons.WARNING, 'bunny-trust-risk-glyph');
         this._riskLabel = new St.Label({style_class: 'bunny-trust-risk-label'});
@@ -140,8 +143,8 @@ export class TrustComponent {
 
         // --- the answer ---------------------------------------------------
         const actions = box({style_class: 'bunny-trust-actions'});
-        this._deny = this._action('Deny', 'deny');
-        this._allow = this._action('Allow', 'allow');
+        this._deny = this._action("Don't allow", 'deny');
+        this._allow = this._action('Allow once', 'allow');
         // Reading order is deny-last so the eye reads the options in escalating
         // order; focus order starts on deny. See focusOrder() in trustPrompt.js.
         actions.add_child(this._allow);
@@ -194,6 +197,7 @@ export class TrustComponent {
 
         this._drawIdentity(model.identity);
         this._heading.text = String(model.heading ?? '');
+        this._drawFacts(model.facts);
         this._drawRisk(model);
         this._drawLines(this._body, model.body ?? []);
         this._drawConfinement(model.confinement ?? []);
@@ -227,6 +231,32 @@ export class TrustComponent {
         // needs to hear first from a permission dialog.
         this._identity.accessible_name = identity.showId
             ? `${identity.name}, ${identity.id}` : identity.name;
+    }
+
+    _drawFacts(facts) {
+        this._facts.destroy_all_children();
+        if (!facts || typeof facts !== 'object') {
+            this._facts.visible = false;
+            return;
+        }
+        const rows = [
+            ['who', 'Who', facts.who],
+            ['what', 'What', facts.what],
+            ['why', 'Why', facts.why],
+            ['duration', 'How long', facts.duration],
+        ];
+        let shown = 0;
+        for (const [key, label, value] of rows) {
+            if (!value)
+                continue;
+            shown += 1;
+            const line = wrapping(new St.Label({
+                text: `${label}: ${value}`,
+                style_class: key === 'duration' ? 'bunny-trust-duration' : 'bunny-trust-fact',
+            }));
+            this._facts.add_child(line);
+        }
+        this._facts.visible = shown > 0;
     }
 
     _drawRisk(model) {

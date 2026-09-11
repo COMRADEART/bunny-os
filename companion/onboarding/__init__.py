@@ -42,6 +42,7 @@ from __future__ import annotations
 from .audio import AudioSurvey, AudioDeviceFinding, survey_audio
 from .character import CharacterSurvey, survey_character
 from .model import (
+    ONBOARDING_ESSENTIAL_IDS,
     ONBOARDING_STEPS,
     OnboardingModel,
     OnboardingStep,
@@ -56,6 +57,7 @@ from .providers import (
 from .speech import SpeechSurvey, survey_speech
 
 __all__ = [
+    "ONBOARDING_ESSENTIAL_IDS",
     "ONBOARDING_STEPS",
     "AudioDeviceFinding",
     "AudioSurvey",

@@ -117,6 +117,17 @@ class RequiredElementsTests(NodeBackedTestCase):
         body = " ".join(line["text"] for line in self.model["body"])
         self.assertIn("holiday.png", body)
 
+    def test_who_what_why_and_how_long_are_facts(self) -> None:
+        facts = self.model["facts"]
+        self.assertEqual(facts["who"], "GNU Image Manipulation Program")
+        self.assertIn("holiday-resized.png", facts["what"])
+        self.assertIn("holiday.png", facts["why"])
+        self.assertEqual(facts["duration"], "This time only")
+
+    def test_visible_labels_are_allow_once_and_dont_allow(self) -> None:
+        labels = {button["label"] for button in self.model["buttons"]}
+        self.assertEqual(labels, {"Allow once", "Don't allow"})
+
     def test_the_effect_is_stated_before_the_reason(self) -> None:
         """§18 and the header of trustPrompt.js: the fact leads, the claim follows."""
         keys = [line["key"] for line in self.model["body"]]

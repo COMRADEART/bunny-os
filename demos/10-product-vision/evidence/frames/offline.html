@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bunny OS · You&#x27;re offline on purpose.</title>
+<style>
+
+:root {
+  --surface-primary: #080B12;
+  --surface-secondary: rgba(17, 21, 32, 0.72);
+  --surface-raised: rgba(27, 31, 45, 0.65);
+  --surface-overlay: rgba(17, 21, 32, 0.94);
+  --surface-hover: rgba(255, 255, 255, 0.07);
+  --surface-active: rgba(255, 255, 255, 0.12);
+  --text-primary: #F7F8FA;
+  --text-secondary: #B4BAC6;
+  --text-muted: #8F96A4;
+  --text-on-accent: #FFFFFF;
+  --text-on-selection: #FFFFFF;
+  --permission: #F59E0B;
+  --offline: #8F96A4;
+  --loading: #A78BFA;
+  --border: rgba(255, 255, 255, 0.06);
+  --border-strong: rgba(255, 255, 255, 0.36);
+  --focus: #A78BFA;
+  --accent: #7C3AED;
+  --accent-text: #A78BFA;
+  --accent-soft: rgba(139, 92, 246, 0.16);
+  --success: #22C55E;
+  --warning: #F59E0B;
+  --danger: #EF4444;
+  --blocked: #FDA4AF;
+  --trust: #A78BFA;
+  --selection: rgba(139, 92, 246, 0.30);
+  --scrim: rgba(8, 11, 18, 0.72);
+  --wallpaper-start: #141033;
+  --wallpaper-end: #080B12;
+  --space-xxs: 2px;
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 20px;
+  --space-xl: 32px;
+  --space-xxl: 48px;
+  --radius-control: 12px;
+  --radius-card: 18px;
+  --radius-panel: 22px;
+  --radius-floating: 20px;
+  --radius-modal: 24px;
+  --motion-fast: 150ms;
+  --motion-normal: 220ms;
+  --motion-slow: 350ms;
+  --motion-companion: 500ms;
+  --opacity-disabled: 0.45;
+}
+@media (prefers-reduced-motion: reduce) {
+  :root { --motion-fast: 0ms; --motion-normal: 0ms; --motion-slow: 0ms; --motion-companion: 0ms; }
+}
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--surface-primary); color: var(--text-primary);
+    font: 16px/1.45 system-ui, "Segoe UI", sans-serif; }
+  .desktop { min-height: 100vh; padding: var(--space-xl) var(--space-xxl); }
+  .chrome { display: flex; justify-content: space-between; color: var(--text-muted);
+    font-size: 13px; letter-spacing: 0.04em; margin-bottom: var(--space-lg); gap: var(--space-md); }
+  .stage { display: grid; grid-template-columns: minmax(180px, 220px) minmax(0, 1fr); gap: var(--space-lg); align-items: start; }
+  .character { width: 180px; min-height: 180px; height: auto; border-radius: var(--radius-modal);
+    background: #161320; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    box-shadow: 0 0 0 1px var(--border-strong), 0 24px 60px rgba(0,0,0,0.45);
+    position: relative; padding: 16px 12px 18px; gap: 10px;
+    transition: box-shadow var(--motion-companion) ease-out, transform var(--motion-companion) ease-out; }
+  .character[data-ears="tilt"] { transform: rotate(-4deg); }
+  .character[data-ears="up"] { transform: translateY(-4px); }
+  .character[data-dim="true"] { filter: grayscale(0.35); }
+  .bunny-face { width: 132px; height: 132px; }
+  .bubble { position: static; min-width: 0; max-width: 100%;
+    background: var(--text-primary); color: var(--surface-primary); border-radius: 16px 16px 16px 4px;
+    padding: 10px 14px; font-size: 15px; font-weight: 600;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.35); }
+  .bubble.error { background: #3a1520; color: #fecdd3; }
+  .bubble.warning, .bubble.approval { background: #3a2a10; color: #fde68a; }
+  .bubble.panel { max-width: min(420px, 46vw); min-width: 240px; font-weight: 500; }
+  .mic-live { position: absolute; left: 12px; bottom: 12px; font-size: 11px; font-weight: 700;
+    letter-spacing: 0.06em; text-transform: uppercase; color: var(--focus);
+    background: rgba(8,11,18,0.72); border-radius: 999px; padding: 4px 10px; }
+  .panel { background: var(--surface-secondary); border-radius: var(--radius-panel); padding: 22px 24px 28px;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.4); min-width: 0; }
+  h1 { margin: 0 0 8px; font-size: 22px; font-weight: 650; }
+  h2 { margin: 8px 0; font-size: 16px; }
+  .muted { color: var(--text-muted); }
+  .grid { display: grid; gap: var(--space-md); }
+  .card { background: var(--surface-raised); border-radius: var(--radius-card); padding: 14px 16px; border: 1px solid var(--border-strong); }
+  .card.chosen { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .pill { display: inline-block; border-radius: 999px; padding: 2px 10px; font-size: 12px;
+    letter-spacing: 0.04em; background: rgba(255,255,255,0.08); color: var(--text-muted); }
+  .pill.ok { background: #143326; color: var(--success); }
+  .pill.warn { background: #3a2a10; color: var(--warning); }
+  .pill.no { background: #3a1520; color: #fecdd3; }
+  .note { margin-top: var(--space-lg); color: var(--text-muted); font-size: 12px; }
+  ul.plain { list-style: none; padding: 0; margin: 12px 0 0; display: grid; gap: 8px; }
+  .row { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  .modes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-md); }
+  .facts { display: grid; gap: 8px; margin: 12px 0; }
+  .facts dt { font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); }
+  .facts dd { margin: 0; }
+  .actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
+  button { appearance: none; border: 0; border-radius: var(--radius-control); padding: 8px 16px;
+    font: 600 15px/1.2 inherit; min-height: 40px; }
+  .deny { background: #3a1520; color: #fecdd3; }
+  .deny.focused { outline: 2px solid #FDE68A; outline-offset: 2px; }
+  .allow { background: var(--accent); color: var(--text-on-accent); }
+  .allow-once { background: transparent; color: var(--text-primary); border: 1px solid var(--border-strong); }
+  @media (max-width: 1366px) {
+    .desktop { padding: var(--space-lg) var(--space-xl); }
+    .stage { grid-template-columns: 1fr; }
+    .character { width: 148px; min-height: 148px; }
+    .bubble { max-width: min(420px, 100%); }
+    .modes { grid-template-columns: 1fr; }
+  }
+  @media (min-width: 1920px) {
+    .desktop { padding: 48px 80px; }
+    .panel { max-width: 920px; }
+  }
+
+  .desktop { background:
+    radial-gradient(900px 500px at 80% 10%, #0c1018 0%, transparent 55%),
+    linear-gradient(180deg, #0c1018 0%, var(--surface-primary) 100%); }
+  
+</style>
+</head>
+<body>
+
+  <div class="desktop">
+    <header class="chrome"><span>Bunny OS · Status</span>
+      <span>what happened · what to do · what changed</span></header>
+    <div class="stage">
+      
+      <aside class="character" data-pose="offline"
+             data-ears="rest" data-dim="true"
+             aria-label="Bunny is Offline">
+        
+<svg class="bunny-face" viewBox="0 0 164 164" role="img" aria-hidden="true" style="opacity:0.55">
+  <path d="M38 52 C34 18 58 10 62 46" fill="#E8D7F8" stroke="#3B3348" stroke-width="3"/>
+  <path d="M102 46 C108 10 132 18 126 52" fill="#E8D7F8" stroke="#3B3348" stroke-width="3"/>
+  <ellipse cx="82" cy="96" rx="46" ry="42" fill="#F4E9F8" stroke="#3B3348" stroke-width="3"/>
+  <ellipse cx="68" cy="92" rx="6" ry="7" fill="#1A1424"/>
+  <ellipse cx="96" cy="92" rx="6" ry="7" fill="#1A1424"/>
+  <ellipse cx="82" cy="108" rx="7" ry="5" fill="#C4A4C8"/>
+  <path d="M70 118 Q82 126 94 118" fill="none" stroke="#3B3348" stroke-width="2.5" stroke-linecap="round"/>
+  
+</svg>
+
+        
+        <div class="bubble warning" role="status">You&#x27;re offline on purpose.</div>
+      </aside>
+
+      <main class="panel">
+        <h1>You&#x27;re offline on purpose.</h1>
+        <dl class="facts">
+          <div><dt>What happened</dt><dd>Bunny will only use this computer.</dd></div>
+          <div><dt>What to do</dt><dd>Connect when you want a lookup that needs the internet.</dd></div>
+          <div><dt>What changed</dt><dd>Nothing left this machine.</dd></div>
+        </dl>
+      </main>
+    </div>
+    <p class="note">Host rendering of production copy from companion.user_copy.
+      Not a guest boot.</p>
+  </div>
+
+</body>
+</html>

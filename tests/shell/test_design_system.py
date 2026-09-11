@@ -331,13 +331,18 @@ class MotionAndTransparencyTests(NodeBackedTestCase):
 const reduced = resolveTheme({reducedMotion: true}).motion;
 const normal = resolveTheme({}).motion;
 console.log(JSON.stringify({
-  reduced: [reduced.instant, reduced.fast, reduced.normal, reduced.slow],
-  normal: [normal.instant, normal.fast, normal.normal, normal.slow],
+  reduced: [reduced.instant, reduced.fast, reduced.normal, reduced.slow,
+            reduced.companionFast, reduced.companionNormal, reduced.companionSlow],
+  ui: [normal.fast, normal.normal, normal.slow],
+  companion: [normal.companionFast, normal.companionNormal, normal.companionSlow],
   easingsSurvive: typeof reduced.easeOut === 'string',
 }));
 """)
-        self.assertEqual(measured["reduced"], [0, 0, 0, 0])
-        self.assertGreater(max(measured["normal"]), 0)
+        self.assertEqual(measured["reduced"], [0, 0, 0, 0, 0, 0, 0])
+        self.assertGreaterEqual(min(measured["ui"]), 150)
+        self.assertLessEqual(max(measured["ui"]), 350)
+        self.assertGreaterEqual(min(measured["companion"]), 300)
+        self.assertLessEqual(max(measured["companion"]), 700)
         self.assertTrue(measured["easingsSurvive"])
 
     def test_reduced_transparency_composites_rather_than_listing_a_second_palette(self) -> None:

@@ -50,6 +50,7 @@ from typing import Any, Mapping
 
 __all__ = [
     "SETTINGS_FILE_NAME",
+    "SETTINGS_NAV",
     "SETTINGS_SCHEMA_VERSION",
     "AccessibilitySettings",
     "AiSettings",
@@ -61,10 +62,41 @@ __all__ = [
     "VoiceSettings",
     "load_settings",
     "save_settings",
+    "settings_nav",
 ]
 
 SETTINGS_FILE_NAME = "settings.json"
 SETTINGS_SCHEMA_VERSION = 1
+
+#: Settings as a person looks for them. Each row names existing fields; it does
+#: not invent a second document. Apps, Permissions, System and Updates live in
+#: the desktop shell store and are listed here so the catalog is complete.
+SETTINGS_NAV: tuple[tuple[str, str, str, tuple[str, ...]], ...] = (
+    ("appearance", "Appearance", "How Bunny looks: Full 3D, Lightweight 2D, or Minimal.", ("character",)),
+    ("bunny", "Bunny", "Where Bunny sits, how large, and whether Bunny is visible.", ("character",)),
+    ("voice", "Voice", "Spoken replies. Off until you want them.", ("voice",)),
+    ("ai", "AI", "Where answers come from. Local first. No model shop.", ("ai",)),
+    ("privacy", "Privacy", "What may leave this computer, and what never does.", ("privacy",)),
+    ("memory", "Memory", "What Bunny may remember. Working memory only, until you say otherwise.", ("privacy",)),
+    ("apps", "Apps", "Installed applications and their sandboxes.", ()),
+    ("permissions", "Permissions", "What Bunny and apps may do, asked each time.", ()),
+    ("accessibility", "Accessibility", "Motion, contrast, text size, captions, text-only.", ("accessibility",)),
+    ("system", "System", "This computer: network, display, power, updates of the OS.", ()),
+    ("updates", "Updates", "OS updates, rollback, and recovery. Separate from app updates.", ()),
+)
+
+
+def settings_nav() -> tuple[dict[str, object], ...]:
+    """The catalog a Settings window should draw, in reading order."""
+    return tuple(
+        {
+            "id": item_id,
+            "title": title,
+            "blurb": blurb,
+            "sources": list(sources),
+        }
+        for item_id, title, blurb, sources in SETTINGS_NAV
+    )
 
 _MAX_FILE_BYTES = 64 * 1024
 

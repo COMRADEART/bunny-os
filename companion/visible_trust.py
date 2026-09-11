@@ -21,6 +21,7 @@ from pathlib import Path
 from typing import Any, Mapping
 
 import trust
+from companion.design_tokens import bunny_silhouette_svg, css_custom_properties, visual_key_spec
 from companion.trust_surface import (
     ALLOW_ACCESSIBLE_NAME,
     DENY_ACCESSIBLE_NAME,
@@ -85,7 +86,7 @@ _STATUS = {
 _CHARACTER = {
     "idle": "idle",
     "thinking": "thinking",
-    "waiting_for_approval": "warning",
+    "waiting_for_approval": "waiting_for_permission",
     "granted": "success",
     "denied": "idle",
     "failed": "error",
@@ -203,6 +204,16 @@ def render_text(prompt: TrustPrompt, *, state: str = "waiting_for_approval") -> 
     return "\n".join(lines)
 
 
+def _duration_for(scope: str) -> str:
+    if scope == "once":
+        return "This time only"
+    if scope == "session":
+        return "Until you close this app"
+    if scope == "always":
+        return "Until you change it in Permissions"
+    return "Only for this request"
+
+
 def render_html(
     prompt: TrustPrompt,
     *,
@@ -212,14 +223,21 @@ def render_html(
     """A self-contained Trust dialog. Deny is focused. No always-allow."""
     if state not in VISIBLE_STATES:
         raise ValueError(f"unknown visible state: {state!r}")
-    body_rows = []
+    pose = _CHARACTER[state]
+    spec = visual_key_spec(pose)
+    who = prompt.application_name
+    what = prompt.capability_note
+    why = prompt.reason or prompt.reason_note or "It didn't say why."
+    first_scope = prompt.options[0][0] if prompt.options else "once"
+    duration = _duration_for(first_scope)
+    body_rows = [
+        ("who", f"Who: {who}"),
+        ("what", f"What: {what}"),
+        ("why", f"Why: {why}"),
+        ("duration", f"How long: {duration}"),
+    ]
     if prompt.resource_display and prompt.resource_display not in prompt.headline:
-        body_rows.append(("resource", prompt.resource_display))
-    body_rows.append(("capability", prompt.capability_note))
-    if prompt.reason:
-        body_rows.append(("reason", prompt.reason))
-    elif prompt.reason_note:
-        body_rows.append(("reason", prompt.reason_note))
+        body_rows.insert(1, ("resource", prompt.resource_display))
     if prompt.enforcement_note:
         body_rows.append(("enforcement", prompt.enforcement_note))
     confinement = (
@@ -238,6 +256,13 @@ def render_html(
             f'<span class="v">{html_escape(value)}</span></li>'
             for key, value in confinement
         )
+        allow_buttons = []
+        for index, (scope, label) in enumerate(prompt.options):
+            aria = ALLOW_ACCESSIBLE_NAME if index == 0 else label
+            allow_buttons.append(
+                f'<button type="button" class="allow"'
+                f' aria-label="{html_escape(aria)}">{html_escape(label)}</button>'
+            )
         prompt_block = f"""
         <section class="trust" role="alertdialog"
                  aria-labelledby="trust-heading"
@@ -254,8 +279,7 @@ def render_html(
                     autofocus
                     aria-label="{html_escape(DENY_ACCESSIBLE_NAME)}"
                     aria-keyshortcuts="Escape Enter">{html_escape(DENY_LABEL)}</button>
-            <button type="button" class="allow"
-                    aria-label="{html_escape(ALLOW_ACCESSIBLE_NAME)}">Allow</button>
+            {"".join(allow_buttons)}
           </div>
         </section>
         """
@@ -263,70 +287,73 @@ def render_html(
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Bunny OS · Trust · {html_escape(state)}</title>
 <style>
-  :root {{
-    --ink: #080B12;
-    --panel: #111520;
-    --card: #1B1F2D;
-    --text: #F7F8FA;
-    --muted: #8F96A4;
-    --accent: #7C3AED;
-    --danger: #F43F5E;
-    --ok: #34D399;
-    --warn: #F59E0B;
-    --ring: #FDE68A;
-  }}
+{css_custom_properties()}
   * {{ box-sizing: border-box; }}
-  html, body {{ margin: 0; padding: 0; background: var(--ink); color: var(--text);
-    font: 16px/1.45 "Source Sans 3", "Segoe UI", sans-serif; }}
+  html, body {{ margin: 0; padding: 0; background: var(--surface-primary); color: var(--text-primary);
+    font: 16px/1.45 system-ui, "Segoe UI", sans-serif; }}
   .desktop {{ min-height: 100vh; padding: 48px 56px; background:
     radial-gradient(900px 500px at 80% 10%, #2a1848 0%, transparent 55%),
-    linear-gradient(180deg, #0c1018 0%, #080B12 100%); }}
-  .chrome {{ display: flex; justify-content: space-between; color: var(--muted);
-    font-size: 13px; letter-spacing: 0.04em; margin-bottom: 36px; }}
+    linear-gradient(180deg, #0c1018 0%, var(--surface-primary) 100%); }}
+  .chrome {{ display: flex; justify-content: space-between; color: var(--text-muted);
+    font-size: 13px; letter-spacing: 0.04em; margin-bottom: 36px; gap: 16px; }}
   .stage {{ display: grid; grid-template-columns: 220px 1fr; gap: 36px; align-items: start; }}
   .character {{ width: 180px; height: 180px; border-radius: 40px;
     background: #161320; display: grid; place-items: center;
-    box-shadow: 0 0 0 1px #2a2f40, 0 24px 60px rgba(0,0,0,0.45); }}
+    box-shadow: 0 0 0 1px var(--border-strong), 0 24px 60px rgba(0,0,0,0.45); }}
   .character[data-pose="thinking"] {{ box-shadow: 0 0 0 2px var(--accent), 0 24px 60px rgba(0,0,0,0.45); }}
-  .character[data-pose="warning"] {{ box-shadow: 0 0 0 2px var(--warn), 0 24px 60px rgba(0,0,0,0.45); }}
-  .character[data-pose="success"] {{ box-shadow: 0 0 0 2px var(--ok), 0 24px 60px rgba(0,0,0,0.45); }}
+  .character[data-pose="waiting_for_permission"] {{ box-shadow: 0 0 0 2px var(--permission), 0 24px 60px rgba(0,0,0,0.45); }}
+  .character[data-pose="success"] {{ box-shadow: 0 0 0 2px var(--success), 0 24px 60px rgba(0,0,0,0.45); }}
   .character[data-pose="error"] {{ box-shadow: 0 0 0 2px var(--danger), 0 24px 60px rgba(0,0,0,0.45); }}
-  .face {{ font-size: 72px; line-height: 1; }}
-  .panel {{ background: var(--panel); border-radius: 20px; padding: 22px 24px 28px;
-    box-shadow: 0 24px 60px rgba(0,0,0,0.4); min-height: 360px; }}
-  .ask {{ color: var(--muted); font-size: 14px; margin: 0 0 8px; }}
+  .bunny-face {{ width: 132px; height: 132px; }}
+  .panel {{ background: var(--surface-secondary); border-radius: 20px; padding: 22px 24px 28px;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.4); min-height: 360px; min-width: 0; }}
+  .ask {{ color: var(--text-muted); font-size: 14px; margin: 0 0 8px; }}
   .user {{ margin: 0 0 16px; font-size: 20px; }}
-  .status {{ margin: 0 0 20px; color: var(--muted); }}
-  .trust {{ background: var(--card); border-radius: 16px; padding: 20px 22px 18px;
-    border: 1px solid #2c3346; }}
-  .identity {{ margin: 0 0 6px; color: var(--muted); font-size: 13px; letter-spacing: 0.03em; }}
+  .status {{ margin: 0 0 20px; color: var(--text-muted); }}
+  .trust {{ background: var(--surface-raised); border-radius: 16px; padding: 20px 22px 18px;
+    border: 1px solid var(--border-strong); }}
+  .identity {{ margin: 0 0 6px; color: var(--text-muted); font-size: 13px; letter-spacing: 0.03em; }}
   h1 {{ margin: 0 0 12px; font-size: 22px; font-weight: 650; }}
   .row {{ margin: 0 0 8px; }}
-  .row.reason {{ color: var(--muted); }}
-  .row.enforcement {{ color: var(--warn); }}
+  .row.why, .row.reason {{ color: var(--text-muted); }}
+  .row.duration {{ color: var(--permission); font-weight: 600; }}
+  .row.enforcement {{ color: var(--warning); }}
   .confinement {{ list-style: none; padding: 10px 0 0; margin: 12px 0 0;
-    border-top: 1px solid #2c3346; display: grid; gap: 6px; }}
-  .confinement li {{ display: flex; justify-content: space-between; font-size: 14px; }}
-  .confinement .k {{ color: var(--muted); }}
-  .actions {{ display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px; }}
+    border-top: 1px solid var(--border-strong); display: grid; gap: 6px; }}
+  .confinement li {{ display: flex; justify-content: space-between; font-size: 14px; gap: 12px; }}
+  .confinement .k {{ color: var(--text-muted); }}
+  .actions {{ display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px; flex-wrap: wrap; }}
   button {{ appearance: none; border: 0; border-radius: 10px; padding: 8px 16px;
-    font: 600 15px/1.2 inherit; cursor: default; }}
+    font: 600 15px/1.2 inherit; cursor: default; min-height: 40px; }}
   .deny {{ background: #3a1520; color: #fecdd3; }}
-  .deny.focused {{ outline: 2px solid var(--ring); outline-offset: 2px; }}
-  .allow {{ background: var(--accent); color: white; }}
-  .note {{ margin-top: 28px; color: var(--muted); font-size: 12px; }}
+  .deny.focused {{ outline: 2px solid #FDE68A; outline-offset: 2px; }}
+  .allow {{ background: var(--accent); color: var(--text-on-accent); }}
+  .note {{ margin-top: 28px; color: var(--text-muted); font-size: 12px; }}
+  @media (max-width: 1366px) {{
+    .desktop {{ padding: 24px 32px; }}
+    .stage {{ grid-template-columns: 1fr; }}
+  }}
+  @media (min-width: 1920px) {{
+    .desktop {{ padding: 48px 80px; }}
+    .panel {{ max-width: 920px; }}
+  }}
 </style>
 </head>
-<body data-state="{html_escape(state)}" data-character="{html_escape(_CHARACTER[state])}">
+<body data-state="{html_escape(state)}" data-character="{html_escape(pose)}">
   <div class="desktop">
     <header class="chrome"><span>Bunny OS · host-visible Trust demo</span>
       <span>deny-by-default · no blanket always-allow</span></header>
     <div class="stage">
-      <aside class="character" data-pose="{html_escape(_CHARACTER[state])}"
-             aria-label="Bunny is {_CHARACTER[state]}">
-        <div class="face">{_face(_CHARACTER[state])}</div>
+      <aside class="character" data-pose="{html_escape(pose)}"
+             aria-label="Bunny is {html_escape(pose)}">
+        {bunny_silhouette_svg(
+            ears=str(spec.get("ears") or "rest"),
+            mic=bool(spec.get("mic")),
+            dim=bool(spec.get("dim")),
+        )}
       </aside>
       <main class="panel">
         <p class="ask">You asked Bunny</p>
@@ -335,7 +362,7 @@ def render_html(
         {prompt_block}
       </main>
     </div>
-    <p class="note">The Deny control is focused (Return and Escape refuse).
+    <p class="note">The Don't allow control is focused (Return and Escape refuse).
       This is a host rendering of the production TrustPrompt. It is not a
       booted GNOME session, not hardware evidence, and not a release GO.
       There is no blanket always-allow control.</p>
@@ -343,16 +370,6 @@ def render_html(
 </body>
 </html>
 """
-
-
-def _face(pose: str) -> str:
-    return {
-        "idle": "🐰",
-        "thinking": "🤔",
-        "warning": "⚠️",
-        "success": "✓",
-        "error": "✕",
-    }.get(pose, "🐰")
 
 
 def frames_for(prompt: TrustPrompt) -> Mapping[str, JourneyFrame]:

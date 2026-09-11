@@ -21,6 +21,11 @@ class BubbleKind(str, Enum):
     ERROR = "error"
 
 
+#: Captions stay short. Longer copy is a panel, not a bigger bubble.
+BUBBLE_CAPTION_LIMIT = 140
+BUBBLE_PANEL_LIMIT = 4096
+
+
 _CONTROL = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]")
 
 
@@ -121,6 +126,8 @@ class BubbleLayout:
     maximum_width: int
     wrapped_lines: tuple[str, ...]
     edge_avoided: bool
+    surface: str = "bubble"
+    panel_avoided: bool = False
 
     def to_json(self) -> dict[str, Any]:
         return {
@@ -131,6 +138,8 @@ class BubbleLayout:
             "maximumWidth": self.maximum_width,
             "wrappedLines": list(self.wrapped_lines),
             "edgeAvoided": self.edge_avoided,
+            "surface": self.surface,
+            "panelAvoided": self.panel_avoided,
         }
 
 
@@ -143,22 +152,35 @@ def layout_bubble(
     scale: float = 1.0,
     maximum_width: int = 420,
     edge_margin: int = 12,
+    avoid: Sequence[PixelRect] = (),
+    panel_top: int = 44,
+    dock_bottom: int = 64,
 ) -> BubbleLayout:
     if not displays:
         raise ValueError("bubble layout requires a display")
     if not 0.75 <= scale <= 3.0:
         raise ValueError("bubble scale is outside the accessibility range")
+    long_copy = len(state.text) > BUBBLE_CAPTION_LIMIT
+    surface = "panel" if long_copy or state.kind is BubbleKind.APPROVAL else "bubble"
     center_x, center_y = character.x + character.width // 2, character.y + character.height // 2
     display = next((item for item in displays if (
         item.work_area.x <= center_x < item.work_area.right
         and item.work_area.y <= center_y < item.work_area.bottom
     )), next((item for item in displays if item.primary), displays[0]))
     area = display.work_area
-    max_width = min(round(maximum_width * scale), max(120, area.width - 2 * edge_margin))
+    # Keep the top bar and dock clear. A bubble over the clock or the launcher
+    # is a bubble covering a control.
+    safe = PixelRect(
+        area.x,
+        area.y + max(0, panel_top),
+        area.width,
+        max(48, area.height - max(0, panel_top) - max(0, dock_bottom)),
+    )
+    max_width = min(round(maximum_width * scale), max(120, safe.width - 2 * edge_margin))
     char_width = max(16, int(max_width / max(8, round(8 * scale))))
     lines = tuple(textwrap.wrap(state.text, width=char_width, replace_whitespace=False) or [""])
     width = min(max_width, max(120, min(max_width, max((len(line) for line in lines), default=1) * round(8 * scale) + 28)))
-    height = min(area.height - 2 * edge_margin, max(48, len(lines) * round(20 * scale) + 24))
+    height = min(safe.height - 2 * edge_margin, max(48, len(lines) * round(20 * scale) + 24))
     anchor_x = character.x + round(anchor.x * character.width)
     anchor_y = character.y + round(anchor.y * character.height)
     preferred = anchor.preferred_side
@@ -175,20 +197,31 @@ def layout_bubble(
             return PixelRect(anchor_x - width // 2, anchor_y - gap - height, width, height)
         return PixelRect(anchor_x - width // 2, anchor_y + gap, width, height)
 
+    def blocked(rect: PixelRect) -> bool:
+        if not (rect.x >= safe.x + edge_margin and rect.right <= safe.right - edge_margin
+                and rect.y >= safe.y + edge_margin and rect.bottom <= safe.bottom - edge_margin):
+            return True
+        return any(rect.intersects(region) for region in avoid)
+
     selected_side = order[0]
     bounds = candidate(selected_side)
     avoided = False
+    panel_avoided = False
     for side in order:
         possible = candidate(side)
-        if (possible.x >= area.x + edge_margin and possible.right <= area.right - edge_margin
-                and possible.y >= area.y + edge_margin and possible.bottom <= area.bottom - edge_margin):
+        if not blocked(possible):
             avoided = side != selected_side
             selected_side, bounds = side, possible
             break
+    else:
+        panel_avoided = True
     clamped = PixelRect(
-        max(area.x + edge_margin, min(bounds.x, area.right - edge_margin - bounds.width)),
-        max(area.y + edge_margin, min(bounds.y, area.bottom - edge_margin - bounds.height)),
+        max(safe.x + edge_margin, min(bounds.x, safe.right - edge_margin - bounds.width)),
+        max(safe.y + edge_margin, min(bounds.y, safe.bottom - edge_margin - bounds.height)),
         bounds.width, bounds.height,
     )
     avoided = avoided or clamped != bounds
-    return BubbleLayout(display.display_id, clamped, selected_side, anchor_x, anchor_y, max_width, lines, avoided)
+    return BubbleLayout(
+        display.display_id, clamped, selected_side, anchor_x, anchor_y,
+        max_width, lines, avoided, surface, panel_avoided,
+    )

@@ -33,6 +33,7 @@ from companion.privacy import (
 
 __all__ = [
     "CLOUD_MODES",
+    "MEMORY_SCOPE_TITLES",
     "MEMORY_SCOPES",
     "MemoryDecision",
     "MemoryPolicy",
@@ -42,6 +43,15 @@ __all__ = [
 
 MEMORY_SCOPES = ("working", "session", "durable", "cloud")
 CLOUD_MODES = ("none", "minimized")
+
+#: What a person should read for each scope. The machine names stay in
+#: :data:`MEMORY_SCOPES`; these are the labels Settings draws.
+MEMORY_SCOPE_TITLES: Mapping[str, str] = {
+    "working": "This task only",
+    "session": "Until you log out",
+    "durable": "Saved on this computer",
+    "cloud": "Shared with a cloud you allowed",
+}
 
 #: What each scope may hold at most when the person has allowed it.
 _SCOPE_CEILING: Mapping[str, str] = {

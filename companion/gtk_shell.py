@@ -55,6 +55,7 @@ from .presentation import (
     window_directive,
 )
 from .protocol import CompanionClient, CompanionClientError
+from .user_copy import disconnected_message, error_message, voice_listening_message
 from .voice import SystemVoice, speak_caption
 
 __all__ = [
@@ -687,10 +688,9 @@ class CompanionViewModel:
     def caption(self) -> str:
         """The line the user reads. Always present, in every presentation."""
         if self.connection_error:
-            return (
-                "This window cannot reach the companion runtime. Anything already "
-                "running is unaffected and will still be there when it can."
-            )
+            return disconnected_message().sentence()
+        if self.phase == "error":
+            return error_message(detail=self.state.error_summary or self.last_error).sentence()
         if self.state.result_summary and self.phase in ("success", "presenting_result"):
             return self.state.result_summary
         return self.state.status_text or describe_phase(self.phase)
@@ -1273,6 +1273,7 @@ class BunnyCompanionApplication:  # pragma: no cover - requires a display
             .bunny-privacy { background: alpha(@view_fg_color, .06); border-radius: 10px; padding: 10px; }
             .bunny-indicator { font-weight: 700; }
             .bunny-mic-indicator { font-weight: 700; background: alpha(@error_bg_color, .18); border-radius: 10px; padding: 10px; }
+            .bunny-mic-indicator.listening { background: alpha(@error_bg_color, .32); border: 2px solid @error_color; }
             .bunny-transcript { background: alpha(@accent_bg_color, .08); border-radius: 12px; padding: 10px; }
             .bunny-partial { font-style: italic; opacity: .8; }
             .caption-heading { font-size: .82em; font-weight: 700; opacity: .75; }
@@ -1323,6 +1324,15 @@ class BunnyCompanionApplication:  # pragma: no cover - requires a display
         line = self.model.speech_indicator_line()
         self.mic_indicator.set_text(line)
         self.mic_indicator.set_visible(bool(line))
+        if phase == "listening":
+            self.mic_indicator.add_css_class("listening")
+            listening = voice_listening_message()
+            self.mic_indicator.update_property(
+                [self.Gtk.AccessibleProperty.LABEL],
+                [f"{listening.headline} {listening.happened}"],
+            )
+        else:
+            self.mic_indicator.remove_css_class("listening")
         self.mic_button.set_label(
             "⏹ Stop" if phase == "listening" else "🎤 Talk"
         )
@@ -1473,13 +1483,13 @@ class BunnyCompanionApplication:  # pragma: no cover - requires a display
 
         actions = self.Gtk.Box(orientation=self.Gtk.Orientation.HORIZONTAL, spacing=8)
         actions.append(self._button(
-            "Allow",
+            "Allow once",
             lambda _b, item=binding: self._resolve(item, "granted"),
             "suggested-action",
             accessible_name=ALLOW_ACCESSIBLE_NAME,
         ))
         actions.append(self._button(
-            "Deny",
+            "Don't allow",
             lambda _b, item=binding: self._resolve(item, "denied"),
             "destructive-action",
             accessible_name=DENY_ACCESSIBLE_NAME,

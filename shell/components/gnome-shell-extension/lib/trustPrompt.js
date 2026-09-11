@@ -129,6 +129,7 @@ export function buildPrompt(record, options = {}) {
         verdict: 'allow',
         scope: option.scope,
         role: index === 0 ? 'suggested-weak' : 'normal',
+        accessibleName: index === 0 ? 'Allow this Bunny action' : option.label,
     }));
     buttons.push({
         id: 'deny',
@@ -140,19 +141,28 @@ export function buildPrompt(record, options = {}) {
 
     const enforced = !nonEmpty(record.enforcementNote);
 
+    const firstAllowScope = (record.options && record.options[0] && record.options[0].scope) || 'once';
+    const identity = identityOf(record);
+
     return {
         source: 'capability',
         requestId: record.requestId,
         category: record.category,
         heading: record.headline,
         subheading: record.categoryTitle,
-        identity: identityOf(record),
+        identity,
         risk: record.risk,
         riskToken: RISK_TOKENS[record.risk] || 'accent',
         marked: MARKED_RISKS.includes(record.risk),
         body,
         confinement: [],
         buttons,
+        facts: factsOf({
+            who: identity ? identity.name : '',
+            what: record.capabilityNote || record.categoryTitle || '',
+            why: record.reason || record.reasonNote || '',
+            scope: firstAllowScope,
+        }),
         details: detailsOf(record),
         // Focus starts on the safe option. Reading order is the array above;
         // focus order starts at the end of it and wraps.
@@ -225,7 +235,7 @@ export function buildApproval(approval, options = {}) {
     const buttons = [
         {
             id: 'allow',
-            label: 'Allow',
+            label: 'Allow once',
             verdict: 'allow',
             scope: 'once',
             role: 'suggested-weak',
@@ -236,13 +246,15 @@ export function buildApproval(approval, options = {}) {
         },
         {
             id: 'deny',
-            label: 'Deny',
+            label: "Don't allow",
             verdict: 'deny',
             scope: null,
             role: 'safe-default',
             accessibleName: 'Deny this Bunny action',
         },
     ];
+
+    const identity = identityOf(prompt);
 
     return {
         source: 'task',
@@ -251,13 +263,21 @@ export function buildApproval(approval, options = {}) {
         category: nonEmpty(prompt.kind) ? prompt.kind : 'task',
         heading,
         subheading: nonEmpty(prompt.operationId) ? prompt.operationId : (approval.action || ''),
-        identity: identityOf(prompt),
+        identity,
         risk: 'medium',
         riskToken: RISK_TOKENS.medium,
         marked: false,
         body,
         confinement,
         buttons,
+        facts: factsOf({
+            who: identity ? identity.name : '',
+            what: prompt.expectedEffect || heading,
+            why: nonEmpty(prompt.disclosure)
+                ? `You asked Bunny to use ${prompt.disclosure}.`
+                : (nonEmpty(approval.reason) ? approval.reason : ''),
+            scope: 'once',
+        }),
         details: detailsOf(approval),
         initialFocus: String(approval.safeDefault ?? 'denied') === 'allowed' ? 'allow' : 'deny',
         defaultAction: 'deny',
@@ -332,8 +352,30 @@ function spokenFor(heading, body, confinement) {
         parts.push(line.text);
     for (const row of confinement)
         parts.push(`${row.label}: ${row.value}`);
-    parts.push('Allow, or deny. Deny is selected.');
+    parts.push('Allow once, or don\'t allow. Don\'t allow is selected.');
     return parts.join(' ');
+}
+
+/**
+ * How long an allow lasts, in words a person can use. Never a capability id.
+ */
+export function durationFor(scope) {
+    if (scope === 'once')
+        return 'This time only';
+    if (scope === 'session')
+        return 'Until you close this app';
+    if (scope === 'always')
+        return 'Until you change it in Permissions';
+    return 'Only for this request';
+}
+
+function factsOf({who, what, why, scope}) {
+    return {
+        who: who || '',
+        what: what || '',
+        why: why || '',
+        duration: durationFor(scope),
+    };
 }
 
 /**

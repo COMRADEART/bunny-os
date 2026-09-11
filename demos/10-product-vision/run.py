@@ -46,15 +46,20 @@ from companion.presentation import PresentationSignals
 from companion.product_surface import (
     forbidden_labels_present,
     render_appearance_html,
+    render_error_html,
     render_memory_html,
     render_onboarding_html,
     render_router_html,
+    render_settings_html,
+    render_trust_html,
     render_visual_html,
     render_voice_html,
     visual_demo_frames,
 )
+from companion.user_copy import disconnected_message, offline_message
+from companion.visual_keys import VISUAL_KEYS
 from companion.voice_story import run_voice_story
-from companion.visible_trust import FORBIDDEN_LABELS
+from companion.visible_trust import FORBIDDEN_LABELS, demo_prompt
 from installer.companion_flow import FIRST_RUN_STAGES, INSTALL_STAGES
 
 
@@ -81,7 +86,14 @@ def probe_host() -> dict[str, object]:
     }
 
 
-def screenshot_html(html: Path, png: Path, chrome: str) -> dict[str, object]:
+def screenshot_html(
+    html: Path,
+    png: Path,
+    chrome: str,
+    *,
+    window_size: str = "1280,800",
+    video_size: str = "1280x800",
+) -> dict[str, object]:
     png.parent.mkdir(parents=True, exist_ok=True)
     display = os.environ.get("DISPLAY") or ""
     ffmpeg = shutil.which("ffmpeg")
@@ -94,7 +106,7 @@ def screenshot_html(html: Path, png: Path, chrome: str) -> dict[str, object]:
     profile = tempfile.mkdtemp(prefix="bunny-chrome-")
     argv = [
         chrome, *DEMO_ONLY_CHROME_FLAGS,
-        f"--user-data-dir={profile}", "--window-size=1280,800",
+        f"--user-data-dir={profile}", f"--window-size={window_size}",
         "--window-position=0,0", f"--app={html.resolve().as_uri()}",
     ]
     proc = None
@@ -103,7 +115,7 @@ def screenshot_html(html: Path, png: Path, chrome: str) -> dict[str, object]:
         time.sleep(3.5)
         grab = subprocess.run(
             [
-                ffmpeg, "-y", "-f", "x11grab", "-video_size", "1280x720",
+                ffmpeg, "-y", "-f", "x11grab", "-video_size", video_size,
                 "-i", f"{display}.0", "-frames:v", "1", "-update", "1", str(png),
             ],
             capture_output=True, text=True, timeout=20,
@@ -141,7 +153,10 @@ def _signals_for(machine: str) -> PresentationSignals:
 
 def run_unit_tests() -> dict[str, object]:
     loader = unittest.TestLoader()
-    suite = loader.loadTestsFromName("tests.companion.test_product_vision")
+    suite = loader.loadTestsFromNames((
+        "tests.companion.test_product_vision",
+        "tests.companion.test_ui_polish",
+    ))
     buffer = unittest.TestResult()
     suite.run(buffer)
     failures = [f"{test.id()}: {err}" for test, err in buffer.failures + buffer.errors]
@@ -244,14 +259,23 @@ def build_pages(work: Path) -> dict[str, object]:
     written["voice"] = str(voice_path.relative_to(work))
     leaked.extend(forbidden_labels_present(voice_html))
 
+    extras = {
+        "settings": render_settings_html(),
+        "error": render_error_html(),
+        "offline": render_error_html(offline_message()),
+        "disconnected": render_error_html(disconnected_message()),
+        "trust": render_trust_html(demo_prompt()),
+    }
+    for name, html in extras.items():
+        path = frames_dir / f"{name}.html"
+        path.write_text(html, encoding="utf-8")
+        written[name] = str(path.relative_to(work))
+        leaked.extend(forbidden_labels_present(html))
+
     return {
         "ok": (
             not leaked
-            and [frame.key for frame in visual]
-            == [
-                "idle", "listening", "thinking", "working", "searching",
-                "downloading", "installing", "reading", "coding", "error", "success",
-            ]
+            and [frame.key for frame in visual] == list(VISUAL_KEYS)
             and ONBOARDING_STEPS[0].title == "Hi. I'm Bunny."
             and ONBOARDING_STEPS[-1].title == "Ready"
             and "I'm Bunny" in INSTALL_STAGES[0].says
@@ -260,6 +284,9 @@ def build_pages(work: Path) -> dict[str, object]:
             and explanations[0].target == "local"
             and explanations[1].target == "refused"
             and not any(item.allowed for item in decisions if item.scope != "working")
+            and "Allow once" in extras["trust"]
+            and "Don't allow" in extras["trust"]
+            and "Always allow everything" not in extras["trust"]
         ),
         "frames": written,
         "forbiddenLabelsSeen": sorted(set(leaked)),
@@ -297,7 +324,7 @@ def write_walkthrough(work: Path, report: dict[str, object]) -> Path:
         "## What to show a reviewer",
         "",
         "1. Visual Keys in `frames/visual-*.html` — speech bubbles for ordinary",
-        "   actions, state transitions, activity-reactive scenes.",
+        "   actions, plus permission / warning / offline / disconnected.",
         "2. Appearance in `frames/appearance-*.html` — Full 3D / Lightweight 2D /",
         "   Minimal, recommended from simulated hardware, override bounded.",
         "3. Outcomes in `frames/outcomes.html` — local vs offline refuse vs",
@@ -305,6 +332,11 @@ def write_walkthrough(work: Path, report: dict[str, object]) -> Path:
         "4. Memory in `frames/memory.html` — session/durable/cloud off by default.",
         "5. First run `frames/onboarding-hello.html` → `onboarding-ready.html`.",
         "6. Voice `frames/voice.html` — Vosk→action→TTS with honest NOT_RUN.",
+        "7. Settings `frames/settings.html` — Appearance, Bunny, Voice, AI,",
+        "   Privacy, Memory, Apps, Permissions, Accessibility, System, Updates.",
+        "8. Status `frames/error.html`, `offline.html`, `disconnected.html`.",
+        "9. Permission `frames/trust.html` — who / what / why / how long;",
+        "   Allow once / Don't allow; deny focused.",
         "",
         "## Unit tests",
         "",
@@ -377,9 +409,11 @@ def main(argv: list[str] | None = None) -> int:
     chrome = str(host["chrome"])
     shot_names = [
         "visual-idle", "visual-listening", "visual-thinking", "visual-working",
-        "visual-searching", "visual-success",
+        "visual-searching", "visual-success", "visual-waiting_for_permission",
+        "visual-offline", "visual-disconnected",
         "appearance-laptop", "appearance-embedded-64mb", "outcomes", "memory",
         "onboarding-hello", "onboarding-ready", "voice",
+        "settings", "error", "offline", "trust",
     ]
     if chrome:
         for name in shot_names:
@@ -390,6 +424,26 @@ def main(argv: list[str] | None = None) -> int:
             screenshots[name] = screenshot_html(html, png, chrome)
         shots = sum(1 for item in screenshots.values() if item.get("ok"))
         print(f"screenshots: {shots}/{len(screenshots)} via Chrome")
+        for name, window_size, video_size in (
+            ("trust", "1366,768", "1366x768"),
+            ("settings", "1366,768", "1366x768"),
+            ("error", "1366,768", "1366x768"),
+            ("trust", "1920,1080", "1920x1080"),
+            ("settings", "1920,1080", "1920x1080"),
+            ("onboarding-hello", "1920,1080", "1920x1080"),
+        ):
+            html = work / "frames" / f"{name}.html"
+            if not html.is_file():
+                continue
+            tag = video_size
+            key = f"{name}-{tag}"
+            png = work / "screenshots" / f"{key}.png"
+            screenshots[key] = screenshot_html(
+                html, png, chrome, window_size=window_size, video_size=video_size,
+            )
+        extra = [k for k in screenshots if "1366x768" in k or "1920x1080" in k]
+        extra_ok = sum(1 for k in extra if screenshots[k].get("ok"))
+        print(f"responsive screenshots: {extra_ok}/{len(extra)} (1366×768 and 1920×1080)")
     else:
         print("screenshots: NOT_RUN (Chrome not installed)")
 

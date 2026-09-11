@@ -28,15 +28,18 @@ from companion.presentation import PresentationSignals
 from companion.product_surface import (
     forbidden_labels_present,
     render_appearance_html,
+    render_error_html,
     render_memory_html,
     render_onboarding_html,
     render_router_html,
+    render_settings_html,
+    render_trust_html,
     render_visual_html,
     render_voice_html,
     visual_demo_frames,
 )
 from companion.settings import PrivacySettings, Settings, load_settings, save_settings
-from companion.visual_keys import VISUAL_KEYS, project_visual_key
+from companion.visual_keys import CORE_VISUAL_KEYS, VISUAL_KEYS, project_visual_key
 from companion.voice_story import VOICE_STORY_UTTERANCE, run_voice_story
 from companion.visible_trust import FORBIDDEN_LABELS
 from installer.companion_flow import FIRST_RUN_STAGES, INSTALL_STAGES
@@ -45,10 +48,16 @@ from installer.companion_flow import FIRST_RUN_STAGES, INSTALL_STAGES
 class VisualKeyTests(unittest.TestCase):
     def test_the_eleven_keys_are_the_product_list(self) -> None:
         self.assertEqual(
-            VISUAL_KEYS,
+            CORE_VISUAL_KEYS,
             (
                 "idle", "listening", "thinking", "working", "searching",
                 "downloading", "installing", "reading", "coding", "error", "success",
+            ),
+        )
+        self.assertEqual(
+            VISUAL_KEYS,
+            CORE_VISUAL_KEYS + (
+                "waiting_for_permission", "warning", "offline", "disconnected",
             ),
         )
 
@@ -82,6 +91,12 @@ class VisualKeyTests(unittest.TestCase):
         self.assertEqual(project_visual_key("working", tool_activity="install"), "installing")
         self.assertEqual(project_visual_key("working", tool_activity="read"), "reading")
         self.assertEqual(project_visual_key("working", tool_activity="code"), "coding")
+
+    def test_approval_offline_and_disconnect_are_readable_keys(self) -> None:
+        self.assertEqual(project_visual_key("waiting_for_approval"), "waiting_for_permission")
+        self.assertEqual(project_visual_key("blocked"), "warning")
+        self.assertEqual(project_visual_key("idle", offline=True), "offline")
+        self.assertEqual(project_visual_key("disconnected"), "disconnected")
 
 
 class AppearanceTests(unittest.TestCase):
@@ -280,6 +295,12 @@ class OnboardingCopyTests(unittest.TestCase):
         self.assertIn("Minimal", character.body)
         privacy = next(step for step in ONBOARDING_STEPS if step.step_id == "privacy")
         self.assertIn("memory stay off", privacy.body)
+        self.assertTrue(privacy.skip)
+        self.assertFalse(privacy.required)
+
+    def test_essential_spine_is_hello_look_permissions_ready(self) -> None:
+        from companion.onboarding.model import ONBOARDING_ESSENTIAL_IDS
+        self.assertEqual(ONBOARDING_ESSENTIAL_IDS, ("welcome", "character", "permissions", "finish"))
 
     def test_the_installer_and_first_run_say_the_same_hello_and_ready(self) -> None:
         self.assertIn("I'm Bunny", INSTALL_STAGES[0].says)
@@ -322,9 +343,49 @@ class SecurityInvariantsTests(unittest.TestCase):
         frames = visual_demo_frames()
         htmls = [render_visual_html(frame) for frame in frames]
         htmls.append(render_onboarding_html())
+        htmls.append(render_settings_html())
+        htmls.append(render_error_html())
         for html in htmls:
             for label in FORBIDDEN_LABELS:
                 self.assertNotIn(label, html)
+
+    def test_settings_are_named_for_people(self) -> None:
+        html = render_settings_html()
+        for title in (
+            "Appearance", "Bunny", "Voice", "AI", "Privacy", "Memory",
+            "Apps", "Permissions", "Accessibility", "System", "Updates",
+        ):
+            self.assertIn(title, html)
+        self.assertNotIn("GGUF", html)
+
+    def test_errors_say_what_happened_what_to_do_and_what_changed(self) -> None:
+        html = render_error_html()
+        self.assertIn("What happened", html)
+        self.assertIn("What to do", html)
+        self.assertIn("What changed", html)
+        self.assertIn("bunny-face", html)
+
+    def test_the_companion_face_is_one_silhouette(self) -> None:
+        html = render_visual_html(visual_demo_frames()[0])
+        self.assertIn("bunny-face", html)
+        self.assertNotIn("🤔", html)
+        self.assertNotIn("🐰", html)
+        listening = next(frame for frame in visual_demo_frames() if frame.key == "listening")
+        listening_html = render_visual_html(listening)
+        self.assertIn("Mic on", listening_html)
+        self.assertTrue(listening.mic_visible)
+
+    def test_trust_html_uses_who_what_why_and_scope_labels(self) -> None:
+        from companion.visible_trust import demo_prompt
+        html = render_trust_html(demo_prompt())
+        self.assertIn("Who", html)
+        self.assertIn("What", html)
+        self.assertIn("Why", html)
+        self.assertIn("How long", html)
+        self.assertIn("This time only", html)
+        self.assertIn("Allow once", html)
+        self.assertIn("Don't allow", html)
+        self.assertEqual(forbidden_labels_present(html), [])
 
 
 if __name__ == "__main__":

@@ -68,10 +68,14 @@ Spacing is 2/4/8/12/20/32/48. Radii carry hierarchy — control 12, card 18, pan
 22, floating 20, modal 24 — and only the Trust prompt sits at modal elevation,
 because it is the only thing in Bunny OS permitted to interrupt.
 
-Motion is instant/fast/normal/slow (0/120/220/360 ms) with two easings. Reduced
-motion sets every duration to **zero**, not shorter: a 40 ms fade is still a fade
-and the setting is not "please hurry". The easings survive so that a component
-reading `theme.motion.easeOut` does not have to check first.
+Motion is instant/fast/normal/slow (0/150/220/350 ms) for UI chrome, plus
+companionFast/companionNormal/companionSlow (300/500/700 ms) for pose changes.
+Reduced motion sets every duration — including companion — to **zero**, not
+shorter: a 40 ms fade is still a fade and the setting is not "please hurry".
+The easings survive so that a component reading `theme.motion.easeOut` does not
+have to check first. Semantic interaction roles (`permission`, `offline`,
+`loading`) and Visual Key pose cues (ears / mic / dim) live in the same token
+file.
 
 Focus is one treatment everywhere: a 2px ring at 2px offset, 3px at high
 contrast, in a colour that is never the accent — a focus ring sharing a colour

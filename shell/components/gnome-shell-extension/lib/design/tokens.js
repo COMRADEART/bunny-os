@@ -36,7 +36,7 @@
 // `violet600` would eventually reach for it, and §6 is explicit that components
 // consume meaning rather than swatches. Every exported colour is a role.
 
-export const SCHEMA_VERSION = 3;
+export const SCHEMA_VERSION = 4;
 
 // ---------------------------------------------------------------- primitives
 
@@ -198,9 +198,14 @@ export const ELEVATION_LEVELS = ['base', 'raised', 'overlay', 'dialog'];
  */
 export const MOTION = {
     instant: 0,
-    fast: 120,
+    // UI chrome: 150–350 ms. Fast was 120 and felt hurried; slow was 360 and
+    // sat just outside the band. Companion pose changes are slower on purpose.
+    fast: 150,
     normal: 220,
-    slow: 360,
+    slow: 350,
+    companionFast: 300,
+    companionNormal: 500,
+    companionSlow: 700,
     reduced: 0,
     easeOut: 'ease-out',
     easeInOut: 'ease-in-out',
@@ -284,6 +289,9 @@ export const THEMES = {
             textMuted: PALETTE.slate400,
             textOnAccent: PALETTE.white,
             textOnSelection: PALETTE.white,
+            permission: PALETTE.amber400,
+            offline: PALETTE.slate400,
+            loading: PALETTE.violet400,
             border: 'rgba(255, 255, 255, 0.06)',
             // 0.36, not 0.18. This is a control boundary — the search entry,
             // the approval card — and at 0.18 it measured 1.72:1 against the
@@ -326,6 +334,9 @@ export const THEMES = {
             textSecondary: PALETTE.plum700,
             textMuted: PALETTE.plum600,
             textOnAccent: PALETTE.white,
+            permission: PALETTE.amber700,
+            offline: PALETTE.plum600,
+            loading: PALETTE.violet700,
             // The light selection is a 18 % violet wash, not a solid fill, so
             // the text on it stays dark. White here would be the same defect
             // the gate caught in the high-contrast themes, in the other
@@ -371,6 +382,9 @@ export const THEMES = {
             textMuted: PALETTE.nearWhite,
             textOnAccent: PALETTE.black,
             textOnSelection: PALETTE.black,
+            permission: PALETTE.hcAmber,
+            offline: PALETTE.nearWhite,
+            loading: PALETTE.cyan,
             border: PALETTE.white,
             borderStrong: PALETTE.white,
             focus: PALETTE.yellow,
@@ -406,6 +420,9 @@ export const THEMES = {
             textMuted: PALETTE.near1,
             textOnAccent: PALETTE.white,
             textOnSelection: PALETTE.white,
+            permission: PALETTE.hcAmberDark,
+            offline: PALETTE.near1,
+            loading: PALETTE.hcBlue,
             border: PALETTE.black,
             borderStrong: PALETTE.black,
             focus: PALETTE.hcFocusLight,
@@ -499,6 +516,49 @@ export const OPACITY = {
     surfaceReducedTransparency: 1.0,
     disabled: 0.45,
     unavailable: 0.38,
+    hover: 1.0,
+    pressed: 1.0,
+    loading: 0.72,
+};
+
+/**
+ * Interaction and status roles. A component asks for `permission` or `offline`,
+ * never for an amber hex. Colour is one cue; `label` is the one a person who
+ * cannot see the hue still gets.
+ */
+export const INTERACTION = {
+    hover: {token: 'surfaceHover', opacity: 1.0, label: 'Hover'},
+    pressed: {token: 'surfaceActive', opacity: 1.0, label: 'Pressed'},
+    disabled: {token: 'textMuted', opacity: 0.45, label: 'Unavailable'},
+    loading: {token: 'loading', opacity: 0.72, label: 'Working'},
+    warning: {token: 'warning', opacity: 1.0, label: 'Warning'},
+    error: {token: 'danger', opacity: 1.0, label: 'Error'},
+    success: {token: 'success', opacity: 1.0, label: 'Done'},
+    permission: {token: 'permission', opacity: 1.0, label: 'Needs permission'},
+    offline: {token: 'offline', opacity: 1.0, label: 'Offline'},
+};
+
+/**
+ * Visual Keys the Companion face may show. A projection of presentation phase
+ * plus activity, not a second state machine. Ears / mic / dim are how a person
+ * reads the state without the caption — the silhouette stays Bunny.
+ */
+export const VISUAL_KEY = {
+    idle: {token: 'trust', intensity: 'quiet', ears: 'rest', mic: false, dim: false},
+    listening: {token: 'focus', intensity: 'active', ears: 'up', mic: true, dim: false},
+    thinking: {token: 'trust', intensity: 'active', ears: 'tilt', mic: false, dim: false},
+    working: {token: 'success', intensity: 'active', ears: 'rest', mic: false, dim: false},
+    searching: {token: 'focus', intensity: 'active', ears: 'up', mic: false, dim: false},
+    downloading: {token: 'warning', intensity: 'active', ears: 'rest', mic: false, dim: false},
+    installing: {token: 'warning', intensity: 'active', ears: 'rest', mic: false, dim: false},
+    reading: {token: 'trust', intensity: 'quiet', ears: 'tilt', mic: false, dim: false},
+    coding: {token: 'focus', intensity: 'active', ears: 'rest', mic: false, dim: false},
+    waiting_for_permission: {token: 'permission', intensity: 'attention', ears: 'up', mic: false, dim: false},
+    success: {token: 'success', intensity: 'active', ears: 'rest', mic: false, dim: false},
+    warning: {token: 'warning', intensity: 'attention', ears: 'tilt', mic: false, dim: false},
+    error: {token: 'danger', intensity: 'attention', ears: 'down', mic: false, dim: false},
+    offline: {token: 'offline', intensity: 'quiet', ears: 'rest', mic: false, dim: true},
+    disconnected: {token: 'textMuted', intensity: 'quiet', ears: 'down', mic: false, dim: true},
 };
 
 /** WCAG 2.2 AA, restated as data so the gate and the docs cannot disagree. */
@@ -531,6 +591,9 @@ export const CONTRAST_PAIRS = [
     {text: 'danger', surface: 'surfaceSecondary', type: 'bodySmall'},
     {text: 'blocked', surface: 'surfaceSecondary', type: 'bodySmall'},
     {text: 'trust', surface: 'surfaceSecondary', type: 'bodySmall'},
+    {text: 'permission', surface: 'surfaceSecondary', type: 'bodySmall'},
+    {text: 'offline', surface: 'surfaceSecondary', type: 'bodySmall'},
+    {text: 'loading', surface: 'surfaceSecondary', type: 'bodySmall'},
     {text: 'textOnAccent', surface: 'accent', type: 'button'},
     {text: 'textOnSelection', surface: 'selection', type: 'body'},
 ];
