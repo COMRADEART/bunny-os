@@ -244,14 +244,23 @@ def authorize_remote_generate(
 ) -> MemoryDecision:
     """Gate one remote generate: current request only, never durable memory.
 
-    ``remote_dispatch`` is the consent for *this* interaction's allow-listed
-    fields. Session and durable memory stay off regardless of the person's
-    cloud_context setting — persistent memory must not dump online. Forbidden
-    keys (conversation-summary, durable records, summary_text) refuse the
-    whole payload rather than being stripped into a quiet leak.
+    Two consents, not one:
+
+    * ``PrivacySettings.cloud_context`` gates **memory / cloud-context egress**
+      (durable, session, conversation-summary). ``none`` keeps that off.
+    * ``remote_dispatch`` gates **this-interaction online generate** of
+      current-request allow-listed fields only.
+
+    They must not be conflated. ``cloud_context=none`` does not silently
+    block an already-granted ``remote_dispatch`` current-request hop.
+    Session and durable stay off on the effective policy regardless.
+    Forbidden keys (``summary_text``, conversation-summary, durable records,
+    ``memory_records``) refuse the whole payload rather than being stripped
+    into a quiet leak. Conversation-summary stays unwired.
 
     ``authorize_cloud_context`` still runs so the field allow-list and remote
-    audience projection are on the generation wire.
+    audience projection are on the generation wire. Alpha CODE accept:
+    ``docs/SECURITY_ALPHA_ACCEPT_REMOTE_DISPATCH_CLOUD_CONTEXT.md``.
     """
     if not remote_dispatch_granted:
         return MemoryDecision(
@@ -277,16 +286,17 @@ def authorize_remote_generate(
         cloud_context="minimized",
     )
     if policy is not None and policy.cloud_context == "none":
-        # SECURITY CO-SIGN HOOK (Memory Core / ADR 0008):
-        # ``remote_dispatch`` consent currently authorises the *current-request*
-        # allow-list even when the person's ``cloud_context=none``. That does
-        # **not** dump durable memory: session/durable stay off on this
-        # effective policy, and forbidden keys still refuse the whole payload.
-        # Tightening ``cloud_context=none`` to also block the already-approved
-        # current-request hop is a Security decision. Do not weaken this path;
-        # do not silently change it. Deny-by-default remains for anything not
-        # on REMOTE_GENERATE_ALLOWED_FIELDS. Memory Core consults ``policy``
-        # for local store/recall only.
+        # SECURITY CO-SIGN HOOK — ACCEPTED for Alpha at CODE (2026-09-11).
+        # Owner: Bunny OS Security Engineer.
+        # cloud_context gates memory/cloud-context egress (durable / session /
+        # summary). remote_dispatch gates this-interaction online generate of
+        # current-request allow-listed fields only. Therefore cloud_context=none
+        # MUST NOT silently block an already-granted remote_dispatch
+        # current-request hop. Do not reverse this `pass` into a refuse.
+        # Session/durable stay off on ``effective``; forbidden keys still
+        # refuse the whole payload. Conversation-summary stays unwired.
+        # Revisit before wiring conversation-summary or expanding the online
+        # path. See docs/SECURITY_ALPHA_ACCEPT_REMOTE_DISPATCH_CLOUD_CONTEXT.md.
         pass
     return authorize_cloud_context(
         payload,
