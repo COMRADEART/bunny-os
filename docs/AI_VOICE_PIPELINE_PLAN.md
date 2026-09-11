@@ -205,6 +205,34 @@ Asserts: `spokenE2e == NOT_RUN`; STT live / mic live / TTS playback never PASS; 
 
 ---
 
+## Authoring-host probe (2026-09-11, this cloud VM)
+
+`python3 -m unittest tests.companion.test_voice_pipeline_plan tests.companion.test_product_vision.VoiceStoryTests tests.companion.test_vosk_runtime tests.companion.test_speech_worker.Endings tests.companion.test_speech_security.OversizedAndMalformedInput tests.companion.test_speech_recognizers -v`
+
+**40 tests, OK** (0.235s).
+
+Inventory (`run_voice_pipeline_inventory()`):
+
+| Stage | Status | Evidence |
+|---|---|---|
+| Push-to-talk | PASS | CODE |
+| Mic helper / live mic | NOT_RUN | no `pw-record`/`parec`/`arecord`; `/dev/snd` absent |
+| `libvosk.so` | NOT_RUN | `libvosk.so was not found` |
+| Vosk model dir | NOT_RUN | none under `MODEL_DIRECTORIES` |
+| STT live | NOT_RUN | labelled fixture, not a recording |
+| Silence / malformed | PASS | CODE |
+| Intent / plan (fixture) | PASS | `system_metric` → `system.get_metric` |
+| `llama-cli` / GGUF | NOT_RUN | binary and weights absent |
+| Model timeout / tool failure | PASS | CODE path |
+| TTS weights / espeak | NOT_RUN | pocket, kitten, espeak/spd-say absent |
+| TTS live playback | NOT_RUN | IMAGE/BOOT |
+| Typed fallback / states | PASS | CODE |
+| **Spoken e2e** | **NOT_RUN** | IMAGE/BOOT |
+
+Construction probe: `SpeechInputService` and `VoiceService` did not raise. Speech readiness `STT_RUNTIME_MISSING`. `spokenE2e: NOT_RUN`.
+
+---
+
 ## What this PR changes (code)
 
 1. `docs/AI_VOICE_PIPELINE_PLAN.md` — this plan.
