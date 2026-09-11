@@ -59,34 +59,42 @@ export const DEFAULT_CHARACTER = {
     id: 'bunny-default',
     name: 'Bunny',
     description:
-        'A young adult standing in a dark violet hoodie with the Bunny OS mark on the chest, ' +
-        'dark trousers and pale sneakers, lit from the left by violet light.',
-    version: 2,
+        'A young stylized 3D human in a black hoodie, black pants and pale sneakers, ' +
+        'with a warm expressive face. Film-quality presence, approachable rather than cute. ' +
+        'The Bunny mark sits on the chest. Replace by dropping a GLB at CHARACTER_ASSETS.glb ' +
+        'or a JSON definition next to this file; missing assets fall back to this vector.',
+    version: 3,
+    assetHooks: {
+        package2d: 'assets/companion/characters/default-bunny',
+        package3d: 'assets/companion/characters/default-bunny-3d',
+        glb: 'assets/companion/characters/default-bunny-3d/assets/bunny-3d.glb',
+        placeholder: 'this vector definition',
+    },
 
     palette: {
         skin: [0.85, 0.70, 0.58],
         skinShadow: [0.71, 0.56, 0.45],
         hair: [0.13, 0.11, 0.16],
         hairHighlight: [0.26, 0.22, 0.34],
-        hoodie: [0.17, 0.16, 0.26],
-        hoodieShadow: [0.10, 0.10, 0.17],
-        hoodieHighlight: [0.26, 0.24, 0.39],
+        hoodie: [0.08, 0.08, 0.09],
+        hoodieShadow: [0.04, 0.04, 0.05],
+        hoodieHighlight: [0.16, 0.16, 0.18],
         // The ribbing at the hem and the cuffs. Deliberately a step darker than
         // the body of the garment rather than a step lighter: it has to read as
         // a band even on a screen that has crushed the blacks.
-        hoodieRib: [0.13, 0.12, 0.21],
-        hood: [0.13, 0.12, 0.20],
-        pocket: [0.14, 0.13, 0.22],
+        hoodieRib: [0.05, 0.05, 0.06],
+        hood: [0.06, 0.06, 0.07],
+        pocket: [0.07, 0.07, 0.08],
         drawstring: [0.80, 0.80, 0.86],
         trousers: [0.11, 0.11, 0.15],
         trousersHighlight: [0.17, 0.17, 0.23],
         shoe: [0.92, 0.92, 0.95],
         shoeSole: [0.70, 0.70, 0.77],
-        shoeAccent: [0.545, 0.361, 0.965],
-        logo: [0.655, 0.545, 0.980],
+        shoeAccent: [0.306, 0.659, 1.0],
+        logo: [0.306, 0.659, 1.0],
         eye: [0.09, 0.08, 0.12],
         mouth: [0.38, 0.24, 0.26],
-        rimLight: [0.655, 0.545, 0.980],
+        rimLight: [0.306, 0.659, 1.0],
         // The three state accents. These were referenced by the pose table from
         // the day it was written and were never defined, so `success` fell
         // through to the violet rim light and the documented "success turns the

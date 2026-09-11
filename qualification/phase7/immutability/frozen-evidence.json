@@ -953,8 +953,8 @@
    "sha256": "775040773fb4cfef31e47e9aa6a60ac21cc3f6bba66591e0abf2f2241c95fbb9"
   },
   "qualification/design/story-manifest.json": {
-   "bytes": 102938,
-   "sha256": "4d9b8712736b74639d960a7310b27ace360f897956404579ba4ca163b7247124"
+   "bytes": 103106,
+   "sha256": "765c59c038e06b51255a88d009abf85e046c8f5d9f535f379935bceadc7af11c"
   },
   "qualification/display-stack/evidence-context.json": {
    "bytes": 2083,

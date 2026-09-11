@@ -63,13 +63,21 @@ export const FRAME_FLOOR_FPS = 24;
 export const BATTERY_FLOOR_PERCENT = 15;
 
 /** Animation budget in milliseconds, per fidelity tier, at normal motion.
- * Companion pose changes sit in the 300–700 ms band; UI chrome uses MOTION. */
+ * Companion pose changes sit in the 300–420 ms band; UI chrome uses MOTION. */
 export const MOTION_BUDGET_MS = {
-    'full-3d': 500,
-    'lightweight-3d': 400,
+    'full-3d': 420,
+    'lightweight-3d': 360,
     'animated-2d': 300,
     'static-image': 0,
     'text-only': 0,
+};
+
+/** Phase 1 rendering-tier names, mapped onto the fidelity ladder. */
+export const RENDERING_TIER_TO_FIDELITY = {
+    FULL: 'full-3d',
+    BALANCED: 'lightweight-3d',
+    LIGHT: 'static-image',
+    MINIMAL: 'text-only',
 };
 
 function tierIndex(tier) {

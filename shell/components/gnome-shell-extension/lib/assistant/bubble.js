@@ -27,7 +27,8 @@ import {rgb} from '../design/current.js';
 import {box, glass} from '../widgets.js';
 import {ease, animationsEnabled} from '../animation.js';
 import {clamp, logError_, setAccessibleRole} from '../util.js';
-import {MOTION} from '../design/tokens.js';
+import {MOTION, RADIUS} from '../design/tokens.js';
+import {limitBubbleText} from '../design/primitives.js';
 
 const MAX_WIDTH = 360;
 const MIN_WIDTH = 200;
@@ -50,7 +51,7 @@ const PREVIEW_LIMIT = 220;
 
 export class AssistantBubble {
     constructor({blur = false} = {}) {
-        this.actor = glass('bunny-bubble', {blur, radius: 20});
+        this.actor = glass('bunny-bubble', {blur, radius: RADIUS.bubble});
         this.actor.visible = false;
         this.actor.opacity = 0;
 
@@ -85,6 +86,9 @@ export class AssistantBubble {
         this._more.connect('clicked', () => this._onOpenFull?.(this._full));
         this._column.add_child(this._more);
 
+        this._actions = box({style_class: 'bunny-bubble-actions', visible: false});
+        this._column.add_child(this._actions);
+
         this._wave = new St.DrawingArea({
             style_class: 'bunny-bubble-wave', height: 18, visible: false, reactive: false,
         });
@@ -106,30 +110,29 @@ export class AssistantBubble {
      *   full response" means — the bubble does not know what other surfaces
      *   exist.
      */
-    say(text, {tone = 'normal', wave = false, onOpenFull = null} = {}) {
+    say(text, {tone = 'normal', wave = false, onOpenFull = null, actions = []} = {}) {
         const full = String(text ?? '');
-        const truncated = full.length > PREVIEW_LIMIT;
-        // Cut at a word, not mid-token: a directory listing broken inside a
-        // filename reads as a corrupted name rather than a shortened list.
-        let preview = full;
-        if (truncated) {
-            const cut = full.slice(0, PREVIEW_LIMIT);
+        const limited = limitBubbleText(full);
+        const truncated = limited.length < full.trim().length || full.length > PREVIEW_LIMIT;
+        let preview = limited;
+        if (preview.length > PREVIEW_LIMIT) {
+            const cut = preview.slice(0, PREVIEW_LIMIT);
             const lastSpace = cut.lastIndexOf(' ');
             preview = `${(lastSpace > PREVIEW_LIMIT * 0.6 ? cut.slice(0, lastSpace) : cut).trimEnd()}…`;
         }
         this._text.text = preview;
-        // The accessible name carries the *whole* answer. A screen-reader user
-        // has no "read the rest in the card" affordance that is any easier than
-        // hearing it here, and the truncation is a visual accommodation.
         this.actor.accessible_name = `Bunny says: ${full}`;
         this._full = full;
 
         this._more.visible = truncated && onOpenFull !== null;
         this._onOpenFull = onOpenFull;
         if (this._more.visible) {
-            const remaining = full.length - preview.length + 1;
-            this._more.label = `Read the rest (${remaining} more characters)`;
+            const remaining = Math.max(0, full.length - preview.length);
+            this._more.label = remaining > 0
+                ? `Read the rest (${remaining} more characters)`
+                : 'Read the rest';
         }
+        this._setActions(Array.isArray(actions) ? actions : []);
         for (const name of ['bunny-bubble-warning', 'bunny-bubble-error'])
             this.actor.remove_style_class_name(name);
         if (tone === 'warning')
@@ -139,6 +142,28 @@ export class AssistantBubble {
 
         this._setWave(wave);
         this._reveal();
+    }
+
+    _setActions(actions) {
+        const existing = [...this._actions.get_children()];
+        for (const child of existing)
+            child.destroy();
+        this._actions.visible = actions.length > 0;
+        for (const action of actions.slice(0, 3)) {
+            const label = String(action?.label ?? '').trim();
+            if (!label)
+                continue;
+            const button = new St.Button({
+                label,
+                style_class: 'bunny-bubble-action',
+                can_focus: true,
+            });
+            button.accessible_name = String(action.accessibleName ?? label);
+            const handler = action.onActivate;
+            if (typeof handler === 'function')
+                button.connect('clicked', handler);
+            this._actions.add_child(button);
+        }
     }
 
     hide() {

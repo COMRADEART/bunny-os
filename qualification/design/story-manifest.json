@@ -9,14 +9,15 @@
    "highContrast": false,
    "cardWidth": 304,
    "typeSizes": {
-    "display": 24,
-    "title": 19,
-    "heading": 14,
-    "body": 12,
-    "bodySmall": 11,
-    "caption": 10,
-    "button": 11,
-    "mono": 11
+    "display": 32,
+    "displayLarge": 40,
+    "title": 22,
+    "heading": 16,
+    "body": 14,
+    "bodySmall": 12,
+    "caption": 11,
+    "button": 12,
+    "mono": 12
    },
    "panels": [
     "Trust — the journey prompt",
@@ -692,14 +693,15 @@
    "highContrast": false,
    "cardWidth": 304,
    "typeSizes": {
-    "display": 24,
-    "title": 19,
-    "heading": 14,
-    "body": 12,
-    "bodySmall": 11,
-    "caption": 10,
-    "button": 11,
-    "mono": 11
+    "display": 32,
+    "displayLarge": 40,
+    "title": 22,
+    "heading": 16,
+    "body": 14,
+    "bodySmall": 12,
+    "caption": 11,
+    "button": 12,
+    "mono": 12
    },
    "panels": [
     "Trust — the journey prompt",
@@ -1375,14 +1377,15 @@
    "highContrast": false,
    "cardWidth": 608,
    "typeSizes": {
-    "display": 48,
-    "title": 38,
-    "heading": 28,
-    "body": 24,
-    "bodySmall": 22,
-    "caption": 20,
-    "button": 22,
-    "mono": 22
+    "display": 64,
+    "displayLarge": 80,
+    "title": 44,
+    "heading": 32,
+    "body": 28,
+    "bodySmall": 24,
+    "caption": 22,
+    "button": 24,
+    "mono": 24
    },
    "panels": [
     "Trust — the journey prompt",
@@ -2058,14 +2061,15 @@
    "highContrast": false,
    "cardWidth": 608,
    "typeSizes": {
-    "display": 48,
-    "title": 38,
-    "heading": 28,
-    "body": 24,
-    "bodySmall": 22,
-    "caption": 20,
-    "button": 22,
-    "mono": 22
+    "display": 64,
+    "displayLarge": 80,
+    "title": 44,
+    "heading": 32,
+    "body": 28,
+    "bodySmall": 24,
+    "caption": 22,
+    "button": 24,
+    "mono": 24
    },
    "panels": [
     "Trust — the journey prompt",
@@ -2741,14 +2745,15 @@
    "highContrast": true,
    "cardWidth": 304,
    "typeSizes": {
-    "display": 24,
-    "title": 19,
-    "heading": 14,
-    "body": 12,
-    "bodySmall": 11,
-    "caption": 10,
-    "button": 11,
-    "mono": 11
+    "display": 32,
+    "displayLarge": 40,
+    "title": 22,
+    "heading": 16,
+    "body": 14,
+    "bodySmall": 12,
+    "caption": 11,
+    "button": 12,
+    "mono": 12
    },
    "panels": [
     "Trust — the journey prompt",
@@ -3424,14 +3429,15 @@
    "highContrast": true,
    "cardWidth": 304,
    "typeSizes": {
-    "display": 24,
-    "title": 19,
-    "heading": 14,
-    "body": 12,
-    "bodySmall": 11,
-    "caption": 10,
-    "button": 11,
-    "mono": 11
+    "display": 32,
+    "displayLarge": 40,
+    "title": 22,
+    "heading": 16,
+    "body": 14,
+    "bodySmall": 12,
+    "caption": 11,
+    "button": 12,
+    "mono": 12
    },
    "panels": [
     "Trust — the journey prompt",
@@ -4107,14 +4113,15 @@
    "highContrast": false,
    "cardWidth": 304,
    "typeSizes": {
-    "display": 24,
-    "title": 19,
-    "heading": 14,
-    "body": 12,
-    "bodySmall": 11,
-    "caption": 10,
-    "button": 11,
-    "mono": 11
+    "display": 32,
+    "displayLarge": 40,
+    "title": 22,
+    "heading": 16,
+    "body": 14,
+    "bodySmall": 12,
+    "caption": 11,
+    "button": 12,
+    "mono": 12
    },
    "panels": [
     "Trust — the journey prompt",

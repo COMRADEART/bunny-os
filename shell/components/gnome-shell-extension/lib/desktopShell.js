@@ -952,6 +952,7 @@ export class DesktopShell {
         const solution = solve(screen, {
             scale: this._textScale(),
             metric: this.theme?.metric ?? null,
+            profile: this._layoutProfile(),
         });
         this._solution = solution;
 
@@ -968,8 +969,13 @@ export class DesktopShell {
         if (this.topBar)
             place(this.topBar.actor, rects.topBar);
         if (this.sidebar) {
-            place(this.sidebar.actor, rects.sidebar);
-            this.sidebar.setCollapsed(solution.sidebarMode === 'collapsed');
+            if (rects.sidebar) {
+                this.sidebar.actor.visible = true;
+                place(this.sidebar.actor, rects.sidebar);
+                this.sidebar.setCollapsed(solution.sidebarMode === 'collapsed');
+            } else {
+                this.sidebar.actor.visible = false;
+            }
         }
         if (this.dock)
             place(this.dock.actor, rects.dock);
@@ -1034,6 +1040,15 @@ export class DesktopShell {
      */
     _textScale() {
         return this.theme?.textScale ?? 1;
+    }
+
+    /**
+     * Phase 1 ships the chrome skeleton: thin bar, centred dock, companion
+     * at bottom-right, no widget clutter. The existing dashboard remains the
+     * `full` profile in lib/layout.js for layouts that still need the cards.
+     */
+    _layoutProfile() {
+        return 'skeleton';
     }
 
     _placeBubbles(band) {
@@ -1851,11 +1866,19 @@ export class DesktopShell {
         Main.layoutManager.addChrome(this._powerMenu.actor, {
             affectsStruts: false, trackFullscreen: true,
         });
-        const sidebarRect = this._solution.rects.sidebar;
         const monitor = Main.layoutManager.primaryMonitor;
-        this._powerMenu.actor.set_position(
-            monitor.x + sidebarRect.x + sidebarRect.width + 10,
-            monitor.y + sidebarRect.y + sidebarRect.height - 190);
+        const sidebarRect = this._solution.rects.sidebar;
+        const dockRect = this._solution.rects.dock;
+        const topBar = this._solution.rects.topBar;
+        // Skeleton chrome hides the sidebar; the menu then sits above the
+        // centred dock rather than crashing on a missing rail.
+        const x = sidebarRect
+            ? monitor.x + sidebarRect.x + sidebarRect.width + 10
+            : monitor.x + (dockRect?.x ?? 20);
+        const y = sidebarRect
+            ? monitor.y + sidebarRect.y + sidebarRect.height - 190
+            : monitor.y + (dockRect ? dockRect.y - 190 : (topBar?.height ?? 44) + 20);
+        this._powerMenu.actor.set_position(x, y);
         enter(this._powerMenu.actor, {rise: 8});
 
         // Modal so Escape closes it and a click elsewhere does too, which is

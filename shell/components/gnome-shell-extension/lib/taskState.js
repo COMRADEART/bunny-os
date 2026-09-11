@@ -196,6 +196,7 @@ export function buildTaskStatus({
             name,
             done: index >= 0 && position < index,
             current: position === index,
+            glyph: index >= 0 && position < index ? 'done' : position === index ? 'current' : 'pending',
         })),
         // Only ever a number the runtime measured. §21.
         percent: typeof percent === 'number' && Number.isFinite(percent)

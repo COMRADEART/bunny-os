@@ -3,6 +3,10 @@
 //
 // The pieces every surface is built from.
 //
+// Phase 1 drawable *models* (Button, TaskTimeline, CompanionAnchor, …) live in
+// lib/design/primitives.js so they can be tested under node. This file is the
+// St actors that consume those models inside GNOME Shell.
+//
 // Three things live here because they were about to be written five times each:
 // a box whose orientation is set the way GNOME 50 wants it, the glass panel
 // that gives the desktop its material, and the "Unavailable" convention.
