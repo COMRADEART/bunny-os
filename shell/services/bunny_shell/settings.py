@@ -99,6 +99,12 @@ DEFINITIONS: dict[str, dict[str, Any]] = {
     },
     "theme": {"default": "system", "scope": "user", "owner": "bunny-shell", "validate": _choice("system", "bunny-light", "bunny-dark", "high-contrast")},
     "textScalePercent": {"default": 100, "scope": "user", "owner": "gnome", "validate": _bounded_int(75, 200)},
+    "renderingTier": {
+        "default": "FULL",
+        "scope": "user",
+        "owner": "bunny-desktop",
+        "validate": _choice("FULL", "BALANCED", "LIGHT", "MINIMAL"),
+    },
 }
 
 SECTIONS = SIDEBAR_SECTION_TITLES

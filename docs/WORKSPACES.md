@@ -15,3 +15,5 @@ bunny-workspace restore <id>
 ```
 
 The dashboard does not run project scripts on open. Future `Run tests`, checkpoint, and review actions must call Bunny Core and its permission/sandbox APIs.
+
+Phase 4 draft snap chrome reserves the bottom-right companion so snapped windows do not cover the figure. Geometry is host-tested at 1366 / 1080 / 4K. Live Mutter tiling is not claimed.

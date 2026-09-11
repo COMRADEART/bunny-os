@@ -23,6 +23,7 @@ __all__ = [
     "SCREEN_QUESTIONS",
     "fidelity_for_tier",
     "tier_is_implemented",
+    "tier_is_fully_featured",
     "limit_bubble_text",
     "os_state_from_phase",
     "pose_for_os_state",
@@ -135,13 +136,24 @@ def pose_for_os_state(state: str) -> str:
 
 
 def tier_is_implemented(tier: str) -> bool:
-    """Phase 1: only FULL is a live renderer. Other names are stubs."""
+    """Phase 4: every named tier is a live ceiling on the fidelity ladder."""
     document = load_tokens()
     companion = document.get("companion") if isinstance(document, dict) else {}
     tiers = companion.get("renderingTiers") if isinstance(companion, dict) else {}
     key = str(tier or "FULL").upper()
     if isinstance(tiers, dict) and key in tiers and isinstance(tiers[key], dict):
         return tiers[key].get("implemented") is True
+    return key in RENDERING_TIERS
+
+
+def tier_is_fully_featured(tier: str) -> bool:
+    """FULL is the only fully featured tier. Lower tiers must not claim full-3d."""
+    document = load_tokens()
+    companion = document.get("companion") if isinstance(document, dict) else {}
+    tiers = companion.get("renderingTiers") if isinstance(companion, dict) else {}
+    key = str(tier or "FULL").upper()
+    if isinstance(tiers, dict) and key in tiers and isinstance(tiers[key], dict):
+        return tiers[key].get("fullyFeatured") is True
     return key == "FULL"
 
 

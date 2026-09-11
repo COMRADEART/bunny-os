@@ -14,3 +14,5 @@ bunny-terminal propose --cwd /project -- rm -rf build
 ```
 
 A future Execute button must revalidate the edited proposal, request any required Bunny permission, create a checkpoint where required, display environment and cwd again, and enter the selected sandbox. Terminal history may not be sent to a provider without disclosure and approval.
+
+Phase 4 draft chrome wraps the same classifier: read-only commands run without Trust; anything else is Allow once / Don't allow, Don't allow focused. The companion is not required. Live GNOME Terminal remains the actual emulator.

@@ -8,7 +8,7 @@ Pinned and recent application IDs are private, bounded, persistent launcher stat
 
 Natural-language routing is deterministic for supported phrases. `Check for system updates` becomes `system_action` with `brokerMethod=update.check`, broker permission, and confirmation. `Ask Bunny …` becomes `bunny_request`; it never becomes a broker call. Ambiguous input remains `search`. No language model invokes the broker.
 
-Consequential results open a detail/confirmation or approval flow. They do not execute directly from search. Application launch is non-consequential; system mutation is not.
+Consequential results open a detail/confirmation or approval flow. They do not execute directly from search. Application launch is non-consequential; system mutation is not. Phase 4 Bunny Files treats opening a file in an application as Trust (Allow once / Don't allow). Nautilus remains the file browser; companion actions stay in the bubble, not a chat wall.
 
 Default shortcut is `Super+Space`. When the Bunny desktop is on, that key opens the in-session command surface (search field, not a chat log); when it is off, it still opens the GTK launcher. `Super+A` remains GNOME's application grid, so approvals use `Super+Shift+A`. The editor is the GNOME extension settings schema; a future preferences UI may write only those typed keys.
 

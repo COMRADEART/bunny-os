@@ -211,9 +211,15 @@ def main(program: str | None = None, argv: list[str] | None = None) -> int:
             return _terminal(arguments)
         if name == "bunny-launcher":
             return _launcher(arguments)
-        if name in {"bunny-approvals", "bunny-tasks", "bunny-plans", "bunny-project", "bunny-command", "bunny-privacy", "bunny-notifications", "bunny-quick-settings"}:
+        if name in {
+            "bunny-approvals", "bunny-tasks", "bunny-plans", "bunny-project",
+            "bunny-command", "bunny-privacy", "bunny-notifications", "bunny-quick-settings",
+        }:
             from .ui import run_surface
             return run_surface(name.removeprefix("bunny-").replace("command", "command"))
+        if arguments and arguments[0] in {"files", "software", "updates", "terminal-chrome"}:
+            from .ui import run_surface
+            return run_surface(arguments[0])
         return _shell(arguments)
     except (KeyError, OSError, PermissionError, TimeoutError, ValueError) as exc:
         print(f"{name}: {exc}", file=sys.stderr)

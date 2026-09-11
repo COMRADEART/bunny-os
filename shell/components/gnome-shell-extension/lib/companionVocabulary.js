@@ -114,10 +114,20 @@ export function fidelityForTier(tier = 'FULL') {
     return entry.fidelity;
 }
 
-/** Whether a named rendering tier is actually drawn. Only FULL is, in Phase 1. */
+/**
+ * Whether a named rendering tier is a live ceiling on the fidelity ladder.
+ * Phase 4: all four names are implemented. FULL remains the only fully
+ * featured tier — see `tierIsFullyFeatured`.
+ */
 export function tierIsImplemented(tier = 'FULL') {
     const entry = RENDERING_TIERS[String(tier).toUpperCase()] ?? RENDERING_TIERS.FULL;
     return entry.implemented === true;
+}
+
+/** True only for FULL. Lower tiers must not advertise full-3d chrome. */
+export function tierIsFullyFeatured(tier = 'FULL') {
+    const entry = RENDERING_TIERS[String(tier).toUpperCase()] ?? RENDERING_TIERS.FULL;
+    return entry.fullyFeatured === true;
 }
 
 const TRUST_WAIT_NAMES = new Set(['waiting_for_approval', 'waiting_for_permission', 'asking']);

@@ -31,6 +31,12 @@ export const PROACTIVITY_LABELS = Object.freeze({
 });
 
 const ANIMATION_LABELS = Object.freeze({full: 'Full', reduced: 'Reduced', none: 'None'});
+export const RENDERING_TIER_LABELS = Object.freeze({
+    FULL: 'Full — fully featured 3D when the machine can',
+    BALANCED: 'Balanced — lighter 3D, not a Full claim',
+    LIGHT: 'Light — still picture, same character',
+    MINIMAL: 'Minimal — status word, same identity',
+});
 
 export function normalisePersonality(value) {
     const token = String(value || 'bunny').trim().toLowerCase().replace(/\s+/g, '');
@@ -86,7 +92,7 @@ export function buildBunnyCompanionModule({
     scale = 1, animationIntensity = 1, animation = 'full',
     contextualReactions = true, visible = true, companionMode = 'full',
     voiceEnabled = true, packageId = 'Bunny', aiMode = 'automatic',
-    localOnlyMode = false,
+    localOnlyMode = false, renderingTier = 'FULL',
 } = {}) {
     const person = normalisePersonality(personality);
     const offer = normaliseProactivity(proactivity);
@@ -98,6 +104,8 @@ export function buildBunnyCompanionModule({
     const scaleNumber = Number(scale);
     const scaleLabel = Number.isFinite(scaleNumber) ? `${scaleNumber}×` : '1×';
     const mode = resolveAiMode({localOnlyMode, aiMode});
+    const tier = String(renderingTier || 'FULL').toUpperCase();
+    const rendering = RENDERING_TIER_LABELS[tier] ? tier : 'FULL';
     return moduleModel({
         id: 'bunny',
         title: 'Bunny',
@@ -122,6 +130,10 @@ export function buildBunnyCompanionModule({
             row('animationIntensity', 'Animation intensity', `${Math.max(0, Math.min(100, intensityPct))}%`, {
                 hint: 'How far poses travel. Expression stays readable at 0%.',
                 control: 'slider',
+            }),
+            row('renderingTier', 'Rendering', RENDERING_TIER_LABELS[rendering], {
+                hint: 'Full is the only fully featured tier. Balanced, Light, and Minimal are real ceilings on the same character — not a second Bunny, and not a fake Full claim.',
+                control: 'choice',
             }),
             row('dock', 'Position', String(dock || 'bottom-right').replace(/-/g, ' '), {
                 hint: 'Named corners, not pixel coordinates. Default is bottom right.',
