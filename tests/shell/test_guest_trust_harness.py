@@ -94,6 +94,17 @@ class GuestTrustHarnessTests(unittest.TestCase):
         self.assertIn("NO-GO", text)
         self.assertIn("resolve_approval", text)
         self.assertNotIn('guestBoot": "PASS"', text)
+        self.assertIn("guestPassed", text)
+        self.assertIn("probePassed", text)
+        self.assertIn('passed = guest_passed', text)
+
+    def test_top_level_passed_is_guest_success_not_a_probe(self) -> None:
+        """NOT_RUN must not set report.passed unless PROBE_OK is explicit."""
+        source = DEMO.read_text(encoding="utf-8")
+        self.assertIn("BUNNY_GUEST_TRUST_PROBE_OK", source)
+        self.assertIn("passed = guest_passed", source)
+        self.assertIn('"guestPassed": guest_passed', source)
+        self.assertIn('"probePassed": probe_passed', source)
 
     def test_a_guest_boot_requires_writable_kvm(self) -> None:
         """`/dev/kvm` existing is not permission to use it.

@@ -22,10 +22,40 @@ from .voice_support import make_request, write_wav
 
 
 REPOSITORY = Path(__file__).resolve().parents[2]
+_LFS_POINTER = b"version https://git-lfs.github.com/spec/v1\n"
 
 
 def _sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _is_git_lfs_pointer(path: Path) -> bool:
+    try:
+        with path.open("rb") as handle:
+            return handle.read(len(_LFS_POINTER)) == _LFS_POINTER
+    except OSError:
+        return False
+
+
+def _require_materialised_voice_bytes(*paths: Path) -> None:
+    """Skip with an operator-facing message instead of a byte-count FAIL.
+
+    A default clone stores Git LFS pointer stubs (~130 bytes). Matching
+    PROVENANCE.json against those stubs would be a fake fix. Pull the real
+    bytes with ``git lfs pull`` on a reference host, then re-run.
+    """
+    pointers = [path for path in paths if path.is_file() and _is_git_lfs_pointer(path)]
+    if not pointers:
+        missing = [path for path in paths if not path.is_file()]
+        if missing:
+            raise unittest.SkipTest(
+                "voice asset missing: " + ", ".join(str(path) for path in missing)
+            )
+        return
+    raise unittest.SkipTest(
+        "Git LFS pointer stubs, not model bytes. Run `git lfs pull` from the "
+        f"repository root (first pointer: {pointers[0]})."
+    )
 
 
 def _installation(
@@ -399,6 +429,7 @@ class BundledAssetTests(unittest.TestCase):
         for provider_id, model_id in (("pocket", "english"), ("kitten", "nano-int8")):
             with self.subTest(provider=provider_id):
                 root = REPOSITORY / "assets/voice/tts" / provider_id / model_id
+                _require_materialised_voice_bytes(*root.rglob("*"))
                 installation, status, detail = _read_installation(root, provider_id, model_id)
                 self.assertIsNotNone(installation, detail)
                 self.assertEqual(status, "READY")
@@ -419,11 +450,16 @@ class BundledAssetTests(unittest.TestCase):
         self.assertEqual(len(manifest["wheels"]), 1)
         record = manifest["wheels"][0]
         wheel = root / record["fileName"]
+        _require_materialised_voice_bytes(wheel)
         self.assertEqual(wheel.stat().st_size, record["sizeBytes"])
         self.assertEqual(_sha256(wheel), record["sha256"])
 
     def test_provenance_accounts_for_every_selected_tts_byte(self) -> None:
         voice_root = REPOSITORY / "assets/voice"
+        _require_materialised_voice_bytes(
+            * (p for p in (voice_root / "tts").rglob("*") if p.is_file()),
+            * (p for p in (voice_root / "runtime").rglob("*") if p.is_file()),
+        )
         provenance = json.loads((voice_root / "PROVENANCE.json").read_text(encoding="utf-8"))
         measured = sum(
             path.stat().st_size

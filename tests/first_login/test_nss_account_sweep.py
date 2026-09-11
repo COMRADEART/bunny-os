@@ -52,11 +52,11 @@ CHRONYD_DROPIN = SYSTEMD_DIR / "chronyd.service.d" / "50-bunny-nss-order.conf"
 
 #: The identities the repo bakes into /etc/passwd. root is always there; the
 #: repo's service account bunny-policy is the other one its units use
-#: (systemd/bunny-policy-agent.service). bunny-policy's provisioning is a
-#: separate known gap recorded elsewhere — this set only states that *if* the
-#: account is provisioned, it lives in /etc/passwd, not /usr/lib/passwd, and so
-#: does not route through altfiles. A numeric UID/GID needs no NSS lookup at
-#: all and is safe regardless.
+#: (systemd/bunny-policy-agent.service). systemd-sysusers installs it from
+#: config/sysusers/bunny-policy.conf into /etc/passwd (files NSS), not
+#: /usr/lib/passwd. Factory overlay tests may still omit the account until
+#: sysusers has run; that is a boot-order fact, not an altfiles identity.
+#: A numeric UID/GID needs no NSS lookup at all and is safe regardless.
 ETC_PASSWD_IDENTITIES: frozenset[str] = frozenset({"root", "bunny-policy"})
 
 

@@ -25,10 +25,10 @@ On this Ubuntu host:
 | `python3 scripts/task.py test-trust` | 91 OK |
 | `python3 scripts/task.py test-capsules` | 109 OK |
 | `python3 demos/08-visible-trust/run.py` | exit 0; host Trust surfaces PASS; `guestBoot=NOT_RUN`; stable NO-GO |
-| `python3 demos/09-guest-trust/run.py` | exit 0; **honest guest `NOT_RUN`**; 15 harness tests PASS; `report.passed=true` means “honest probe”, not guest PASS |
+| `python3 demos/09-guest-trust/run.py` | exit 0; **honest guest `NOT_RUN`**; harness tests PASS; `probePassed=true`, `guestPassed=false`, **`passed=false`** (NOT_RUN is not a guest PASS) |
 | `python3 demos/10-product-vision/run.py` | exit 0; 13/13 screenshots; voice STT/mic/TTS **NOT_RUN**; `passed=true` because NOT_RUN ≠ FAIL |
 
-**Could not run here:** Fedora `image-builder`, QEMU guest boot, composed QCOW2, Podman image build, physical hardware, Orca, live microphone STT, neural TTS against real LFS bytes, `jsonschema` (not installed on this image; CI installs it). `/dev/kvm` exists but is **not writable** for this user.
+**Could not run here:** Fedora `image-builder`, QEMU guest boot, composed QCOW2, Podman image build, physical hardware, Orca, live microphone STT, neural TTS *playback* in a graphical session, `jsonschema` (not installed on this image; CI installs it). `/dev/kvm` exists but is **not writable** for this user. Git LFS voice bytes **were** pulled for a provenance re-measure.
 
 ---
 
@@ -135,7 +135,7 @@ Details that matter:
 | Demo | Command | What it proves | What `NOT_RUN` means |
 |---|---|---|---|
 | **08 visible Trust** | `python3 demos/08-visible-trust/run.py` | Host can draw the production Trust prompt, photograph idle → thinking → waiting_for_approval → granted/denied/failed, and drive Allow/Deny through `TrustGate` by accessible name. Capability CLI and companion local path run. Deadline classification is tested. | This demo **never boots a guest**. After the honesty fix, `guestBoot` is always `NOT_RUN`, even if KVM+QEMU exist. |
-| **09 guest Trust** | `python3 demos/09-guest-trust/run.py` | On a Fedora 44 image-builder host with a composed `shell-test` QCOW2, writable `/dev/kvm`, QEMU, OVMF, guestfish: boot twice, wait for `BUNNY_SESSION_READY`, type the resize request, press Allow/Deny at AT-SPI extents. The driver does **not** call `resolve_approval`. | On this Ubuntu host: no QEMU, no image-builder, no qcow, kvm not writable → journeys `NOT_RUN`. Exit 0 if host harness tests pass. `BUNNY_GUEST_TRUST_REQUIRE=1` → exit 2 if guest is not PASS. `report.passed=true` with `guest.ok=false` is an **honest probe**, not a guest PASS. |
+| **09 guest Trust** | `python3 demos/09-guest-trust/run.py` | On a Fedora 44 image-builder host with a composed `shell-test` QCOW2, writable `/dev/kvm`, QEMU, OVMF, guestfish: boot twice, wait for `BUNNY_SESSION_READY`, type the resize request, press Allow/Deny at AT-SPI extents. The driver does **not** call `resolve_approval`. | On this Ubuntu host: no QEMU, no image-builder, no qcow, kvm not writable → journeys `NOT_RUN`. Exit 0 if host harness tests pass (`probePassed`). Top-level `passed` is `guestPassed` only, so NOT_RUN yields `passed=false` unless `BUNNY_GUEST_TRUST_PROBE_OK=1`. `BUNNY_GUEST_TRUST_REQUIRE=1` → exit 2 if guest is not PASS. |
 | **10 product vision** | `python3 demos/10-product-vision/run.py` | Host HTML/Chrome captures of Visual Keys, appearance (full-3d / 2d / minimal from capability signals), outcome copy, memory defaults (session/durable/cloud **off**), first-run “Hi. I'm Bunny.” / “Ready.” Bounded voice intent without vendoring models. | Guest always `NOT_RUN`. Voice STT, microphone, and TTS are `NOT_RUN` when Vosk/mic/espeak are missing (this host). Unit tests of the surfaces can still PASS. |
 
 `NOT_RUN` is a first-class outcome in this project. It is **blocking** for qualification/stable gates. It is **not** a silent skip that gets renamed PASS. Demos that exit 0 with `NOT_RUN` are telling you the probe was honest, not that the missing layer worked.
@@ -234,9 +234,9 @@ CI has been red since at least the functional-alpha merge (#37, 2026-08-25). The
 | Allow-once grant dropped too early | **Historical-fixed**. `capsules/runtime.py` `reconcile()` calls `_drop_session_grants`. Covered in `tests/capsules/test_runtime.py`. |
 | `TaskResult` failure presented as completed | **Historical-fixed** for “executor defaulted success while every op failed”. Mixed completed+failed is **intentionally** observed success (`test_a_mix_is_not_reported_as_a_total_failure`). |
 | `RestrictNamespaces` vs bubblewrap | **Historical-fixed**. Launcher is a transient **service** (`capsules/command.py`). Companion units still set `RestrictNamespaces=yes` (correct for the Companion; wrong if the capsule inherited it). |
-| Companion `ProtectHome` + export EROFS | **Historical-fixed** in unit form: `ReadWritePaths=` for `%h/.local/share/bunny`, `%h/.local/state/bunny`, and `-%h/Pictures`. **Still limited:** not dynamic for custom `XDG_PICTURES_DIR`; comments say a portal is the real answer. |
-| NSS / `User=` races (chronyd 217/USER) | **Partially fixed.** `chronyd.service.d` waits on `nss-user-lookup.target` (`CHRONYD_NSS_ORDERING_REPORT.md`). A full sweep of other `User=` units is **not** claimed as runtime-closed. Functional alpha: source-level PASS, runtime often NOT_RUN. |
-| Voice provenance 605-byte excess | **Likely still open when LFS is pulled.** `NEXT_PHASE.md` recorded 436,604,323 vs 436,603,718. **This host measured Git LFS pointer stubs** (e.g. wheel 134 bytes vs 184,378,318), so the 605-byte mismatch was **not re-measured**. Do not “fix” the JSON to match stubs. |
+| Companion `ProtectHome` + export EROFS | **Historical-fixed** in unit form: `ReadWritePaths=` for `%h/.local/share/bunny`, `%h/.local/state/bunny`, and `-%h/Pictures`. **Improved on this branch:** user generator `bunny-pictures-path-generator` adds a drop-in for a relocated Pictures directory still under `$HOME`. A portal is still the long-term answer; ProtectHome is not widened. Graphical load of the drop-in is **NOT_RUN** here. |
+| NSS / `User=` races (chronyd 217/USER) | **Partially fixed.** `chronyd.service.d` waits on `nss-user-lookup.target`. Repo `User=` units are classified at build time. **This branch** adds `bunny-nss-order-generator` to overlay the same drop-in on installed altfiles-backed units that lack it. Runtime proof still needs a booted Fedora image (`/usr/lib/passwd` absent here → generator no-op, **NOT_RUN**). |
+| Voice provenance 605-byte excess | **Not reproduced after `git lfs pull`.** Measured `436,603,718` bytes equals `PROVENANCE.json` `selectedAssetAndNoticeSizeBytes`. The historical 605-byte excess was **not** present with materialised LFS bytes; JSON was not rewritten. Pointer-stub clones still skip with “run `git lfs pull`”. |
 | Capsule bridge “no UI caller” / graphical Trust in guest | Host demo #38 covers the prompt **on the development host**. Graphical AT-SPI inside Bunny Shell still needs Fedora QCOW2 (#39 path). **NOT_RUN here.** |
 
 ### Findings — each with evidence
@@ -339,61 +339,62 @@ CI has been red since at least the functional-alpha merge (#37, 2026-08-25). The
 
 #### B13. Demo 09 `report.passed=true` when guest is `NOT_RUN`
 
-- **Severity:** Medium (misread risk). **Not changed** — documented behaviour.
-- **Status:** Confirmed. `demos/09-guest-trust/run.py` sets `passed` if host tests pass and guest status is `PASS`, `NOT_RUN`, or `BLOCKED`.
-- **Impact:** a JSON consumer that only looks at `passed` will treat an unbooted guest as success. The report also has `honest: true`, `guest.ok: false`, `stableRelease: NO-GO`.
-- **Fix direction:** keep honesty fields; any dashboard must key off `guest.status` / `summary.guestGranted`, not `passed` alone. Optional: rename to `probePassed` in a later change.
+- **Severity:** Medium (misread risk).
+- **Status:** **Fixed on this branch.** `passed` is now `guestPassed` (`guest.status == PASS`). `probePassed` is the host harness. Default NOT_RUN → `passed=false`. `BUNNY_GUEST_TRUST_PROBE_OK=1` restores the old probe-only `passed` bit. Exit 0 still means an honest probe whose host tests passed.
+- **Location:** `demos/09-guest-trust/run.py`, WALKTHROUGH, `tests/shell/test_guest_trust_harness.py`, checked-in `demos/09-guest-trust/evidence/`.
+- **Impact:** a JSON consumer that only looks at `passed` no longer treats an unbooted guest as success.
+- **Evidence:** source tests require `passed = guest_passed`; evidence `report.json` has `probePassed: true`, `guestPassed: false`, `passed: false`. Guest journeys remain **NOT_RUN** on this host.
 
 #### B14. Neural TTS / voice provenance tests fail without Git LFS
 
-- **Severity:** Medium for builders who forget `git lfs pull`; **not** re-verified as the 605-byte excess.
-- **Status:** Confirmed on this host (pointer files). Historical 605-byte mismatch **Likely** still open when bytes are real.
+- **Severity:** Medium for builders who forget `git lfs pull`.
+- **Status:** **Fixed (test honesty + re-measure) on this branch.** `git lfs pull` on this host materialised the torch wheel (184,378,318 bytes) and Pocket weights. Measured selected TTS+runtime+license bytes: **436,603,718**, equal to `PROVENANCE.json`. The historical 605-byte excess was **not reproduced**; the JSON was not changed. Pointer stubs still skip with “run `git lfs pull`” instead of a fake size FAIL.
 - **Location:** `tests/companion/test_neural_tts.py`; `assets/voice/PROVENANCE.json`.
-- **Impact:** full `task.py test` is red on a default clone. Image packaging of voice is not proven here.
-- **Fix direction:** pull LFS on reference hosts; if the 605-byte gap remains, establish which side is wrong — do not edit the provenance number to match.
+- **Impact:** a default clone without LFS skips provenance honestly. A clone with LFS pulled can assert the recorded total.
+- **Won’t fake-fix:** do not edit the provenance number to match stubs.
 
 #### B15. `bunny-policy-agent` unit names a program nothing installs
 
-- **Severity:** Medium (recorded gap). Unchanged.
-- **Status:** Confirmed as an acknowledged gap: `operations/data/unit-program-gaps.json`, `KNOWN_LIMITATIONS.md`. CI skips it by name.
-- **Impact:** if enrolment ever enabled that unit, it would fail at ExecStart.
-- **Fix direction:** install a real binary or stop shipping the unit as enabled; do not only skip it in the fixture.
+- **Severity:** Medium (recorded gap).
+- **Status:** **Fixed on this branch** by installing a real fail-closed program, not by skipping the unit in CI.
+- **Location:** `scripts/bunny-policy-agent.py` → `/usr/libexec/bunny-policy-agent`; `config/sysusers/bunny-policy.conf` (UID/GID 471); tmpfiles `/var/lib/bunny-os/policy`; removed from `operations/data/unit-program-gaps.json`; `KNOWN_LIMITATIONS.md` rewritten. Frozen `qualification/installed-system/evidence/` still records the old gap (byte-identical; not edited).
+- **Impact:** an enrolled device no longer fails at ExecStart with “not executable”. The agent exits 2 without writing managed-settings or staging unsigned policy. Enterprise pilot remains **BLOCKED**.
+- **Evidence:** `tests/policy/test_policy_agent.py`; `ci-verify-units.sh` installs the program.
 
 #### B16. Companion Pictures export is not XDG-dynamic
 
 - **Severity:** Low/Medium for users who relocate Pictures.
-- **Status:** Confirmed in unit comments; not a regression in #38–#40.
-- **Location:** `systemd/user/bunny-companion.service` `ReadWritePaths=-%h/Pictures`.
-- **Impact:** custom `XDG_PICTURES_DIR` still EROFS on the final copy-out. Capsule sandbox is unchanged; the **runtime** cannot write the result.
-- **Fix direction:** xdg-desktop-portal document/file transfer, not a wider `ProtectHome=` hole.
+- **Status:** **Fixed (safe interim) on this branch.** Full xdg-desktop-portal export is **Still open** as the long-term design.
+- **Location:** `scripts/bunny-pictures-path-generator.py` (user generator); default `ReadWritePaths=-%h/Pictures` kept; ProtectHome not widened. Paths outside `$HOME` or named like credential dirs are refused.
+- **Impact:** a relocated Pictures directory under the home gets an extra ReadWritePaths drop-in. Portal is still the right product answer. Graphical session load is **NOT_RUN** here.
+- **Evidence:** `tests/companion/test_pictures_path_generator.py`.
 
 #### B17. NSS race class beyond chronyd
 
 - **Severity:** Medium (boot reliability), runtime **NOT_RUN** here.
-- **Status:** Likely still open for other `User=` services; chronyd drop-in exists.
-- **Impact:** first-boot `217/USER` on identity lookup. Do not invent guest counts.
-- **Fix direction:** continue the `nss-user-lookup.target` pattern; measure on a booted image.
+- **Status:** **Fixed at source / generator level on this branch; runtime still NOT_RUN.** Repo `User=` units were already classified (root / bunny-policy / numeric). This branch adds `bunny-nss-order-generator` to write the chronyd drop-in pattern for installed altfiles-backed units that lack it. Without Fedora `/usr/lib/passwd` the generator writes nothing (honest no-op).
+- **Impact:** first-boot `217/USER` on identity lookup is addressed for the class on a booted image, not invented as a count on Ubuntu.
+- **Evidence:** `tests/first_login/test_nss_order_generator.py`. Runtime proof: booted Bunny OS + `scripts/nss_account_sweep.py`.
 
 #### B18. Chrome `--no-sandbox` in host screenshot helpers
 
 - **Severity:** Low (demo-only on the development host).
-- **Status:** Confirmed. `demos/08-visible-trust/run.py`, `demos/10-product-vision/run.py`.
-- **Impact:** none for the shipped image; expected in many CI containers. Do not copy into a user-facing browser launcher.
-- **Fix direction:** keep demo-scoped; never ship as the product Chromium flags.
+- **Status:** **Fixed (guard) on this branch.** Flag kept for headless CI; product trees must not copy it.
+- **Location:** `demos/host_chrome.py` (`DEMO_ONLY_CHROME_FLAGS`); demos 08 and 10 import it. `tests/demos/test_host_chrome_flags.py` greps companion/shell/services/capability/capsules/trust.
+- **Impact:** none for the shipped image. A copy into a user-facing launcher now fails the test.
 
 #### B19. `_observed_outcome` treats any completed op as success
 
 - **Severity:** Low if executors are honest; High if they are not.
-- **Status:** Confirmed **by design** in `companion/runtime.py`. Mixed completed+failed → observed `success`, then `worst_outcome` with executor verdict.
-- **Impact:** a buggy executor that returns `success` after a partial failure can still present completed. The all-failed case is the one that was fixed.
-- **Fix direction:** keep pessimism on the executor field; add a policy test if product intent changes to “any failed op fails the task”.
+- **Status:** **Won’t change product semantics.** Clarifying comment + test landed: a mixed completed+failed plan is observed success; `worst_outcome` still reports failure when the executor sets `TaskResult.outcome` to `failed`.
+- **Location:** `companion/runtime.py` `_observed_outcome`; `tests/companion/test_terminal_outcomes.py` `test_the_executor_must_report_failure_when_the_whole_task_failed`.
+- **Impact:** none. A buggy executor that returns `success` after a partial failure can still present completed — that remains an executor contract, not a runtime rewrite.
 
 #### B20. `jsonschema` missing on this host
 
 - **Severity:** Low (validator SKIP).
-- **Status:** Confirmed locally. CI installs it.
-- **Impact:** schema validator SKIP here; not a product defect.
-- **Fix direction:** document in contributor setup; optional `pip install jsonschema` in the cloud environment.
+- **Status:** **Fixed (message / contributor note) on this branch.** Schema header failures still FAIL. Missing `jsonschema` is SKIP with install hint (`python3-jsonschema` / `pip install jsonschema`), not PASS. Noted in `docs/TESTING.md`.
+- **Impact:** schema validator SKIP here; not a product defect. CI installs it.
 
 ### What this host did **not** run (do not invent)
 
@@ -409,7 +410,7 @@ CI has been red since at least the functional-alpha merge (#37, 2026-08-25). The
 
 ## Fixes included on this branch (for reviewers)
 
-These are the code changes beside this document. They restore host-gate honesty and CI fixtures. They do **not** move stable or pilots.
+These are the code changes beside this document. They restore host-gate honesty and close several recorded gaps. They do **not** move stable or pilots.
 
 1. Exclude frozen-record shell scripts from ShellCheck (do not edit frozen `verify.sh`).
 2. Move supervisor `StartLimit*` to `[Unit]`; extend the unit-directive test.
@@ -418,11 +419,19 @@ These are the code changes beside this document. They restore host-gate honesty 
 5. Demo 09 requires writable KVM; 08/10 never claim `guestBoot=AVAILABLE`.
 6. Gdk 4 `require_version`; disk-before-QEMU in `vm-desktop-story.sh`; `sys.executable` in the evidence test; drop duplicate Makefile recipe.
 7. Search-index test `chmod 0600`; companion state test ignores `out/`.
+8. Demo 09 `passed` is `guestPassed` only; `probePassed` is the host harness (B13).
+9. Fail-closed `bunny-policy-agent` program + sysusers; removed from unit-program-gaps (B15).
+10. User generator for relocated XDG Pictures without widening ProtectHome (B16).
+11. System generator for altfiles `User=` NSS ordering; runtime NOT_RUN here (B17).
+12. Voice provenance tests skip on Git LFS pointers; with `git lfs pull`, measured bytes match `PROVENANCE.json` (B14).
+13. Demo-only Chrome `--no-sandbox` helper; product-tree grep (B18).
+14. Mixed `_observed_outcome` comment + executor `worst_outcome` test (B19, semantics unchanged).
+15. `jsonschema` validator SKIP message + `docs/TESTING.md` (B20).
 
 ---
 
 ## How a coordinator should talk about this
 
-**Accurate:** Bunny OS is a Fedora 44 bootc + GNOME Shell + Companion + Trust/capsules tree. Host demos 08 and 10 show the Trust prompt and product-vision surfaces without a guest. Demo 09 is the Fedora+KVM path and is `NOT_RUN` without that builder. Source completeness is not a release. Stable is NO-GO. Pilots are BLOCKED. Main’s GitHub workflows were red at `b6a2fa6f`; this branch addresses the ShellCheck/frozen conflict, ignored supervisor start limits, and the CI unit fixture.
+**Accurate:** Bunny OS is a Fedora 44 bootc + GNOME Shell + Companion + Trust/capsules tree. Host demos 08 and 10 show the Trust prompt and product-vision surfaces without a guest. Demo 09 is the Fedora+KVM path and is `NOT_RUN` without that builder; top-level `passed` is guest success only. Source completeness is not a release. Stable is NO-GO. Pilots are BLOCKED. Main’s GitHub workflows were red at `b6a2fa6f`; this branch addresses the ShellCheck/frozen conflict, ignored supervisor start limits, the CI unit fixture, and the remaining honest host-side findings B13–B20.
 
-**Not accurate:** “Source gate is green on current main.” “Guest Trust passed.” “Stable is close.” “We scanned CVEs and they’re fine.” “Voice models are verified in this clone.”
+**Not accurate:** “Source gate is green on current main.” “Guest Trust passed.” “Stable is close.” “We scanned CVEs and they’re fine.” “Voice models are verified in this clone.” “Enterprise policy is applied.”

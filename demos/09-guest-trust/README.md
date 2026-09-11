@@ -55,8 +55,8 @@ Exit codes:
 
 | Code | Meaning |
 |---|---|
-| 0 | Guest journeys PASS, **or** an honest NOT_RUN/BLOCKED probe whose host tests passed |
-| 1 | Host tests failed, or a guest booted and the journey failed |
+| 0 | Guest journeys PASS, **or** an honest NOT_RUN/BLOCKED probe whose host tests passed (`probePassed=true`). Top-level `passed` is `guestPassed` only, so NOT_RUN yields `passed=false` unless `BUNNY_GUEST_TRUST_PROBE_OK=1`. |
+| 1 | Host tests failed |
 | 2 | A guest was requested (`BUNNY_GUEST_TRUST_REQUIRE=1`) and could not be booted |
 
 ## What the command will not do

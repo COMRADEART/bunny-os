@@ -219,20 +219,29 @@ def _schema_validation(root: Path) -> ValidatorOutcome:
     try:
         import jsonschema  # type: ignore
     except ImportError:
-        outcome.skipReason = "jsonschema unavailable; headers and local references still checked"
-    else:
-        for path in paths:
-            try:
-                jsonschema.Draft202012Validator.check_schema(
-                    json.loads(path.read_text(encoding="utf-8"))
-                )
-            except Exception as exc:  # jsonschema raises several types
-                outcome.failures.append(Failure(_name(root, path), f"invalid schema: {exc}"))
+        outcome.skipReason = (
+            "jsonschema unavailable; headers and local $ref still checked. "
+            "Install python3-jsonschema (Fedora) or `pip install jsonschema` "
+            "for Draft 2020-12 meta-validation. A SKIP is not a PASS."
+        )
 
     outcome.checked = len(paths)
-    outcome.summary = f"{len(paths)} schemas" + (
-        f" ({outcome.skipReason})" if outcome.skipReason else ""
-    )
+    if outcome.failures:
+        outcome.result = "FAIL"
+        outcome.summary = f"{len(paths)} schemas"
+        return outcome
+    if outcome.skipReason:
+        outcome.result = "SKIP"
+        outcome.summary = f"{len(paths)} schemas ({outcome.skipReason})"
+        return outcome
+    for path in paths:
+        try:
+            jsonschema.Draft202012Validator.check_schema(
+                json.loads(path.read_text(encoding="utf-8"))
+            )
+        except Exception as exc:  # jsonschema raises several types
+            outcome.failures.append(Failure(_name(root, path), f"invalid schema: {exc}"))
+    outcome.summary = f"{len(paths)} schemas"
     outcome.result = "FAIL" if outcome.failures else "PASS"
     return outcome
 
@@ -937,11 +946,11 @@ _EXTERNALLY_PROVIDED = (
 def _systemd_unit_programs(root: Path) -> ValidatorOutcome:
     """Every unit must name a program this repository actually ships.
 
-    `systemd-analyze verify` in CI reported four units whose ExecStart= did not
-    resolve. Three were an artefact of running on a bare container. The fourth,
-    bunny-policy-agent, names a program nothing installs — a real gap that was
-    invisible inside the noise. It is recorded in unit-program-gaps.json; a unit
-    that is neither shippable nor recorded fails here.
+    `systemd-analyze verify` in CI reported units whose ExecStart= did not
+    resolve on a bare container. Programs this repository ships must be
+    findable via _PROGRAM_SOURCES / _PROGRAM_ALIASES. A remaining gap is
+    recorded in unit-program-gaps.json; a unit that is neither shippable nor
+    recorded fails here.
     """
     outcome = ValidatorOutcome("systemd unit programs")
     recorded: dict[str, str] = {}

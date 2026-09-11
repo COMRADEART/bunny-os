@@ -13,14 +13,11 @@
 #     is not executable: No such file or directory
 #     ... and the same for bunny-live-session, bunny-policy-agent, bunny-first-run
 #
-# Three of those four are installed by build/scripts/install-root.py and are
-# installed here too, so the check now tests the layout the image produces.
-#
-# The fourth is real: nothing installs /usr/libexec/bunny-policy-agent. It is
-# recorded in operations/data/unit-program-gaps.json and skipped here by name,
-# so the gap is tracked instead of being rediscovered as noise. A unit whose
-# program is missing and which is *not* recorded still fails, both here and in
-# the "systemd unit programs" repository validator.
+# Those four are installed by build/scripts/install-root.py (policy-agent
+# included) and are installed here too, so the check tests the layout the
+# image produces. Units whose program is still absent must be recorded in
+# operations/data/unit-program-gaps.json or this script and the repository
+# validator fail them.
 
 set -euo pipefail
 
@@ -59,7 +56,7 @@ install -m 0755 "${SRC}/scripts/bunny-companion-window.py" \
     /usr/libexec/bunny-companion-window
 for name in bunny-health-check bunny-recovery-prepare bunny-recovery \
             bunny-first-boot bunny-config-dir bunny-brlapi-key \
-            bunny-safe-graphics bunny-live-session; do
+            bunny-safe-graphics bunny-live-session bunny-policy-agent; do
     install -m 0755 "${SRC}/scripts/${name}.py" "/usr/libexec/${name}"
 done
 install -m 0755 "${SRC}/shell/services/bin/bunny-shell-service" /usr/libexec/bunny-shell-service

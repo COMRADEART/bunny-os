@@ -69,8 +69,10 @@
     "reason": "QEMU accepted accel=kvm (timed wait)",
     "status": "PASS"
   },
-  "passed": true,
+  "guestPassed": false,
+  "passed": false,
   "pilots": "BLOCKED",
+  "probePassed": true,
   "stableRelease": "NO-GO",
   "summary": {
     "guestDenied": "NOT_RUN",

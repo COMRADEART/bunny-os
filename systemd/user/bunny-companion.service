@@ -78,12 +78,13 @@ ReadWritePaths=%h/.local/share/bunny %h/.local/state/bunny
 # `-` so a home without a Pictures directory does not fail namespace setup with
 # 226/NAMESPACE before ExecStart, the way a missing ReadWritePaths= path does.
 #
-# The narrowness is real but limited: it is one directory rather than the home,
-# and it is the directory the only operation writes to. It is *not* dynamic — a
-# person whose XDG_PICTURES_DIR points somewhere else still cannot receive a
-# result, because ReadWritePaths= is resolved when the unit loads and a user's
-# XDG configuration is not known then. A portal is the answer to that, and this
-# is not one.
+# The narrowness is real: it is one directory rather than the home, and it is
+# the directory the only operation writes to. ``-%h/Pictures`` is the default
+# XDG location. A user who relocated Pictures gets a second ReadWritePaths=
+# from the user generator ``bunny-pictures-path-generator`` (installed under
+# /usr/lib/systemd/user-generators/), which reads user-dirs.dirs and refuses
+# paths outside the home. A portal is still the long-term answer; this is not
+# one, and it does not widen ProtectHome.
 ReadWritePaths=-%h/Pictures
 # The store lives here. Per-user under the session, never system-wide: a
 # companion session is one person's conversation and /var would make it readable
