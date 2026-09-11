@@ -737,6 +737,11 @@ class RemoteProviderExecutor(ProviderBackedExecutor):
                 "remote generate refuses conversation-summary context",
                 reasons=("persistent memory must not dump online",),
             )
+        # Memory Core (ADR 0008): conversation-summary stays empty. Do not
+        # invent a summary here. Local recall, when a caller wires it, must
+        # go through companion.memory.service.recall_envelope_for_local_context
+        # (taint envelope, refs+snippets) and must never be handed to this
+        # remote generate path.
         cloud = authorize_remote_generate(
             {
                 "user_request": str(view.get("originalRequest", "")),

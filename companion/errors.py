@@ -30,6 +30,7 @@ __all__ = [
     "IntegrityError",
     "InvalidTransition",
     "MalformedOutput",
+    "MemoryError",
     "PayloadTooLarge",
     "RecoveryError",
     "ReviewerError",
@@ -84,6 +85,15 @@ class IntegrityError(CompanionError):
 
 class StoreError(CompanionError):
     """The durable store could not be read, locked or written."""
+
+
+class MemoryError(CompanionError):
+    """The Memory Service refused a write, recall, or erasure.
+
+    Distinct from :class:`StoreError` so a caller can tell "the event log
+    could not be written" from "this memory record is not storable" — a
+    provenance-free write is a constitutional refusal, not a disk failure.
+    """
 
 
 # -- capability ------------------------------------------------------------

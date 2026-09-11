@@ -228,6 +228,9 @@ _FORBIDDEN_REMOTE_MARKERS = (
     "session_memory",
     "memory_record",
     "memory_records",
+    "memory_body",
+    "memory_hits",
+    "recall",
 )
 
 
@@ -274,9 +277,16 @@ def authorize_remote_generate(
         cloud_context="minimized",
     )
     if policy is not None and policy.cloud_context == "none":
-        # The person's cloud-memory control is recorded; it does not widen
-        # this payload, and it does not block the already-approved current
-        # request. Memory Core will consult it when a store exists.
+        # SECURITY CO-SIGN HOOK (Memory Core / ADR 0008):
+        # ``remote_dispatch`` consent currently authorises the *current-request*
+        # allow-list even when the person's ``cloud_context=none``. That does
+        # **not** dump durable memory: session/durable stay off on this
+        # effective policy, and forbidden keys still refuse the whole payload.
+        # Tightening ``cloud_context=none`` to also block the already-approved
+        # current-request hop is a Security decision. Do not weaken this path;
+        # do not silently change it. Deny-by-default remains for anything not
+        # on REMOTE_GENERATE_ALLOWED_FIELDS. Memory Core consults ``policy``
+        # for local store/recall only.
         pass
     return authorize_cloud_context(
         payload,
