@@ -42,12 +42,15 @@ from .clock import SystemClock
 from .coordination import CoordinationPolicy
 from .demo import DEMO_REQUEST, run_demo
 from .errors import CompanionError
+from .memory import MemoryService, memory_root
+from .memory_boundary import MemoryPolicy
 from .executor import DeterministicLocalExecutor
 from .ids import RandomIds
 from .recovery import recover
 from .reviewer import DeterministicLocalReviewer
 from .runtime import CompanionRuntime, RuntimeOptions
 from .session import CostPolicy, LOCALITY_PREFERENCES, PrivacyPolicy
+from .settings import load_settings
 from .store import CompanionStore
 from .task import CANCELLATION_CAUSES
 from .tools import ToolBroker
@@ -140,6 +143,21 @@ def add_arguments(subparsers: argparse._SubParsersAction) -> None:
 
     recovery = group.add_parser("recover", help="RECOVERS incomplete tasks after a restart")
     recovery.add_argument("--dry-run", action="store_true", help="validate only; change nothing")
+
+    memory = group.add_parser("memory", help="Bunny Memory Core (files SoR, disposable SQLite index)")
+    memory_group = memory.add_subparsers(dest="memory_command", required=True)
+    memory_group.add_parser("probe", help="probe FTS5 and index health (read-only)")
+    memory_group.add_parser("reindex", help="REBUILDS the disposable index from files")
+    memory_recall = memory_group.add_parser("recall", help="recall refs and snippets (read-only)")
+    memory_recall.add_argument("--query", default="", help="search text")
+    memory_recall.add_argument("--plugin", default=None)
+    memory_recall.add_argument("--scope-kind", default=None)
+    memory_recall.add_argument("--scope-id", default=None)
+    memory_recall.add_argument("-k", type=int, default=8)
+    memory_forget = memory_group.add_parser("forget", help="ERASES one record, shreds its DEK, cascades derived files")
+    memory_forget.add_argument("record_id")
+    memory_forget.add_argument("--by", default="user")
+    memory_forget.add_argument("--reason", default="forget")
 
     demo = group.add_parser("run-demo", help="RUNS the headless vertical slice in a scratch directory")
     demo.add_argument("--demo-root", type=Path, default=None, help="where the demo store is written")
@@ -403,8 +421,43 @@ def build_runtime(args: argparse.Namespace) -> tuple[CompanionRuntime, str]:
     return CompanionRuntime(options).start(), banner
 
 
+def _memory_service(args: argparse.Namespace) -> MemoryService:
+    root = args.root or default_root()
+    settings = load_settings(root)
+    policy = MemoryPolicy.from_settings(settings.privacy)
+    return MemoryService(memory_root(root), policy=policy)
+
+
+def _memory_command(args: argparse.Namespace) -> dict[str, Any]:
+    """Files-SoR Memory Core. Does not need the companion task runtime."""
+    service = _memory_service(args)
+    command = args.memory_command
+    if command == "probe":
+        document = service.probe()
+        document["effect"] = "read-only"
+        return document
+    if command == "reindex":
+        return service.reindex()
+    if command == "recall":
+        result = service.recall(
+            args.query,
+            plugin=args.plugin,
+            scope_kind=args.scope_kind,
+            scope_id=args.scope_id,
+            k=args.k,
+        )
+        document = result.to_json()
+        document["effect"] = "read-only"
+        return document
+    if command == "forget":
+        return service.forget(args.record_id, by=args.by, reason=args.reason)
+    raise CompanionError(f"unknown memory command {command!r}")
+
+
 def dispatch(args: argparse.Namespace) -> dict[str, Any]:
     """Run one companion command and return its document."""
+    if args.companion_command == "memory":
+        return _memory_command(args)
     if args.companion_command == "run-demo":
         return _run_demo(args)
     if args.companion_command == "run-integration-slice":

@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bunny-os.org/schemas/companion-memory-record-1.schema.json",
+  "title": "Bunny MemoryRecord v1 (ADR 0008 / Phase 1 §14.3)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion", "id", "rev", "bodyHash", "state",
+    "validFrom", "observedAt", "recordedAt",
+    "writer", "source", "provenanceRef", "authoritySource",
+    "taints", "confirmation", "scope", "plugin", "category",
+    "sensitivity", "identityContext", "owner", "body"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "id": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "rev": { "type": "integer", "minimum": 1 },
+    "bodyHash": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "state": { "type": "string", "enum": ["active", "proposed", "superseded", "tombstoned", "shredded"] },
+    "validFrom": { "type": "string" },
+    "validTo": { "type": ["string", "null"] },
+    "observedAt": { "type": "string" },
+    "recordedAt": { "type": "string" },
+    "supersededBy": { "type": ["string", "null"] },
+    "writer": {
+      "type": "object",
+      "required": ["kind", "id"],
+      "properties": {
+        "kind": { "type": "string", "enum": ["user", "model", "tool", "agent", "system"] },
+        "id": { "type": "string" },
+        "modelId": { "type": ["string", "null"] },
+        "provider": { "type": ["string", "null"] }
+      }
+    },
+    "source": {
+      "type": "object",
+      "required": ["kind", "ref"],
+      "properties": {
+        "kind": { "type": "string", "enum": ["conversation", "file", "tool_output", "web", "mcp", "import"] },
+        "ref": { "type": "string" },
+        "span": { "type": ["string", "null"] }
+      }
+    },
+    "grantId": { "type": ["string", "null"] },
+    "provenanceRef": { "type": "string", "minLength": 1 },
+    "authoritySource": { "type": "string", "enum": ["user_expression", "approved_plan", "system_policy", "none"] },
+    "taints": {
+      "type": "array",
+      "items": { "type": "string", "enum": ["third_party_content", "model_generated", "imported_unverified"] }
+    },
+    "confirmation": {
+      "type": "object",
+      "required": ["status"],
+      "properties": {
+        "status": { "type": "string", "enum": ["user_confirmed", "unconfirmed", "model_proposed"] },
+        "confirmedAt": { "type": ["string", "null"] },
+        "confirmedBy": { "type": ["string", "null"] }
+      }
+    },
+    "scope": {
+      "type": "object",
+      "required": ["kind", "id"],
+      "properties": {
+        "kind": { "type": "string", "enum": ["task", "plan", "workspace", "user"] },
+        "id": { "type": "string" }
+      }
+    },
+    "promotedFrom": { "type": ["string", "null"] },
+    "promotionGrantId": { "type": ["string", "null"] },
+    "plugin": {
+      "type": "string",
+      "enum": ["working", "conversation", "preference", "task", "system", "episodic", "semantic", "companion", "application", "routines", "project"]
+    },
+    "category": {
+      "type": "string",
+      "enum": ["episodic", "semantic", "procedural", "task_state", "system", "performance"]
+    },
+    "sensitivity": { "type": "string", "enum": ["public", "personal", "secret"] },
+    "identityContext": { "const": false },
+    "owner": { "type": "string" },
+    "expiresAt": { "type": ["string", "null"] },
+    "derivedFrom": { "type": "array", "items": { "type": "object" } },
+    "derivation": { "type": ["object", "null"] },
+    "body": { "type": "object" },
+    "embeddingRef": { "type": ["string", "null"] },
+    "lastUsedAt": { "type": ["string", "null"] },
+    "useCount": { "type": "integer", "minimum": 0 },
+    "corrections": { "type": "integer", "minimum": 0 },
+    "crypto": { "type": "object" },
+    "deletedAt": { "type": ["string", "null"] },
+    "deletedBy": { "type": ["string", "null"] },
+    "deletionReason": { "type": ["string", "null"] }
+  }
+}

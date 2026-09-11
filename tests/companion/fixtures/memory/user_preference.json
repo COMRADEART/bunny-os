@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 1,
+  "id": "01ARZ3NDEKTSV4RRFFQ69G5FAV",
+  "rev": 1,
+  "bodyHash": "1d5a5a4e694d5520757dd836f56c6ca57e6fe4b1bec64148f1007375b6ef076a",
+  "state": "active",
+  "validFrom": "2026-01-01T00:00:00Z",
+  "validTo": null,
+  "observedAt": "2026-01-01T00:00:00Z",
+  "recordedAt": "2026-01-01T00:00:00Z",
+  "supersededBy": null,
+  "writer": {
+    "kind": "user",
+    "id": "person-1",
+    "modelId": null,
+    "provider": null
+  },
+  "source": {
+    "kind": "file",
+    "ref": "fixture:user_preference",
+    "span": null
+  },
+  "grantId": null,
+  "provenanceRef": "prov-fixture-cardamom",
+  "authoritySource": "user_expression",
+  "taints": [],
+  "confirmation": {
+    "status": "user_confirmed",
+    "confirmedAt": "2026-01-01T00:00:00Z",
+    "confirmedBy": "person-1"
+  },
+  "scope": {
+    "kind": "user",
+    "id": "person-1"
+  },
+  "promotedFrom": null,
+  "promotionGrantId": null,
+  "plugin": "preference",
+  "category": "procedural",
+  "sensitivity": "public",
+  "identityContext": false,
+  "owner": "person-1",
+  "expiresAt": null,
+  "derivedFrom": [],
+  "derivation": null,
+  "body": {
+    "kind": "text",
+    "text": "I take cardamom in coffee"
+  },
+  "embeddingRef": null,
+  "lastUsedAt": null,
+  "useCount": 0,
+  "corrections": 0,
+  "crypto": {
+    "sensitiveBody": false,
+    "scheme": null,
+    "fileDek": null,
+    "keystoreWrap": "os-keystore-wrap NOT VERIFIED"
+  },
+  "deletedAt": null,
+  "deletedBy": null,
+  "deletionReason": null
+}
