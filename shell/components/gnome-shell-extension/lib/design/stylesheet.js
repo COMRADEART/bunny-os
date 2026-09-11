@@ -36,6 +36,11 @@ export const REACTIVE_CLASSES = [
     'bunny-suggestion-row', 'bunny-suggestions-more', 'bunny-search-row', 'bunny-toast',
     'bunny-trust-action', 'bunny-trust-disclosure', 'bunny-result-action', 'bunny-error-action',
     'bunny-capsule-disclosure',
+    'bunny-button', 'bunny-icon-button', 'bunny-text-field', 'bunny-search-field',
+    'bunny-toggle', 'bunny-slider', 'bunny-menu-item', 'bunny-list-row',
+    'bunny-dock-item', 'bunny-sheet-action', 'bunny-dialog-action',
+    'bunny-popover-item', 'bunny-task-pause', 'bunny-task-cancel',
+    'bunny-bubble-action', 'bunny-companion-anchor', 'bunny-notification-action',
 ];
 
 const px = value => `${Math.round(value)}px`;
@@ -405,6 +410,7 @@ function renderComponents(theme) {
     rule(`.bunny-trust { border-radius: ${px(r.modal)}; box-shadow: ${theme.shadow.dialog}; border: ${px(theme.highContrast ? theme.focus.width : 1)} solid ${theme.highContrast ? c.borderStrong : c.trust}; }`);
     rule(`.bunny-trust-column { padding: ${px(s.lg)}; spacing: ${px(s.md)}; }`);
     rule(`.bunny-trust-scrim { background-color: ${c.scrim}; }`);
+    rule(`.bunny-trust-overlay { width: ${px(440)}; }`);
     rule(`.bunny-trust-heading { ${type(theme, 'title')} color: ${c.textPrimary}; }`);
     rule(`.bunny-trust-subheading { ${type(theme, 'caption')} color: ${c.textSecondary}; text-transform: uppercase; }`);
     rule(`.bunny-trust-identity { spacing: ${px(s.sm)}; padding: ${px(s.sm)} ${px(s.md)}; border-radius: ${px(r.control)}; background-color: ${c.surfaceRaised}; }`);
@@ -528,6 +534,105 @@ function renderComponents(theme) {
     rule(`.bunny-capsule-disclosure:hover { background-color: ${c.accentSoft}; }`);
     focus('.bunny-capsule-disclosure');
     rule(`.bunny-capsule-detail { ${type(theme, 'mono')} color: ${c.textSecondary}; }`);
+
+    // ---------------------------------------------- Phase 1 primitives
+    const controlPad = `${px(s.sm)} ${px(s.md)}`;
+    rule(`.bunny-button {
+  ${type(theme, 'button')}
+  padding: ${controlPad};
+  border-radius: ${px(r.control)};
+  border: 1px solid ${c.borderStrong};
+  background-color: ${c.surfaceRaised};
+  color: ${c.textPrimary};
+}`);
+    rule(`.bunny-button:hover { background-color: ${c.surfaceHover}; }`);
+    focus('.bunny-button');
+    rule(`.bunny-button-primary { background-color: ${c.accent}; color: ${c.textOnAccent}; border-color: ${c.accent}; }`);
+    rule(`.bunny-button-ghost { background-color: transparent; }`);
+    rule(`.bunny-button-destructive { border-color: ${c.danger}; color: ${c.danger}; }`);
+    rule(`.bunny-icon-button { padding: ${px(s.xs)}; border-radius: ${px(r.control)}; color: ${c.textSecondary}; }`);
+    rule(`.bunny-icon-button:hover { background-color: ${c.surfaceHover}; color: ${c.textPrimary}; }`);
+    focus('.bunny-icon-button');
+    rule(`.bunny-panel { border-radius: ${px(r.panel)}; }`);
+    rule(`.bunny-sheet { border-radius: ${px(r.sheet)}; box-shadow: ${theme.shadow.overlay}; }`);
+    rule(`.bunny-dialog { border-radius: ${px(r.modal)}; box-shadow: ${theme.shadow.dialog}; }`);
+    rule(`.bunny-popover { border-radius: ${px(r.card)}; box-shadow: ${theme.shadow.overlay}; }`);
+    rule(`.bunny-tooltip { ${type(theme, 'caption')} padding: ${px(s.xs)} ${px(s.sm)}; border-radius: ${px(r.control)}; background-color: ${c.surfaceOverlay}; color: ${c.textPrimary}; }`);
+    rule(`.bunny-text-field, .bunny-search-field {
+  ${type(theme, 'body')}
+  padding: ${controlPad};
+  border-radius: ${px(r.control)};
+  border: 1px solid ${c.borderStrong};
+  background-color: ${c.surfaceRaised};
+  color: ${c.textPrimary};
+  caret-color: ${c.companionSignal};
+}`);
+    focus('.bunny-text-field', {inset: true});
+    focus('.bunny-search-field', {inset: true});
+    rule(`.bunny-toggle { border-radius: ${px(r.control)}; }`);
+    focus('.bunny-toggle');
+    rule(`.bunny-slider { color: ${c.companionSignal}; }`);
+    focus('.bunny-slider');
+    rule(`.bunny-menu { border-radius: ${px(r.card)}; }`);
+    rule(`.bunny-menu-item { ${type(theme, 'body')} padding: ${controlPad}; border-radius: ${px(r.control)}; }`);
+    rule(`.bunny-menu-item:hover { background-color: ${c.surfaceHover}; }`);
+    focus('.bunny-menu-item');
+    rule(`.bunny-list-row { ${type(theme, 'body')} padding: ${controlPad}; border-radius: ${px(r.control)}; }`);
+    rule(`.bunny-list-row:hover { background-color: ${c.surfaceHover}; }`);
+    focus('.bunny-list-row');
+    rule(`.bunny-dock-item { border-radius: ${px(r.control)}; }`);
+    focus('.bunny-dock-item');
+    rule(`.bunny-sheet-action, .bunny-dialog-action, .bunny-popover-item, .bunny-notification-action {
+  ${type(theme, 'button')}
+  padding: ${controlPad};
+  border-radius: ${px(r.control)};
+}`);
+    focus('.bunny-sheet-action');
+    focus('.bunny-dialog-action');
+    focus('.bunny-popover-item');
+    focus('.bunny-notification-action');
+    rule(`.bunny-task-card { border-radius: ${px(r.card)}; }`);
+    rule(`.bunny-task-timeline { spacing: ${px(s.sm)}; }`);
+    rule(`.bunny-task-mark {
+  width: ${px(s.sm)};
+  height: ${px(s.sm)};
+  border-radius: ${px(s.sm)};
+  border-width: ${px(2)};
+  border-color: ${c.textMuted};
+}`);
+    rule(`.bunny-task-mark-done {
+  background-color: ${c.success};
+  border-color: ${c.success};
+}`);
+    rule(`.bunny-task-mark-current {
+  background-color: ${c.companionSignal};
+  border-color: ${c.companionSignal};
+}`);
+    rule(`.bunny-task-mark-pending {
+  background-color: transparent;
+  border-color: ${c.textMuted};
+}`);
+    rule(`.bunny-task-pause, .bunny-task-cancel {
+  ${type(theme, 'button')}
+  padding: ${px(s.xs)} ${px(s.md)};
+  border-radius: ${px(r.control)};
+  border: 1px solid ${c.borderStrong};
+}`);
+    focus('.bunny-task-pause');
+    focus('.bunny-task-cancel');
+    rule(`.bunny-permission-card { border-radius: ${px(r.card)}; }`);
+    rule(`.bunny-bubble-actions { spacing: ${px(s.sm)}; padding-top: ${px(s.xs)}; }`);
+    rule(`.bunny-bubble-action {
+  ${type(theme, 'button')}
+  padding: ${px(s.xs)} ${px(s.md)};
+  border-radius: ${px(r.control)};
+  background-color: ${c.accentSoft};
+  color: ${c.accentText};
+}`);
+    focus('.bunny-bubble-action');
+    rule(`.bunny-companion-anchor { border-radius: ${px(r.panel)}; }`);
+    rule(`.bunny-companion-anchor:focus { outline: ${px(theme.focus.width)} solid ${c.companionSignal}; outline-offset: ${px(theme.focus.offset)}; }`);
+    rule(`.bunny-notification { border-radius: ${px(r.card)}; }`);
 
     return out.join('\n');
 }

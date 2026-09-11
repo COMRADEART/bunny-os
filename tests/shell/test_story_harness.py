@@ -25,7 +25,8 @@ import unittest
 from tests.support import ROOT
 
 STORY = ROOT / "build/scripts/story.mjs"
-COMMITTED = ROOT / "qualification/design/story-manifest.json"
+COMMITTED = ROOT / "shell/themes/story-manifest.json"
+FROZEN = ROOT / "qualification/design/story-manifest.json"
 
 
 def generated() -> dict:
@@ -80,8 +81,14 @@ class StoryHarnessTests(unittest.TestCase):
     def test_the_committed_manifest_is_what_the_harness_produces(self) -> None:
         self.assertEqual(
             self.now, self.committed,
-            "the story manifest is stale; run node build/scripts/story.mjs and commit "
-            "qualification/design/story-manifest.json")
+            "the live story manifest is stale; run node build/scripts/story.mjs and commit "
+            "shell/themes/story-manifest.json")
+
+    def test_phase1_regen_does_not_retarget_the_frozen_pin(self) -> None:
+        """Gate Keeper: type-scale regen stays off qualification/design/."""
+        self.assertTrue(FROZEN.is_file())
+        self.assertEqual(COMMITTED, ROOT / "shell/themes/story-manifest.json")
+        self.assertNotEqual(COMMITTED, FROZEN)
 
     # -- what the manifest is guarding, stated so a regeneration is a decision --
 

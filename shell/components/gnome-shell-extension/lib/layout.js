@@ -28,11 +28,11 @@ export const RIGHT_COLUMN = ['agenda', 'systemMonitor', 'assistant'];
 /**
  * Cards that are kept when a column has to shed one.
  *
- * The assistant card is where a task is typed, where its state is shown, and
- * where the permission question appears. Dropping it does not remove a
- * convenience; it removes the ability to answer Trust, which §40 lists among the
- * behaviours a visual refactor must not regress. Everything else in a column is
- * discretionary against that.
+ * The assistant card is where a task is typed and where its state is shown.
+ * Trust itself must not live only on that card: the Phase 1 skeleton drops
+ * every dashboard card, including assistant, so consent is the chrome dialog
+ * (and a bubble caption) from `consentSurfaceForLayout`. Dropping the card
+ * in the `full` profile still must not hide the only answerable prompt.
  */
 export const PROTECTED_CARDS = ['assistant'];
 
@@ -107,7 +107,10 @@ export function breakpointFor(width) {
  *   design/theme.js — instead of two that can disagree about what 150 % means.
  * @returns {{breakpoint: string, sidebarMode: string, rects: object, dropped: string[]}}
  */
-export function solve(screen, {scale = 1, metric = null} = {}) {
+/** Phase 1 chrome-only desktop vs the existing dashboard. */
+export const LAYOUT_PROFILES = ['full', 'skeleton'];
+
+export function solve(screen, {scale = 1, metric = null, profile = 'full'} = {}) {
     const m = metric ?? BASE_METRICS;
     const TOP_BAR_HEIGHT = m.topBarHeight ?? BASE_METRICS.topBarHeight;
     const DOCK_HEIGHT = m.dockHeight ?? BASE_METRICS.dockHeight;
@@ -158,6 +161,9 @@ export function solve(screen, {scale = 1, metric = null} = {}) {
         width: dockWidth,
         height: DOCK_HEIGHT,
     };
+
+    if (profile === 'skeleton')
+        return solveSkeleton({width, height, EDGE, GAP, TOP_BAR_HEIGHT, DOCK_HEIGHT, rects, point, scale});
 
     // Card columns. Both are dropped entirely before the character is squeezed
     // below CHARACTER_MIN_WIDTH, right column first, because the brief's
@@ -243,8 +249,52 @@ export function solve(screen, {scale = 1, metric = null} = {}) {
         cardWidth,
         columns,
         scale,
+        profile: 'full',
         rects,
         dropped,
+    };
+}
+
+/**
+ * Phase 1 chrome: thin system bar, centred dock, companion at bottom-right.
+ * Widget cards are dropped on purpose — progressive disclosure, not clutter.
+ * Trust is not one of those cards; see consentSurfaceForLayout.
+ */
+function solveSkeleton({width, height, EDGE, GAP, TOP_BAR_HEIGHT, DOCK_HEIGHT, rects, point, scale}) {
+    const dropped = ['sidebar', ...LEFT_COLUMN, ...RIGHT_COLUMN];
+    delete rects.sidebar;
+    const thinBar = Math.max(32, Math.round(TOP_BAR_HEIGHT * 0.82));
+    rects.topBar = {x: 0, y: 0, width, height: thinBar};
+
+    const dockTop = height - DOCK_HEIGHT - EDGE;
+    const dockWidth = Math.min(width - 2 * EDGE, 560);
+    rects.dock = {
+        x: Math.round((width - dockWidth) / 2),
+        y: dockTop,
+        width: dockWidth,
+        height: DOCK_HEIGHT,
+    };
+
+    const anchorSize = Math.round(Math.min(280, Math.max(160, width * 0.16)));
+    const anchor = {
+        x: width - EDGE - anchorSize,
+        y: dockTop - GAP - anchorSize,
+        width: anchorSize,
+        height: anchorSize,
+    };
+    rects.character = anchor;
+    rects.companionAnchor = {...anchor};
+
+    return {
+        breakpoint: point.name,
+        sidebarMode: 'hidden',
+        cardWidth: 0,
+        columns: 0,
+        scale,
+        profile: 'skeleton',
+        rects,
+        dropped,
+        companionCorner: 'bottom-right',
     };
 }
 

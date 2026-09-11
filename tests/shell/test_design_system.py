@@ -342,7 +342,7 @@ console.log(JSON.stringify({
         self.assertGreaterEqual(min(measured["ui"]), 150)
         self.assertLessEqual(max(measured["ui"]), 350)
         self.assertGreaterEqual(min(measured["companion"]), 300)
-        self.assertLessEqual(max(measured["companion"]), 700)
+        self.assertLessEqual(max(measured["companion"]), 420)
         self.assertTrue(measured["easingsSurvive"])
 
     def test_reduced_transparency_composites_rather_than_listing_a_second_palette(self) -> None:

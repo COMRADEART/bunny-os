@@ -34,17 +34,17 @@ _TOKENS_PATH = _ROOT / "shell" / "themes" / "tokens.json"
 #: Visual Key 1: a speech bubble is a caption, not a transcript.
 BUBBLE_PREVIEW_LIMIT = 220
 
-MOTION_UI_MS = (150, 350)
-MOTION_COMPANION_MS = (300, 700)
+MOTION_UI_MS = (80, 420)
+MOTION_COMPANION_MS = (300, 420)
 
 _FALLBACK_DARK = {
-    "schemaVersion": 4,
-    "space": {"xxs": 2, "xs": 4, "sm": 8, "md": 12, "lg": 20, "xl": 32, "xxl": 48},
-    "radius": {"control": 12, "card": 18, "panel": 22, "floating": 20, "modal": 24},
+    "schemaVersion": 5,
+    "space": {"xxs": 4, "xs": 4, "sm": 8, "md": 12, "lg": 16, "xl": 24, "xxl": 32, "xxxl": 48},
+    "radius": {"control": 8, "card": 14, "panel": 22, "floating": 22, "bubble": 22, "sheet": 28, "modal": 28},
     "motion": {
-        "fastMs": 150, "standardMs": 220, "slowMs": 350,
-        "companionFastMs": 300, "companionNormalMs": 500, "companionSlowMs": 700,
-        "reducedMs": 0, "uiRangeMs": [150, 350], "companionRangeMs": [300, 700],
+        "fastMs": 150, "standardMs": 220, "slowMs": 350, "microMs": 80,
+        "companionFastMs": 300, "companionNormalMs": 360, "companionSlowMs": 420,
+        "reducedMs": 0, "uiRangeMs": [80, 420], "companionRangeMs": [300, 420],
     },
     "dark": {
         "surfacePrimary": "#080B12",
@@ -66,6 +66,7 @@ _FALLBACK_DARK = {
         "offline": "#8F96A4",
         "loading": "#A78BFA",
         "trust": "#A78BFA",
+        "companionSignal": "#4EA8FF",
         "scrim": "rgba(8, 11, 18, 0.72)",
     },
     "companion": {"visualKey": {}},
@@ -88,19 +89,25 @@ def load_tokens() -> Mapping[str, Any]:
 #: Fallback matching ``VISUAL_KEY`` in tokens.js so host HTML still poses
 #: correctly if the generated JSON has not been regenerated yet.
 _FALLBACK_VISUAL_KEY: Mapping[str, Mapping[str, Any]] = {
-    "idle": {"token": "trust", "intensity": "quiet", "ears": "rest", "mic": False, "dim": False},
+    "idle": {"token": "companionSignal", "intensity": "quiet", "ears": "rest", "mic": False, "dim": False},
     "listening": {"token": "focus", "intensity": "active", "ears": "up", "mic": True, "dim": False},
     "thinking": {"token": "trust", "intensity": "active", "ears": "tilt", "mic": False, "dim": False},
+    "understanding": {"token": "trust", "intensity": "active", "ears": "tilt", "mic": False, "dim": False},
+    "planning": {"token": "trust", "intensity": "active", "ears": "tilt", "mic": False, "dim": False},
     "working": {"token": "success", "intensity": "active", "ears": "rest", "mic": False, "dim": False},
     "searching": {"token": "focus", "intensity": "active", "ears": "up", "mic": False, "dim": False},
     "downloading": {"token": "warning", "intensity": "active", "ears": "rest", "mic": False, "dim": False},
     "installing": {"token": "warning", "intensity": "active", "ears": "rest", "mic": False, "dim": False},
     "reading": {"token": "trust", "intensity": "quiet", "ears": "tilt", "mic": False, "dim": False},
     "coding": {"token": "focus", "intensity": "active", "ears": "rest", "mic": False, "dim": False},
+    "waiting": {"token": "textMuted", "intensity": "quiet", "ears": "rest", "mic": False, "dim": False},
+    "asking": {"token": "permission", "intensity": "attention", "ears": "up", "mic": False, "dim": False},
     "waiting_for_permission": {"token": "permission", "intensity": "attention", "ears": "up", "mic": False, "dim": False},
+    "celebrating": {"token": "success", "intensity": "active", "ears": "rest", "mic": False, "dim": False},
     "success": {"token": "success", "intensity": "active", "ears": "rest", "mic": False, "dim": False},
     "warning": {"token": "warning", "intensity": "attention", "ears": "tilt", "mic": False, "dim": False},
     "error": {"token": "danger", "intensity": "attention", "ears": "down", "mic": False, "dim": False},
+    "sleep": {"token": "textMuted", "intensity": "quiet", "ears": "rest", "mic": False, "dim": True},
     "offline": {"token": "offline", "intensity": "quiet", "ears": "rest", "mic": False, "dim": True},
     "disconnected": {"token": "textMuted", "intensity": "quiet", "ears": "down", "mic": False, "dim": True},
 }
@@ -174,13 +181,14 @@ def css_custom_properties(*, scheme: str = "dark") -> str:
         lines.append(f"  --space-{name}: {int(value)}px;")
     for name, value in radius.items():
         lines.append(f"  --radius-{name}: {int(value)}px;")
+    lines.append(f"  --motion-micro: {int(motion.get('microMs', 80))}ms;")
     lines.append(f"  --motion-fast: {int(motion.get('fastMs', 150))}ms;")
     lines.append(f"  --motion-normal: {int(motion.get('standardMs', 220))}ms;")
     lines.append(f"  --motion-slow: {int(motion.get('slowMs', 350))}ms;")
-    lines.append(f"  --motion-companion: {int(motion.get('companionNormalMs', 500))}ms;")
+    lines.append(f"  --motion-companion: {int(motion.get('companionNormalMs', 360))}ms;")
     lines.append(f"  --opacity-disabled: {opacity.get('disabled', 0.45)};")
     lines.append("}")
     lines.append("@media (prefers-reduced-motion: reduce) {")
-    lines.append("  :root { --motion-fast: 0ms; --motion-normal: 0ms; --motion-slow: 0ms; --motion-companion: 0ms; }")
+    lines.append("  :root { --motion-micro: 0ms; --motion-fast: 0ms; --motion-normal: 0ms; --motion-slow: 0ms; --motion-companion: 0ms; }")
     lines.append("}")
     return "\n".join(lines)

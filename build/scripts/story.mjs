@@ -18,6 +18,11 @@
 //
 //   node build/scripts/story.mjs            -> build/out/story/story.html
 //                                              build/out/story/story.json
+//                                              shell/themes/story-manifest.json
+//
+// qualification/design/story-manifest.json is Phase 7 frozen evidence. Do not
+// overwrite it from this script; recutting that pin is a governed successor
+// record, not a UX regen.
 //
 // ## What it is, exactly
 //
@@ -861,10 +866,9 @@ if (process.argv[1] && resolve(process.argv[1]) === resolve(fileURLToPath(import
     writeFileSync(join(out, 'story.html'), html, 'utf8');
     writeFileSync(join(out, 'story.json'), document, 'utf8');
 
-    // The committed copy, written here rather than by a shell redirect: the
-    // redirect used the console codepage and turned every § into a replacement
-    // character, which the regression test then reported as a stale manifest.
-    const reference = join(ROOT, 'qualification', 'design', 'story-manifest.json');
+    // Live Phase 1 copy. The frozen Phase 7 pin at
+    // qualification/design/story-manifest.json is not retargeted from here.
+    const reference = join(ROOT, 'shell', 'themes', 'story-manifest.json');
     mkdirSync(dirname(reference), {recursive: true});
     writeFileSync(reference, document, 'utf8');
 

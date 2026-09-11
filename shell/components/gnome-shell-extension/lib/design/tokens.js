@@ -36,7 +36,7 @@
 // `violet600` would eventually reach for it, and §6 is explicit that components
 // consume meaning rather than swatches. Every exported colour is a role.
 
-export const SCHEMA_VERSION = 4;
+export const SCHEMA_VERSION = 5;
 
 // ---------------------------------------------------------------- primitives
 
@@ -49,7 +49,15 @@ export const SCHEMA_VERSION = 4;
 // the rendered one and retiring the paper one changes what nobody has seen
 // rather than what everybody has. docs/DESIGN_SYSTEM.md records the change.
 const PALETTE = {
-    // Violet — the accent, and the only hue Bunny uses decoratively.
+    // Bunny Blue — presence and companion signal only, never a fill behind
+    // text. #4EA8FF on dark charcoal and #2F80ED on warm light. Used sparingly
+    // so the OS does not read as a blue product chrome.
+    bunnyBlue400: '#4EA8FF',
+    bunnyBlue600: '#2F80ED',
+
+    // Violet — interactive accent (buttons, selection, focus on dark).
+    // Kept as the fill-behind-text hue because #4EA8FF on white misses AA
+    // for the button role, the same class of defect #8B5CF6 had.
     violet300: '#C4B5FD',
     violet400: '#A78BFA',
     violet500: '#8B5CF6',
@@ -130,14 +138,17 @@ const PALETTE = {
  * the system monospace. Neither is bundled — §26, and Bunny ships no font file.
  */
 export const TYPE = {
-    display: {size: 24, weight: 600, role: 'ui'},
-    title: {size: 19, weight: 700, role: 'ui'},
-    heading: {size: 14, weight: 600, role: 'ui'},
-    body: {size: 12, weight: 400, role: 'ui'},
-    bodySmall: {size: 11, weight: 400, role: 'ui'},
-    caption: {size: 10, weight: 500, role: 'ui'},
-    button: {size: 11, weight: 600, role: 'ui'},
-    mono: {size: 11, weight: 400, role: 'mono'},
+    // Display sits in the brief's 32–40 band. Title through body are the
+    // working scale; caption is 11–12. Nothing below caption is a role.
+    display: {size: 32, weight: 600, role: 'ui'},
+    displayLarge: {size: 40, weight: 600, role: 'ui'},
+    title: {size: 22, weight: 700, role: 'ui'},
+    heading: {size: 16, weight: 600, role: 'ui'},
+    body: {size: 14, weight: 400, role: 'ui'},
+    bodySmall: {size: 12, weight: 400, role: 'ui'},
+    caption: {size: 11, weight: 500, role: 'ui'},
+    button: {size: 12, weight: 600, role: 'ui'},
+    mono: {size: 12, weight: 400, role: 'mono'},
 };
 
 /** Largest scale the type ramp is defined at. Beyond this the desktop reflows but does not grow. */
@@ -147,7 +158,8 @@ export const MIN_TEXT_SCALE = 0.75;
 // ------------------------------------------------------------------ spacing
 
 /** §10. One scale, used everywhere; no per-component margins. */
-export const SPACE = {xxs: 2, xs: 4, sm: 8, md: 12, lg: 20, xl: 32, xxl: 48};
+/** One scale, 4–48. `xxs` is an alias of the 4px floor, not a 2px exception. */
+export const SPACE = {xxs: 4, xs: 4, sm: 8, md: 12, lg: 16, xl: 24, xxl: 32, xxxl: 48};
 
 /**
  * How fast whitespace grows relative to glyphs.
@@ -167,11 +179,13 @@ export const SPACE_SCALE_RATE = 0.5;
  * shape with a large radius reads as a pill rather than as a button.
  */
 export const RADIUS = {
-    control: 12,
-    card: 18,
+    control: 8,
+    card: 14,
     panel: 22,
-    floating: 20,
-    modal: 24,
+    floating: 22,
+    bubble: 22,
+    sheet: 28,
+    modal: 28,
 };
 
 // --------------------------------------------------------------- elevation
@@ -187,6 +201,9 @@ export const RADIUS = {
  */
 export const ELEVATION_LEVELS = ['base', 'raised', 'overlay', 'dialog'];
 
+/** Blur radii for glass panels. High contrast, and the LIGHT/MINIMAL stub mappings, use 0. */
+export const BLUR = {none: 0, panel: 18, overlay: 28, companion: 24};
+
 // ------------------------------------------------------------------ motion
 
 /**
@@ -198,18 +215,24 @@ export const ELEVATION_LEVELS = ['base', 'raised', 'overlay', 'dialog'];
  */
 export const MOTION = {
     instant: 0,
-    // UI chrome: 150–350 ms. Fast was 120 and felt hurried; slow was 360 and
-    // sat just outside the band. Companion pose changes are slower on purpose.
+    // Phase 1 band: 80–420 ms. Micro is press/hover; UI chrome stays
+    // 150–350; companion pose tops out at 420 rather than a 700 ms linger.
+    micro: 80,
     fast: 150,
     normal: 220,
     slow: 350,
     companionFast: 300,
-    companionNormal: 500,
-    companionSlow: 700,
+    companionNormal: 360,
+    companionSlow: 420,
     reduced: 0,
     easeOut: 'ease-out',
     easeInOut: 'ease-in-out',
 };
+
+/** The product motion envelope, so docs and generators cannot invent a second range. */
+export const MOTION_UI_RANGE_MS = [80, 420];
+export const MOTION_CHROME_RANGE_MS = [150, 350];
+export const MOTION_COMPANION_RANGE_MS = [300, 420];
 
 // ------------------------------------------------------------------- focus
 
@@ -279,6 +302,7 @@ export const THEMES = {
         highContrast: false,
         colour: {
             surfacePrimary: PALETTE.ink900,
+            surfaceSunken: '#05070C',
             surfaceSecondary: 'rgba(17, 21, 32, 0.72)',
             surfaceRaised: 'rgba(27, 31, 45, 0.65)',
             surfaceOverlay: 'rgba(17, 21, 32, 0.94)',
@@ -306,6 +330,7 @@ export const THEMES = {
             danger: PALETTE.red400,
             blocked: PALETTE.rose300,
             trust: PALETTE.violet400,
+            companionSignal: PALETTE.bunnyBlue400,
             selection: 'rgba(139, 92, 246, 0.30)',
             scrim: 'rgba(8, 11, 18, 0.72)',
             wallpaperStart: '#141033',
@@ -325,6 +350,7 @@ export const THEMES = {
         highContrast: false,
         colour: {
             surfacePrimary: PALETTE.warm50,
+            surfaceSunken: PALETTE.warm100,
             surfaceSecondary: 'rgba(255, 255, 255, 0.90)',
             surfaceRaised: PALETTE.white,
             surfaceOverlay: 'rgba(255, 255, 255, 0.97)',
@@ -353,6 +379,7 @@ export const THEMES = {
             danger: PALETTE.red700,
             blocked: PALETTE.rose800,
             trust: PALETTE.violet800,
+            companionSignal: PALETTE.bunnyBlue600,
             selection: 'rgba(109, 40, 217, 0.18)',
             scrim: 'rgba(22, 19, 32, 0.40)',
             wallpaperStart: PALETTE.warm100,
@@ -372,6 +399,7 @@ export const THEMES = {
         highContrast: true,
         colour: {
             surfacePrimary: PALETTE.black,
+            surfaceSunken: PALETTE.black,
             surfaceSecondary: PALETTE.black,
             surfaceRaised: PALETTE.near0,
             surfaceOverlay: PALETTE.black,
@@ -396,6 +424,7 @@ export const THEMES = {
             danger: PALETTE.hcRed,
             blocked: PALETTE.hcRed,
             trust: PALETTE.cyan,
+            companionSignal: PALETTE.cyan,
             selection: PALETTE.cyan,
             scrim: 'rgba(0, 0, 0, 0.92)',
             wallpaperStart: PALETTE.black,
@@ -410,6 +439,7 @@ export const THEMES = {
         highContrast: true,
         colour: {
             surfacePrimary: PALETTE.white,
+            surfaceSunken: PALETTE.white,
             surfaceSecondary: PALETTE.white,
             surfaceRaised: PALETTE.white,
             surfaceOverlay: PALETTE.white,
@@ -434,6 +464,7 @@ export const THEMES = {
             danger: PALETTE.hcRedDark,
             blocked: PALETTE.hcRedDark,
             trust: PALETTE.hcBlue,
+            companionSignal: PALETTE.hcBlue,
             selection: PALETTE.hcSelectionLight,
             scrim: 'rgba(255, 255, 255, 0.92)',
             wallpaperStart: PALETTE.white,
@@ -509,7 +540,65 @@ export const COMPANION_PHASE = {
 };
 
 /** §16. Companion presentation sizes, in px at 100 % scaling. */
-export const COMPANION_SIZE = {full: 220, compact: 128, minimal: 48, indicator: 28};
+export const COMPANION_SIZE = {
+    full: 220, compact: 128, ambient: 72, minimal: 48, indicator: 28,
+};
+
+/**
+ * Phase 1 OS companion vocabulary. Seventeen states, one active companion.
+ *
+ * This is what the desktop *shows*. Task lifecycle stays in companion.states;
+ * presentation phases stay in companion.presentation. Both map here so a
+ * character, a bubble and a task card cannot disagree about what Bunny is doing.
+ */
+export const OS_COMPANION_STATES = {
+    idle: {label: 'Ready', token: 'companionSignal', intensity: 'quiet', behaviour: 'resting'},
+    listening: {label: 'Listening', token: 'focus', intensity: 'active', behaviour: 'attention'},
+    understanding: {label: 'Understanding', token: 'trust', intensity: 'active', behaviour: 'attention'},
+    thinking: {label: 'Thinking', token: 'trust', intensity: 'active', behaviour: 'attention'},
+    planning: {label: 'Planning', token: 'trust', intensity: 'active', behaviour: 'working'},
+    working: {label: 'Working', token: 'trust', intensity: 'active', behaviour: 'working'},
+    coding: {label: 'Coding', token: 'focus', intensity: 'active', behaviour: 'working'},
+    reading: {label: 'Reading', token: 'trust', intensity: 'quiet', behaviour: 'working'},
+    searching: {label: 'Searching', token: 'focus', intensity: 'active', behaviour: 'working'},
+    waiting: {label: 'Waiting', token: 'textMuted', intensity: 'quiet', behaviour: 'resting'},
+    asking: {label: 'Waiting for you', token: 'permission', intensity: 'attention', behaviour: 'attention'},
+    warning: {label: 'Needs attention', token: 'warning', intensity: 'attention', behaviour: 'blocked'},
+    error: {label: 'Something failed', token: 'danger', intensity: 'attention', behaviour: 'error'},
+    success: {label: 'Done', token: 'success', intensity: 'active', behaviour: 'success'},
+    celebrating: {label: 'Done', token: 'success', intensity: 'active', behaviour: 'success'},
+    sleep: {label: 'Resting', token: 'textMuted', intensity: 'quiet', behaviour: 'resting'},
+    offline: {label: 'Offline', token: 'offline', intensity: 'quiet', behaviour: 'offline'},
+};
+
+/** How much of the companion is shown. Distinct from rendering fidelity. */
+export const OS_PRESENTATION_MODES = {
+    full: {character: true, bubble: true, task: true, size: 'full'},
+    compact: {character: true, bubble: true, task: true, size: 'compact'},
+    ambient: {character: true, bubble: false, task: false, size: 'ambient'},
+};
+
+/**
+ * Rendering effort, heaviest first. FULL is implemented; BALANCED / LIGHT /
+ * MINIMAL are named stubs that map onto the existing fidelity ladder so a
+ * later phase can fill them without renaming.
+ */
+export const RENDERING_TIERS = {
+    FULL: {fidelity: 'full-3d', blur: 'overlay', motion: 'companionNormal', implemented: true},
+    BALANCED: {fidelity: 'lightweight-3d', blur: 'panel', motion: 'companionFast', implemented: false},
+    LIGHT: {fidelity: 'static-image', blur: 'none', motion: 'reduced', implemented: false},
+    MINIMAL: {fidelity: 'text-only', blur: 'none', motion: 'reduced', implemented: false},
+};
+
+/**
+ * Every screen must be able to answer these, in this order. A surface that
+ * cannot is not ready to ship.
+ */
+export const SCREEN_QUESTIONS = [
+    'What am I doing?',
+    'What is Bunny doing?',
+    'What can I do next?',
+];
 
 export const OPACITY = {
     surface: 0.86,
@@ -519,6 +608,25 @@ export const OPACITY = {
     hover: 1.0,
     pressed: 1.0,
     loading: 0.72,
+    muted: 0.64,
+    glow: 0.28,
+    bubble: 0.94,
+};
+
+/**
+ * Character asset hooks. The default figure is a young stylized human in a
+ * black hoodie — drawn in-process on the desktop, GLB in the companion window.
+ * Missing files fall back to the vector definition; nothing here is a second
+ * character.
+ */
+export const CHARACTER_ASSETS = {
+    id: 'bunny-default',
+    silhouette: 'young stylized 3D human, black hoodie, black pants, pale sneakers, warm expressive face',
+    desktopDefinition: 'shell/components/gnome-shell-extension/lib/character/definition.js',
+    package2d: 'assets/companion/characters/default-bunny',
+    package3d: 'assets/companion/characters/default-bunny-3d',
+    glb: 'assets/companion/characters/default-bunny-3d/assets/bunny-3d.glb',
+    placeholder: 'vector definition in DEFAULT_CHARACTER when GLB or frames are absent',
 };
 
 /**
@@ -544,19 +652,25 @@ export const INTERACTION = {
  * reads the state without the caption — the silhouette stays Bunny.
  */
 export const VISUAL_KEY = {
-    idle: {token: 'trust', intensity: 'quiet', ears: 'rest', mic: false, dim: false},
+    idle: {token: 'companionSignal', intensity: 'quiet', ears: 'rest', mic: false, dim: false},
     listening: {token: 'focus', intensity: 'active', ears: 'up', mic: true, dim: false},
     thinking: {token: 'trust', intensity: 'active', ears: 'tilt', mic: false, dim: false},
+    understanding: {token: 'trust', intensity: 'active', ears: 'tilt', mic: false, dim: false},
+    planning: {token: 'trust', intensity: 'active', ears: 'tilt', mic: false, dim: false},
     working: {token: 'success', intensity: 'active', ears: 'rest', mic: false, dim: false},
     searching: {token: 'focus', intensity: 'active', ears: 'up', mic: false, dim: false},
     downloading: {token: 'warning', intensity: 'active', ears: 'rest', mic: false, dim: false},
     installing: {token: 'warning', intensity: 'active', ears: 'rest', mic: false, dim: false},
     reading: {token: 'trust', intensity: 'quiet', ears: 'tilt', mic: false, dim: false},
     coding: {token: 'focus', intensity: 'active', ears: 'rest', mic: false, dim: false},
+    waiting: {token: 'textMuted', intensity: 'quiet', ears: 'rest', mic: false, dim: false},
+    asking: {token: 'permission', intensity: 'attention', ears: 'up', mic: false, dim: false},
     waiting_for_permission: {token: 'permission', intensity: 'attention', ears: 'up', mic: false, dim: false},
+    celebrating: {token: 'success', intensity: 'active', ears: 'rest', mic: false, dim: false},
     success: {token: 'success', intensity: 'active', ears: 'rest', mic: false, dim: false},
     warning: {token: 'warning', intensity: 'attention', ears: 'tilt', mic: false, dim: false},
     error: {token: 'danger', intensity: 'attention', ears: 'down', mic: false, dim: false},
+    sleep: {token: 'textMuted', intensity: 'quiet', ears: 'rest', mic: false, dim: true},
     offline: {token: 'offline', intensity: 'quiet', ears: 'rest', mic: false, dim: true},
     disconnected: {token: 'textMuted', intensity: 'quiet', ears: 'down', mic: false, dim: true},
 };
@@ -608,4 +722,5 @@ export const NON_TEXT_PAIRS = [
     {mark: 'focus', surface: 'surfaceRaised'},
     {mark: 'borderStrong', surface: 'surfaceSecondary'},
     {mark: 'accent', surface: 'surfaceSecondary'},
+    {mark: 'companionSignal', surface: 'surfaceSecondary'},
 ];

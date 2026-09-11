@@ -10,6 +10,10 @@ order:
 * what to do
 * whether anything on the computer changed
 
+Every *screen* additionally answers the design-system trio exported as
+:data:`SCREEN_QUESTIONS`: what am I doing, what is Bunny doing, what can I
+do next.
+
 The runtime still decides. This module only phrases. It does not grant
 permissions, start tools, or invent a recovery that did not happen.
 """
@@ -20,12 +24,19 @@ from dataclasses import dataclass
 from typing import Mapping
 
 __all__ = [
+    "SCREEN_QUESTIONS",
     "UserMessage",
     "disconnected_message",
     "error_message",
     "offline_message",
     "voice_listening_message",
 ]
+
+SCREEN_QUESTIONS = (
+    "What am I doing?",
+    "What is Bunny doing?",
+    "What can I do next?",
+)
 
 
 @dataclass(frozen=True)

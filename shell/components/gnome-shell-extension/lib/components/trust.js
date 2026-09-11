@@ -362,6 +362,12 @@ export class TrustComponent {
         target.grab_key_focus();
     }
 
+    /** Re-focus the safe answer after the overlay is shown or re-raised. */
+    focusSafeAnswer() {
+        if (this._model)
+            this._focusSafeAnswer(this._model);
+    }
+
     // ------------------------------------------------------------- answering
 
     _decide(verdict) {

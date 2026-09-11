@@ -27,8 +27,8 @@ from companion.visual_keys import CORE_VISUAL_KEYS, VISUAL_KEYS
 
 class TokenTests(unittest.TestCase):
     def test_motion_bands_are_the_product_budget(self) -> None:
-        self.assertEqual(MOTION_UI_MS, (150, 350))
-        self.assertEqual(MOTION_COMPANION_MS, (300, 700))
+        self.assertEqual(MOTION_UI_MS, (80, 420))
+        self.assertEqual(MOTION_COMPANION_MS, (300, 420))
 
     def test_css_custom_properties_honour_reduced_motion(self) -> None:
         css = css_custom_properties()

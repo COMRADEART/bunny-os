@@ -8,7 +8,8 @@
 // Two layers, and the difference is not cosmetic.
 //
 // **Chrome** — top bar, sidebar, dock, toasts, the search results, the power
-// menu — goes through Main.layoutManager.addChrome. That puts it above windows,
+// menu, the Trust overlay — goes through Main.layoutManager.addChrome. That
+// puts it above windows,
 // in the shell's input region, and — with trackFullscreen — makes it disappear
 // under a fullscreen video without any code here knowing that fullscreen
 // exists.
@@ -68,6 +69,8 @@ import {CharacterStateManager} from './character/state.js';
 import {AssistantBubble} from './assistant/bubble.js';
 import {SuggestedActions} from './assistant/suggestions.js';
 import {AssistantPanel} from './assistant/panel.js';
+import {TrustOverlay} from './assistant/trustOverlay.js';
+import {consentSurfaceForLayout} from './companionVocabulary.js';
 
 import {SystemOverview} from './cards/systemOverview.js';
 import {QuickAccess} from './cards/quickAccess.js';
@@ -512,6 +515,8 @@ export class DesktopShell {
             onDismiss: () => this._dismissAssistant(),
         }));
 
+        this._trustOverlay = this._optional('trust overlay', () => new TrustOverlay({blur}));
+
         // Cards, each on its own. A card is a widget over a service, so it is
         // the piece most likely to meet a machine its service has no answer
         // for, and the piece whose absence costs the least. A card whose
@@ -636,7 +641,7 @@ export class DesktopShell {
         this._chromeActors = [this._desktopLayer];
         for (const actor of [
             this.topBar?.actor, this.sidebar?.actor, this.dock?.actor,
-            this.notificationLayer?.actor, this._searchResults,
+            this.notificationLayer?.actor, this._searchResults, this._trustOverlay?.actor,
         ]) {
             if (!actor)
                 continue;
@@ -952,6 +957,7 @@ export class DesktopShell {
         const solution = solve(screen, {
             scale: this._textScale(),
             metric: this.theme?.metric ?? null,
+            profile: this._layoutProfile(),
         });
         this._solution = solution;
 
@@ -968,8 +974,13 @@ export class DesktopShell {
         if (this.topBar)
             place(this.topBar.actor, rects.topBar);
         if (this.sidebar) {
-            place(this.sidebar.actor, rects.sidebar);
-            this.sidebar.setCollapsed(solution.sidebarMode === 'collapsed');
+            if (rects.sidebar) {
+                this.sidebar.actor.visible = true;
+                place(this.sidebar.actor, rects.sidebar);
+                this.sidebar.setCollapsed(solution.sidebarMode === 'collapsed');
+            } else {
+                this.sidebar.actor.visible = false;
+            }
         }
         if (this.dock)
             place(this.dock.actor, rects.dock);
@@ -1008,6 +1019,7 @@ export class DesktopShell {
 
         this._characterViewport?.setGeometry(rects.character);
         this._placeBubbles(rects.character);
+        this._trustOverlay?.place(monitor);
 
         log_(`layout ${screen.width}x${screen.height} -> ${solution.breakpoint}, ` +
             `${solution.columns} card column(s)` +
@@ -1034,6 +1046,114 @@ export class DesktopShell {
      */
     _textScale() {
         return this.theme?.textScale ?? 1;
+    }
+
+    /**
+     * Phase 1 ships the chrome skeleton: thin bar, centred dock, companion
+     * at bottom-right, no widget clutter. The existing dashboard remains the
+     * `full` profile in lib/layout.js for layouts that still need the cards.
+     */
+    _layoutProfile() {
+        return 'skeleton';
+    }
+
+    /**
+     * Where Trust is drawn for the current layout. Skeleton hides the
+     * assistant card; consent then has to be the overlay (and a bubble).
+     */
+    _consentSurface() {
+        const solution = this._solution;
+        return consentSurfaceForLayout({
+            profile: solution?.profile ?? this._layoutProfile(),
+            dropped: solution?.dropped ?? [],
+            cardLive: this._assistantPanel?.live ?? false,
+        });
+    }
+
+    _approvalCaption(approval) {
+        const prompt = approval?.prompt && typeof approval.prompt === 'object'
+            ? approval.prompt : {};
+        const text = String(prompt.presentation ?? approval?.reason ?? '').trim();
+        return text || 'Waiting for you.';
+    }
+
+    _presentApproval(approval, onDecision) {
+        const requestId = String(approval?.requestId ?? '');
+        if (!requestId)
+            return;
+        const surface = this._consentSurface();
+        const decide = (decision, id) => onDecision?.(decision, id);
+        if (surface.card)
+            this._assistantPanel?.showApproval(approval, decide);
+        else
+            this._assistantPanel?.clearApproval();
+
+        let dialogShown = false;
+        if (surface.dialog && this._trustOverlay) {
+            dialogShown = this._trustOverlay.showApproval(approval, decide) === true;
+            if (dialogShown) {
+                this._trustOverlay.place(Main.layoutManager.primaryMonitor);
+                this._grabTrustOverlay();
+            }
+        }
+
+        const actions = [];
+        if (dialogShown) {
+            actions.push({
+                label: 'Review the request',
+                accessibleName: 'Review the permission request',
+                onActivate: () => this._trustOverlay?.focusSafeAnswer(),
+            });
+        } else if (!surface.card) {
+            // Overlay failed to construct: the bubble is the only visible,
+            // focusable consent surface left.
+            actions.push({
+                label: "Don't allow",
+                accessibleName: 'Deny this Bunny action',
+                onActivate: () => decide('deny', requestId),
+            });
+            actions.push({
+                label: 'Allow once',
+                accessibleName: 'Allow this Bunny action',
+                onActivate: () => decide('allow', requestId),
+            });
+        }
+        this._bubble?.say(this._approvalCaption(approval), {
+            tone: 'warning',
+            wave: false,
+            actions,
+        });
+    }
+
+    _clearPresentedApproval(requestId = '') {
+        this._assistantPanel?.clearApproval(requestId);
+        this._trustOverlay?.clearApproval(requestId);
+        this._releaseTrustOverlay();
+    }
+
+    _grabTrustOverlay() {
+        if (!this._trustOverlay?.visible || this._trustGrab)
+            return;
+        try {
+            this._trustGrab = Main.pushModal(this._trustOverlay.actor, {
+                actionMode: Shell.ActionMode.NORMAL,
+            });
+        } catch (error) {
+            logError_('the Trust overlay could not take a modal grab', error);
+            this._trustGrab = null;
+        }
+        this._trustOverlay.focusSafeAnswer();
+    }
+
+    _releaseTrustOverlay() {
+        if (this._trustGrab) {
+            try {
+                Main.popModal(this._trustGrab);
+            } catch (_error) {
+                // Already popped; the overlay is going away either way.
+            }
+            this._trustGrab = null;
+        }
     }
 
     _placeBubbles(band) {
@@ -1270,7 +1390,7 @@ export class DesktopShell {
         this.characterState.noteActivity();
         this._assistantPanel?.addTurn('user', trimmed);
         this._assistantPanel?.showFileResults([]);
-        this._assistantPanel?.clearApproval();
+        this._clearPresentedApproval();
         this._assistantPanel?.setBusy(true);
         this._assistantPanel?.setStatus('Thinking…');
         this.characterState.setState('thinking', {reason: trimmed});
@@ -1286,23 +1406,24 @@ export class DesktopShell {
                 this.characterState.adoptPhase(phase, PHASE_TO_STATE, {statusText});
                 if (statusText)
                     this._assistantPanel?.setStatus(statusText);
-                if (phase !== 'waiting_for_approval')
-                    this._assistantPanel?.clearApproval();
+                if (phase !== 'waiting_for_approval' && phase !== 'waiting_for_permission')
+                    this._clearPresentedApproval();
             },
             onApproval: (approval, meta) => {
                 if (!this._owns(meta))
                     return;
-                this._assistantPanel?.showApproval(approval, (decision, requestId) => {
+                this._presentApproval(approval, (decision, requestId) => {
                     this.assistant.resolveApproval(
                         approval.taskId, requestId, decision,
                         (resolved, line) => {
                             if (!this._owns(meta))
                                 return;
                             if (resolved) {
-                                this._assistantPanel?.clearApproval(requestId);
+                                this._clearPresentedApproval(requestId);
                                 this._assistantPanel?.setStatus('Permission recorded.');
                             } else {
                                 this._assistantPanel?.approvalDecisionFailed(requestId);
+                                this._trustOverlay?.approvalDecisionFailed(requestId);
                                 this._assistantPanel?.setStatus(
                                     line?.reason ?? 'That permission answer was refused.',
                                     {tone: 'error'});
@@ -1362,7 +1483,7 @@ export class DesktopShell {
                     return;
                 this._voicePhase = 'idle';
                 this._bubble?.setSpeaking(false);
-                this._assistantPanel?.clearApproval();
+                this._clearPresentedApproval();
                 this._assistantPanel?.setBusy(false);
                 this._assistantPanel?.setStatus('');
                 if (phase === 'success') {
@@ -1380,7 +1501,7 @@ export class DesktopShell {
             onError: (reason, meta) => {
                 if (!this._owns(meta))
                     return;
-                this._assistantPanel?.clearApproval();
+                this._clearPresentedApproval();
                 this._failRequest(reason, {retry: trimmed});
             },
         });
@@ -1505,7 +1626,7 @@ export class DesktopShell {
         this._releaseVoiceInteraction({notify: false});
         this._voicePhase = 'starting';
         this._assistantPanel?.showFileResults([]);
-        this._assistantPanel?.clearApproval();
+        this._clearPresentedApproval();
         this._assistantPanel?.setBusy(true);
         // Conservative privacy ordering: make the persistent chrome indicator
         // visible before asking the service to open a device. The companion
@@ -1538,8 +1659,8 @@ export class DesktopShell {
                     this._assistantPanel?.setStatus(statusText);
                 if (phase === 'speaking')
                     this._assistantPanel?.setVoiceState(false, 'speaking');
-                if (phase !== 'waiting_for_approval')
-                    this._assistantPanel?.clearApproval();
+                if (phase !== 'waiting_for_approval' && phase !== 'waiting_for_permission')
+                    this._clearPresentedApproval();
             },
             onPartial: (partial, meta) => {
                 if (this._ownsVoice(meta) && partial)
@@ -1566,17 +1687,18 @@ export class DesktopShell {
             onApproval: (approval, meta) => {
                 if (!this._ownsVoice(meta))
                     return;
-                this._assistantPanel?.showApproval(approval, (decision, requestId) => {
+                this._presentApproval(approval, (decision, requestId) => {
                     this.voice.resolveApproval(
                         approval.taskId, requestId, decision,
                         (resolved, line) => {
                             if (!this._ownsVoice(meta))
                                 return;
                             if (resolved) {
-                                this._assistantPanel?.clearApproval(requestId);
+                                this._clearPresentedApproval(requestId);
                                 this._assistantPanel?.setStatus('Permission recorded.');
                             } else {
                                 this._assistantPanel?.approvalDecisionFailed(requestId);
+                                this._trustOverlay?.approvalDecisionFailed(requestId);
                                 this._assistantPanel?.setStatus(
                                     line?.reason ?? 'That permission answer was refused.',
                                     {tone: 'error'});
@@ -1634,7 +1756,7 @@ export class DesktopShell {
                     return;
                 this._bubble?.setSpeaking(false);
                 this._setMicrophoneVisible(false);
-                this._assistantPanel?.clearApproval();
+                this._clearPresentedApproval();
                 this._assistantPanel?.setVoiceState(false);
                 this._assistantPanel?.setBusy(false);
                 if (phase === 'success') {
@@ -1652,7 +1774,7 @@ export class DesktopShell {
                     return;
                 this._voicePhase = 'idle';
                 this._bubble?.setSpeaking(false);
-                this._assistantPanel?.clearApproval();
+                this._clearPresentedApproval();
                 this._failRequest(reason, {retry: null});
             },
         });
@@ -1851,11 +1973,19 @@ export class DesktopShell {
         Main.layoutManager.addChrome(this._powerMenu.actor, {
             affectsStruts: false, trackFullscreen: true,
         });
-        const sidebarRect = this._solution.rects.sidebar;
         const monitor = Main.layoutManager.primaryMonitor;
-        this._powerMenu.actor.set_position(
-            monitor.x + sidebarRect.x + sidebarRect.width + 10,
-            monitor.y + sidebarRect.y + sidebarRect.height - 190);
+        const sidebarRect = this._solution.rects.sidebar;
+        const dockRect = this._solution.rects.dock;
+        const topBar = this._solution.rects.topBar;
+        // Skeleton chrome hides the sidebar; the menu then sits above the
+        // centred dock rather than crashing on a missing rail.
+        const x = sidebarRect
+            ? monitor.x + sidebarRect.x + sidebarRect.width + 10
+            : monitor.x + (dockRect?.x ?? 20);
+        const y = sidebarRect
+            ? monitor.y + sidebarRect.y + sidebarRect.height - 190
+            : monitor.y + (dockRect ? dockRect.y - 190 : (topBar?.height ?? 44) + 20);
+        this._powerMenu.actor.set_position(x, y);
         enter(this._powerMenu.actor, {rise: 8});
 
         // Modal so Escape closes it and a click elsewhere does too, which is
@@ -1930,6 +2060,7 @@ export class DesktopShell {
         });
 
         attempt('power menu', () => this._closePowerMenu());
+        attempt('trust overlay grab', () => this._releaseTrustOverlay());
 
         // Before the actors go, so that the restyle St triggers when the
         // generated sheet is unloaded lands on actors that still exist.
@@ -1972,6 +2103,7 @@ export class DesktopShell {
             ['top bar', this.topBar], ['sidebar', this.sidebar], ['dock', this.dock],
             ['notification layer', this.notificationLayer], ['bubble', this._bubble],
             ['suggestions', this._suggestions], ['character', this._characterViewport],
+            ['trust overlay', this._trustOverlay],
             ['wallpaper', this.wallpaper],
         ]) {
             attempt(what, () => component?.destroy());

@@ -47,6 +47,7 @@ export const PHASE_TO_STATE = {
     planning: 'thinking',
     reviewing: 'thinking',
     waiting_for_approval: 'warning',
+    waiting_for_permission: 'warning',
     listening: 'listening',
     transcribing: 'thinking',
     speaking: 'talking',
