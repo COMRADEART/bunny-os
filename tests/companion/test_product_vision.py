@@ -156,6 +156,8 @@ class OutcomeRouterTests(unittest.TestCase):
         explanation = route_outcome(request, simulate("embedded-64mb"))
         self.assertEqual(explanation.target, "refused")
         self.assertTrue(any("secret" in reason for reason in explanation.reasons))
+        self.assertIn("this computer", explanation.headline.casefold())
+        self.assertIn("private work", explanation.detail.casefold())
 
     def test_memory_pressure_does_not_become_a_cloud_upload(self) -> None:
         request = OutcomeRequest(

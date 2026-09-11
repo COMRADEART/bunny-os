@@ -40,17 +40,19 @@ __all__ = [
 ]
 
 _FACES = {
+    # Bunny stays Bunny. State is the pose, the bubble, and the room — not a
+    # different pictogram for each key.
     "idle": "🐰",
-    "listening": "👂",
-    "thinking": "💭",
-    "working": "🛠️",
-    "searching": "🔎",
-    "downloading": "⬇️",
-    "installing": "📦",
-    "reading": "📖",
-    "coding": "⌨️",
-    "error": "✕",
-    "success": "✓",
+    "listening": "🐰",
+    "thinking": "🐰",
+    "working": "🐰",
+    "searching": "🐰",
+    "downloading": "🐰",
+    "installing": "🐰",
+    "reading": "🐰",
+    "coding": "🐰",
+    "error": "🐰",
+    "success": "🐰",
 }
 
 #: Ordinary-action journey used by the host demo. Each row is a real
@@ -100,12 +102,12 @@ def _css() -> str:
   .desktop { min-height: 100vh; padding: 40px 48px; }
   .chrome { display: flex; justify-content: space-between; color: var(--muted);
     font-size: 13px; letter-spacing: 0.04em; margin-bottom: 28px; }
-  .stage { display: grid; grid-template-columns: 220px 1fr; gap: 28px; align-items: start; }
+  .stage { display: grid; grid-template-columns: 400px 1fr; gap: 20px; align-items: start; }
   .character { width: 180px; height: 180px; border-radius: 40px;
     background: #161320; display: grid; place-items: center;
     box-shadow: 0 0 0 1px #2a2f40, 0 24px 60px rgba(0,0,0,0.45); position: relative; }
   .face { font-size: 72px; line-height: 1; }
-  .bubble { position: absolute; left: 190px; top: 24px; min-width: 180px; max-width: 280px;
+  .bubble { position: absolute; left: 196px; top: 28px; min-width: 160px; max-width: 190px;
     background: #F7F8FA; color: #080B12; border-radius: 16px 16px 16px 4px;
     padding: 10px 14px; font-size: 15px; font-weight: 600;
     box-shadow: 0 12px 30px rgba(0,0,0,0.35); }
@@ -296,7 +298,7 @@ def render_onboarding_html(*, step_index: int = 0) -> str:
         items.append(f"<li>{mark} {html_escape(item.title)}</li>")
     first_install = INSTALL_STAGES[0].says
     last_first_run = FIRST_RUN_STAGES[-1].says
-    snippet = step.body.split(".")[0] + "."
+    snippet = step.title
     body = f"""
   <div class="desktop">
     <header class="chrome"><span>Bunny OS · First run</span>

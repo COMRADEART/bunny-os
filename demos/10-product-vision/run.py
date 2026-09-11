@@ -383,7 +383,7 @@ def main(argv: list[str] | None = None) -> int:
     shot_names = [
         "visual-idle", "visual-listening", "visual-thinking", "visual-working",
         "visual-searching", "visual-success",
-        "appearance-laptop", "outcomes", "memory",
+        "appearance-laptop", "appearance-embedded-64mb", "outcomes", "memory",
         "onboarding-hello", "onboarding-ready", "voice",
     ]
     if chrome:

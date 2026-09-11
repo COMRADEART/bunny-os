@@ -148,15 +148,15 @@ def explain_route(request: OutcomeRequest, decision: RouteDecision) -> OutcomeEx
         )
         locality = "cloud, if you approve"
     else:
-        if memory:
+        if request.privacy in {"sensitive", "secret", "personal"}:
+            headline = "This stays on this computer, and it cannot run here right now."
+            detail = "I will not send private work to a cloud to make up for a weak machine."
+        elif memory:
             headline = "This computer is too busy to do that right now."
             detail = "I will not send it somewhere else just because memory is tight."
         elif request.offline or offline:
             headline = "I can't do that while you're offline."
             detail = "This request would need the internet, and you asked me to stay offline."
-        elif request.privacy in {"sensitive", "secret", "personal"}:
-            headline = "This stays on this computer, and it cannot run here right now."
-            detail = "I will not send private work to a cloud to make up for a weak machine."
         else:
             headline = "I can't do that with what's allowed right now."
             detail = "Remote help is off until you turn it on, and local work could not start."

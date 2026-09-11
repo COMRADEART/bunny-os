@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Bunny OS · Memory</title>
+<style>
+
+  :root {
+    --ink: #080B12; --panel: #111520; --card: #1B1F2D; --text: #F7F8FA;
+    --muted: #8F96A4; --accent: #7C3AED; --danger: #F43F5E; --ok: #34D399;
+    --warn: #F59E0B;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--ink); color: var(--text);
+    font: 16px/1.45 "Source Sans 3", "Segoe UI", sans-serif; }
+  .desktop { min-height: 100vh; padding: 40px 48px; }
+  .chrome { display: flex; justify-content: space-between; color: var(--muted);
+    font-size: 13px; letter-spacing: 0.04em; margin-bottom: 28px; }
+  .stage { display: grid; grid-template-columns: 400px 1fr; gap: 20px; align-items: start; }
+  .character { width: 180px; height: 180px; border-radius: 40px;
+    background: #161320; display: grid; place-items: center;
+    box-shadow: 0 0 0 1px #2a2f40, 0 24px 60px rgba(0,0,0,0.45); position: relative; }
+  .face { font-size: 72px; line-height: 1; }
+  .bubble { position: absolute; left: 196px; top: 28px; min-width: 160px; max-width: 190px;
+    background: #F7F8FA; color: #080B12; border-radius: 16px 16px 16px 4px;
+    padding: 10px 14px; font-size: 15px; font-weight: 600;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.35); }
+  .bubble.error { background: #3a1520; color: #fecdd3; }
+  .panel { background: var(--panel); border-radius: 20px; padding: 22px 24px 28px;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.4); }
+  h1 { margin: 0 0 8px; font-size: 22px; font-weight: 650; }
+  h2 { margin: 8px 0; font-size: 16px; }
+  .muted { color: var(--muted); }
+  .grid { display: grid; gap: 12px; }
+  .card { background: var(--card); border-radius: 14px; padding: 14px 16px; border: 1px solid #2c3346; }
+  .card.chosen { outline: 2px solid var(--accent); }
+  .pill { display: inline-block; border-radius: 999px; padding: 2px 10px; font-size: 12px;
+    letter-spacing: 0.04em; background: #2a2f40; color: var(--muted); }
+  .pill.ok { background: #143326; color: var(--ok); }
+  .pill.warn { background: #3a2a10; color: var(--warn); }
+  .pill.no { background: #3a1520; color: #fecdd3; }
+  .note { margin-top: 24px; color: var(--muted); font-size: 12px; }
+  ul.plain { list-style: none; padding: 0; margin: 12px 0 0; display: grid; gap: 8px; }
+  .row { display: flex; justify-content: space-between; gap: 16px; }
+  .modes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+
+  .desktop { background:
+    radial-gradient(900px 500px at 80% 10%, #0c1018 0%, transparent 55%),
+    linear-gradient(180deg, #0c1018 0%, #080B12 100%); }
+  
+</style>
+</head>
+<body>
+
+  <div class="desktop">
+    <header class="chrome"><span>Bunny OS · Memory</span>
+      <span>deny by default · cloud minimised</span></header>
+    <main class="panel">
+      <h1>What Bunny may remember</h1>
+      <p class="muted">Working memory is the current task. Session, durable and
+        cloud stay off until you turn them on.</p>
+      <div class="grid">
+        <article class="card">
+          <p>Session: <strong>off</strong></p>
+          <p>Durable: <strong>off</strong></p>
+          <p>Cloud context: <strong>none</strong></p>
+        </article>
+      </div>
+      <ul class="plain"><li class="row"><span>working · internal</span><span class="pill ok">allowed</span></li><li class="row"><span>session · internal</span><span class="pill no">denied</span></li><li class="row"><span>durable · personal</span><span class="pill no">denied</span></li><li class="row"><span>cloud · public</span><span class="pill no">denied</span></li></ul>
+    </main>
+    <p class="note">There is no blanket override. Cloud shares need an explicit
+      field allow-list and still honour the remote transfer ceiling.</p>
+  </div>
+
+</body>
+</html>
