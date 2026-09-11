@@ -83,7 +83,7 @@ DEFINITIONS: dict[str, dict[str, Any]] = {
 
 SECTIONS = (
     "Network", "Bluetooth", "Displays", "Sound", "Power", "Keyboard", "Mouse and Touchpad",
-    "Appearance", "Applications", "Notifications", "Privacy", "Users", "Date and Time", "Storage",
+    "Appearance", "Applications", "Notifications", "Privacy", "Memory", "Users", "Date and Time", "Storage",
     "Updates", "Recovery", "Bunny", "Voice & AI", "Local Models", "Plugins", "Permissions",
     "Accessibility", "System Information",
 )

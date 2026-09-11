@@ -104,6 +104,23 @@ class SpeechBubbleTests(unittest.TestCase):
         layout = layout_bubble(state, self.anchor, PixelRect(1500, 200, 200, 200), [self.display, second])
         self.assertEqual(layout.display_id, "second")
 
+    def test_layout_stays_clear_of_the_top_bar_and_dock(self) -> None:
+        state = SpeechBubbleController().update("Hello", now=0)
+        character = PixelRect(40, 40, 160, 160)
+        layout = layout_bubble(
+            state, self.anchor, character, [self.display],
+            panel_top=44, dock_bottom=64,
+        )
+        self.assertGreaterEqual(layout.bounds.y, 44 + 12)
+        self.assertLessEqual(layout.bounds.bottom, 720 - 64 - 12)
+        self.assertEqual(layout.surface, "bubble")
+
+    def test_long_copy_is_a_panel_not_a_wider_bubble(self) -> None:
+        state = SpeechBubbleController().update("word " * 80, now=0)
+        layout = layout_bubble(state, self.anchor, PixelRect(400, 250, 200, 200), [self.display])
+        self.assertEqual(layout.surface, "panel")
+        self.assertLessEqual(layout.bounds.width, 420)
+
 
 class LipSyncTests(unittest.TestCase):
     def controller(self, shapes=None) -> LipSyncController:

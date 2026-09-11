@@ -1,0 +1,134 @@
+# SPDX-FileCopyrightText: 2026 ComradeArt
+# SPDX-License-Identifier: GPL-3.0-or-later
+"""Human copy for errors, offline, voice, and disconnects.
+
+A status line that only names a phase ("error", "offline") leaves a person
+to invent the rest. Every message here answers three questions, in that
+order:
+
+* what happened
+* what to do
+* whether anything on the computer changed
+
+The runtime still decides. This module only phrases. It does not grant
+permissions, start tools, or invent a recovery that did not happen.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from typing import Mapping
+
+__all__ = [
+    "UserMessage",
+    "disconnected_message",
+    "error_message",
+    "offline_message",
+    "voice_listening_message",
+]
+
+
+@dataclass(frozen=True)
+class UserMessage:
+    """One human-readable status, with the three facts a person needs."""
+
+    headline: str
+    happened: str
+    next_step: str
+    changed: str
+    kind: str = "info"
+
+    def as_paragraph(self) -> str:
+        return f"{self.headline} {self.happened} {self.next_step} {self.changed}"
+
+    def sentence(self) -> str:
+        """The three facts as one caption line."""
+        return self.as_paragraph()
+
+    def to_json(self) -> dict[str, str]:
+        return {
+            "headline": self.headline,
+            "happened": self.happened,
+            "nextStep": self.next_step,
+            "changed": self.changed,
+            "kind": self.kind,
+        }
+
+
+_ERROR_KINDS: Mapping[str, UserMessage] = {
+    "failed": UserMessage(
+        "That didn't work.",
+        "Bunny stopped this step.",
+        "You can try again, or ask for something else.",
+        "Nothing else on this computer was changed.",
+        "error",
+    ),
+    "blocked": UserMessage(
+        "Bunny needs something to change first.",
+        "This cannot go further with the permission or machine as it is.",
+        "Answer the question if there is one, or try a smaller request.",
+        "Nothing was changed.",
+        "warning",
+    ),
+    "denied": UserMessage(
+        "You said no.",
+        "Bunny recorded the refusal and stopped.",
+        "If that was a mistake, ask again and choose Allow once.",
+        "Nothing was changed.",
+        "info",
+    ),
+    "expired": UserMessage(
+        "The question timed out.",
+        "Bunny treated silence as no, which is the safe default.",
+        "Ask again if you still want this done.",
+        "Nothing was changed.",
+        "warning",
+    ),
+}
+
+
+def error_message(*, kind: str = "failed", detail: str = "") -> UserMessage:
+    """A failure the person can act on. ``detail`` is already display-safe."""
+    base = _ERROR_KINDS.get(kind, _ERROR_KINDS["failed"])
+    extra = str(detail or "").strip()
+    happened = f"{base.happened} {extra}".strip() if extra else base.happened
+    return UserMessage(base.headline, happened, base.next_step, base.changed, base.kind)
+
+
+def offline_message(*, intentional: bool = True) -> UserMessage:
+    """Intentional offline, not a network outage dressed as a feature."""
+    if intentional:
+        return UserMessage(
+            "You're offline on purpose.",
+            "Bunny will only use this computer.",
+            "Connect when you want a lookup that needs the internet.",
+            "Nothing left this machine.",
+            "info",
+        )
+    return UserMessage(
+        "The network isn't available.",
+        "Bunny cannot reach anything off this computer right now.",
+        "Work that only needs this machine can still run. Try again when you're back online for the rest.",
+        "Nothing left this machine.",
+        "warning",
+    )
+
+
+def disconnected_message() -> UserMessage:
+    return UserMessage(
+        "This window cannot reach the companion runtime.",
+        "The picture stopped updating.",
+        "Keep using the desktop. Bunny will catch up when the connection returns.",
+        "Anything already running is unaffected.",
+        "warning",
+    )
+
+
+def voice_listening_message() -> UserMessage:
+    return UserMessage(
+        "Listening.",
+        "The microphone is on, only while you hold talk.",
+        "Speak, or press Stop if you didn't mean to.",
+        "Audio is used for this request and is not kept.",
+        "info",
+    )

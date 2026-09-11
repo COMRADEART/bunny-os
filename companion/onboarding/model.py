@@ -26,6 +26,7 @@ from dataclasses import dataclass, field
 from typing import Any, Callable, Mapping, Sequence
 
 __all__ = [
+    "ONBOARDING_ESSENTIAL_IDS",
     "ONBOARDING_STEPS",
     "OnboardingModel",
     "OnboardingStep",
@@ -79,7 +80,7 @@ ONBOARDING_STEPS: tuple[OnboardingStep, ...] = (
         "transfer. Session, durable and cloud memory stay off until you turn them on. There is "
         "no telemetry in Bunny OS: no usage counters, no crash uploads, nothing sent in the "
         "background. Diagnostics are exported to a file you read first.",
-        action="Continue", skip="",
+        action="Continue", skip="Skip — I'll read this later",
     ),
     OnboardingStep(
         "character", "Meet Bunny",
@@ -106,7 +107,7 @@ ONBOARDING_STEPS: tuple[OnboardingStep, ...] = (
     OnboardingStep(
         "providers", "Where answers come from",
         "Bunny needs an AI provider to answer questions. Local providers run on this machine "
-        "and are preferred whenever one is available.",
+        "and are preferred whenever one is available. You choose an outcome, not an engine.",
         action="Continue", skip="Set this up later", survey="providers",
     ),
     OnboardingStep(
@@ -140,6 +141,11 @@ ONBOARDING_STEPS: tuple[OnboardingStep, ...] = (
 )
 
 _BY_ID = {step.step_id: step for step in ONBOARDING_STEPS}
+
+#: The path a person must walk: hello, how Bunny looks, what Bunny may do, ready.
+#: Everything else is skippable. The ten steps stay so nothing is hidden; this
+#: tuple is which of them a first-run can treat as the progressive spine.
+ONBOARDING_ESSENTIAL_IDS = ("welcome", "character", "permissions", "finish")
 
 
 @dataclass(frozen=True)

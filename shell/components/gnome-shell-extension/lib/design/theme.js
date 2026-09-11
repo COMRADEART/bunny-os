@@ -133,7 +133,11 @@ export function resolveTheme({
     // zero-duration transition never consults them and a component that reads
     // `theme.motion.easeOut` should not have to check first.
     const motion = reducedMotion
-        ? {...MOTION, instant: 0, fast: 0, normal: 0, slow: 0}
+        ? {
+            ...MOTION,
+            instant: 0, fast: 0, normal: 0, slow: 0,
+            companionFast: 0, companionNormal: 0, companionSlow: 0,
+        }
         : {...MOTION};
 
     return {

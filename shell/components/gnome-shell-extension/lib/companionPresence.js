@@ -62,11 +62,12 @@ export const FRAME_FLOOR_FPS = 24;
 /** Below this, the machine is on battery and low enough to stop animating. */
 export const BATTERY_FLOOR_PERCENT = 15;
 
-/** Animation budget in milliseconds, per fidelity tier, at normal motion. */
+/** Animation budget in milliseconds, per fidelity tier, at normal motion.
+ * Companion pose changes sit in the 300–700 ms band; UI chrome uses MOTION. */
 export const MOTION_BUDGET_MS = {
-    'full-3d': 260,
-    'lightweight-3d': 220,
-    'animated-2d': 180,
+    'full-3d': 500,
+    'lightweight-3d': 400,
+    'animated-2d': 300,
     'static-image': 0,
     'text-only': 0,
 };

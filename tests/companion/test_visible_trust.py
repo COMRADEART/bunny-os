@@ -67,6 +67,16 @@ class PromptHtmlTests(unittest.TestCase):
         self.assertIn("autofocus", self.html)
         self.assertIn('data-safe-default="denied"', self.html)
 
+    def test_the_face_is_bunny_not_an_emoji(self) -> None:
+        self.assertIn("bunny-face", self.html)
+        self.assertNotIn("🤔", self.html)
+        self.assertNotIn("⚠️", self.html)
+        self.assertIn("Who:", self.html)
+        self.assertIn("What:", self.html)
+        self.assertIn("Why:", self.html)
+        self.assertIn("How long:", self.html)
+        self.assertIn("Allow once", self.html)
+
     def test_there_is_no_always_allow_everything(self) -> None:
         self.assertEqual(forbidden_labels_present(self.html), [])
         for label in FORBIDDEN_LABELS:

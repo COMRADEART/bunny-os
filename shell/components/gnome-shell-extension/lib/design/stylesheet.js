@@ -342,6 +342,8 @@ export function renderStylesheet(theme) {
     focus('.bunny-bubble-more');
     rule(`.bunny-bubble-warning { border-color: ${c.warning}; }`);
     rule(`.bunny-bubble-error { border-color: ${c.danger}; }`);
+    rule(`.bunny-bubble-permission { border-color: ${c.permission}; }`);
+    rule(`.bunny-bubble-offline { border-color: ${c.offline}; opacity: ${theme.highContrast ? 1 : 0.92}; }`);
 
     rule(`.bunny-suggestions-column { padding: ${px(s.md)} ${px(s.md)}; spacing: ${px(s.xxs)}; }`);
     rule(`.bunny-suggestion-row { spacing: ${px(s.sm)}; padding: ${px(s.xs)} ${px(s.sm)}; border-radius: ${px(r.control)}; }`);
@@ -413,6 +415,10 @@ function renderComponents(theme) {
     rule(`.bunny-trust-line-normal { ${type(theme, 'body')} color: ${c.textPrimary}; }`);
     rule(`.bunny-trust-line-quiet { ${type(theme, 'bodySmall')} color: ${c.textSecondary}; }`);
     rule(`.bunny-trust-line-warning { ${type(theme, 'bodySmall')} font-weight: 600; color: ${c.warning}; }`);
+    rule(`.bunny-trust-facts { spacing: ${px(s.xs)}; padding: ${px(s.sm)} ${px(s.md)}; border-radius: ${px(r.control)}; background-color: ${c.surfaceRaised}; }`);
+    rule(`.bunny-trust-fact { ${type(theme, 'bodySmall')} color: ${c.textSecondary}; }`);
+    rule(`.bunny-trust-fact-label { ${type(theme, 'caption')} font-weight: 700; color: ${c.textMuted}; text-transform: uppercase; }`);
+    rule(`.bunny-trust-duration { ${type(theme, 'caption')} font-weight: 600; color: ${c.permission}; }`);
     // The risk marker is a glyph, not a tint. §19.
     rule(`.bunny-trust-risk { spacing: ${px(s.xs)}; }`);
     rule(`.bunny-trust-risk-glyph { icon-size: ${px(theme.icon.medium)}; }`);
