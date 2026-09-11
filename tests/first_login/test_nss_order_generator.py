@@ -70,8 +70,8 @@ class NssOrderGeneratorTests(unittest.TestCase):
         self.assertIn("Wants=nss-user-lookup.target", text)
         self.assertIn("After=nss-user-lookup.target", text)
         self.assertIn("After=authselect-apply-changes.service", text)
-        self.assertNotIn("Requires=", text)
-        self.assertNotIn("Before=", text)
+        self.assertNotRegex(text, r"(?m)^Requires=")
+        self.assertNotRegex(text, r"(?m)^Before=")
 
     def test_skips_when_chronyd_already_has_the_repo_dropin(self) -> None:
         self._unit("chronyd.service", "chrony")

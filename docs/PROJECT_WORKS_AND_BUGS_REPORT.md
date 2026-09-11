@@ -25,7 +25,7 @@ On this Ubuntu host:
 | `python3 scripts/task.py test-trust` | 91 OK |
 | `python3 scripts/task.py test-capsules` | 109 OK |
 | `python3 demos/08-visible-trust/run.py` | exit 0; host Trust surfaces PASS; `guestBoot=NOT_RUN`; stable NO-GO |
-| `python3 demos/09-guest-trust/run.py` | exit 0; **honest guest `NOT_RUN`**; harness tests PASS; `probePassed=true`, `guestPassed=false`, **`passed=false`** (NOT_RUN is not a guest PASS) |
+| `python3 demos/09-guest-trust/run.py` | exit 0; **honest guest `NOT_RUN`**; 16 harness tests PASS; `probePassed=true`, `guestPassed=false`, **`passed=false`** (NOT_RUN is not a guest PASS) |
 | `python3 demos/10-product-vision/run.py` | exit 0; 13/13 screenshots; voice STT/mic/TTS **NOT_RUN**; `passed=true` because NOT_RUN ≠ FAIL |
 
 **Could not run here:** Fedora `image-builder`, QEMU guest boot, composed QCOW2, Podman image build, physical hardware, Orca, live microphone STT, neural TTS *playback* in a graphical session, `jsonschema` (not installed on this image; CI installs it). `/dev/kvm` exists but is **not writable** for this user. Git LFS voice bytes **were** pulled for a provenance re-measure.

@@ -25,7 +25,8 @@ DROPIN = """\
 # Written by bunny-nss-order-generator. Same contract as
 # systemd/chronyd.service.d/50-bunny-nss-order.conf: pull in the passive
 # identity-settled target, order after it and after authselect's rewrite.
-# No Requires= (authselect is conditional). No Before= (cycle risk).
+# authselect is conditional, so this overlay never hard-depends on it.
+# The consuming unit waits; it does not become a reverse-order peer.
 Wants=nss-user-lookup.target
 After=nss-user-lookup.target
 After=authselect-apply-changes.service
