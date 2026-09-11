@@ -965,8 +965,13 @@ class ShellVoiceBoundaryTests(unittest.TestCase):
         self.assertIn("TrustComponent", panel)
         self.assertIn("buildApproval", panel)
         prompt = (EXTENSION / "lib/trustPrompt.js").read_text(encoding="utf-8")
-        self.assertIn("'Deny'", prompt)
-        self.assertIn("'Allow'", prompt)
+        # Drawn labels are "Don't allow" / "Allow once". Bare quoted 'Deny' /
+        # 'Allow' left this check stale after the design-system wording change,
+        # and 'Allow' alone would accept a weaker unbounded grant.
+        self.assertIn('"Don\'t allow"', prompt)
+        self.assertIn("'Allow once'", prompt)
+        self.assertIn("defaultAction: 'deny'", prompt)
+        self.assertIn("accessibleName: 'Deny this Bunny action'", prompt)
         self.assertIn("resolveApproval(", shell)
 
     def test_stop_keeps_indicator_until_companion_confirms_device_closed(self) -> None:
