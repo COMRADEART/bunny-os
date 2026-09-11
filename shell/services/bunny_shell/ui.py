@@ -23,6 +23,9 @@ from .project import project_status
 from .search import SearchIndex
 from .settings import SECTIONS, SettingsStore
 from .trust_copy import (
+    ALLOWLISTED_CEILING_NOTE,
+    CLIPBOARD_BLUETOOTH_NOTE,
+    CLOUD_MEMORY_IS_OFF,
     CLOUD_MEMORY_STAYS_OFF,
     NETWORK_ALLOWLIST_NOTE,
 )
@@ -605,6 +608,9 @@ class BunnyApplication:
             f"Broker: {status['broker']}"
         ))
         box.append(self._label(NETWORK_ALLOWLIST_NOTE))
+        box.append(self._label(ALLOWLISTED_CEILING_NOTE))
+        box.append(self._label(CLIPBOARD_BLUETOOTH_NOTE))
+        box.append(self._label(CLOUD_MEMORY_IS_OFF))
         box.append(self._label(CLOUD_MEMORY_STAYS_OFF))
         box.append(self._button("Open GNOME device privacy", lambda _b: _fixed_spawn(["/usr/bin/gnome-control-center", "privacy"])))
         return box

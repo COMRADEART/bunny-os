@@ -25,6 +25,7 @@ class SettingsTests(unittest.TestCase):
         value = self.settings.set("localOnlyMode", True)
         self.assertEqual(value["defaultProviderAlias"], "local")
         self.assertEqual(value["cloudFailoverPolicy"], "never")
+        self.assertEqual(value["aiMode"], "local-only")
 
     def test_offline_mode_preserves_loopback_design(self) -> None:
         value = self.settings.set("offlineMode", True)

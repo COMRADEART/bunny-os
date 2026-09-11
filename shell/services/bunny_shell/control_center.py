@@ -3,7 +3,8 @@
 """Bunny / AI / Privacy Control Center modules.
 
 Device panels still deep-link to GNOME. These three are Bunny-owned. Voice
-stays off until wanted; AI is local-first; cloud_context is named honestly.
+stays off until wanted; AI is one local-first control; cloud_context is named
+honestly and is not remote_dispatch.
 """
 
 from __future__ import annotations
@@ -12,6 +13,9 @@ from dataclasses import dataclass
 from typing import Any, Mapping
 
 from .trust_copy import (
+    ALLOWLISTED_CEILING_NOTE,
+    CLIPBOARD_BLUETOOTH_NOTE,
+    CLOUD_MEMORY_IS_OFF,
     CLOUD_MEMORY_STAYS_OFF,
     NETWORK_ALLOWLIST_NOTE,
     NETWORK_FULL_INTERNET,
@@ -24,6 +28,51 @@ CLOUD_CONTEXT_LABELS = {
     "none": "Off — saved memory stays on this computer",
     "minimized": "Minimized — only current-request fields may go online after Allow once",
 }
+
+AI_MODES = ("automatic", "local-only", "online-enhanced")
+AI_MODE_LABELS = {
+    "automatic": "Automatic",
+    "local-only": "Local only",
+    "online-enhanced": "Online enhanced",
+}
+AI_MODE_HINTS = {
+    "automatic": (
+        "Picks a local model from measured resources on this computer. "
+        "Bunny does not go online because local is slower. An online answer still "
+        "needs Allow once for this request."
+    ),
+    "local-only": (
+        "Refuses hosted providers. Bunny will not show a Trust prompt to generate "
+        "online. Typed Search still works."
+    ),
+    "online-enhanced": (
+        "Still starts locally. Online generate is offered only when the router would "
+        "escalate, and only after Allow once for this request — not always cloud."
+    ),
+}
+_AI_WARNINGS = {
+    "automatic": (
+        "Automatic never goes online just because a local model is slower.",
+    ),
+    "local-only": (
+        "Local only refuses hosted providers. Bunny will not ask to generate online.",
+    ),
+    "online-enhanced": (
+        "Online enhanced is still local-first. Cloud generate needs Allow once "
+        "for this request — not always cloud.",
+    ),
+}
+
+
+def resolve_ai_mode(values: Mapping[str, Any] | None = None, **kwargs: Any) -> str:
+    settings = dict(values or {})
+    settings.update(kwargs)
+    if settings.get("localOnlyMode"):
+        return "local-only"
+    mode = str(settings.get("aiMode") or "automatic").strip().casefold()
+    if mode in {"online-enhanced", "local-only"}:
+        return mode
+    return "automatic"
 
 
 @dataclass(frozen=True)
@@ -72,25 +121,18 @@ def bunny_module(values: Mapping[str, Any] | None = None, *, companion_hidden: b
 
 def ai_module(values: Mapping[str, Any] | None = None) -> ControlModule:
     settings = values or {}
-    local_only = bool(settings.get("localOnlyMode"))
+    mode = resolve_ai_mode(settings)
     return ControlModule(
         id="ai",
         title="AI",
-        summary="Answers start on this computer. Online generate is a separate Allow once.",
+        summary="One control. Automatic is the default. Answers start on this computer.",
         rows=(
             ControlRow(
-                "localAiEnabled",
-                "Local AI",
-                "On" if settings.get("localAiEnabled", True) else "Off",
-                hint="Models on this machine. Nothing leaves until you allow a hop.",
-                control="toggle",
-            ),
-            ControlRow(
-                "localOnlyMode",
-                "Local-only",
-                "On" if local_only else "Off",
-                hint="Refuses cloud failover. Local voice and local models stay available.",
-                control="toggle",
+                "aiMode",
+                "AI mode",
+                AI_MODE_LABELS[mode],
+                hint=AI_MODE_HINTS[mode],
+                control="choice",
             ),
             ControlRow(
                 "voiceListening",
@@ -111,7 +153,7 @@ def ai_module(values: Mapping[str, Any] | None = None) -> ControlModule:
                 control="toggle",
             ),
         ),
-        warnings=("Local-only is on. Bunny will not fail over to an online model.",) if local_only else (),
+        warnings=_AI_WARNINGS[mode],
     )
 
 
@@ -120,6 +162,14 @@ def privacy_module(
 ) -> ControlModule:
     settings = values or {}
     cloud = cloud_context if cloud_context in CLOUD_CONTEXT_LABELS else "none"
+    warnings = [
+        NETWORK_ALLOWLIST_NOTE,
+        ALLOWLISTED_CEILING_NOTE,
+        CLIPBOARD_BLUETOOTH_NOTE,
+    ]
+    if cloud == "none":
+        warnings.append(CLOUD_MEMORY_IS_OFF)
+    warnings.append(CLOUD_MEMORY_STAYS_OFF)
     return ControlModule(
         id="privacy",
         title="Privacy",
@@ -129,15 +179,33 @@ def privacy_module(
                 "cloudContext",
                 "Cloud memory",
                 CLOUD_CONTEXT_LABELS[cloud],
-                hint=CLOUD_MEMORY_STAYS_OFF if cloud == "none" else (
+                hint=CLOUD_MEMORY_IS_OFF if cloud == "none" else (
                     "Minimized still cannot send saved memory, session memory, or a conversation summary."
                 ),
+            ),
+            ControlRow(
+                "remoteDispatch",
+                "Online for this request",
+                "Allow once each time",
+                hint=CLOUD_MEMORY_STAYS_OFF,
             ),
             ControlRow(
                 "network",
                 "Application network",
                 f"{NETWORK_OFF} or {NETWORK_FULL_INTERNET}",
                 hint=NETWORK_ALLOWLIST_NOTE,
+            ),
+            ControlRow(
+                "appClipboard",
+                "App clipboard",
+                "Not mediated",
+                hint=CLIPBOARD_BLUETOOTH_NOTE,
+            ),
+            ControlRow(
+                "appBluetooth",
+                "App Bluetooth",
+                "Not mediated",
+                hint=CLIPBOARD_BLUETOOTH_NOTE,
             ),
             ControlRow(
                 "pluginNetworkDefault",
@@ -155,10 +223,10 @@ def privacy_module(
                 "clipboardHistory",
                 "Clipboard history",
                 "On" if settings.get("clipboardHistory") else "Off",
-                hint="Off by default. There is no cloud clipboard.",
+                hint="Off by default. There is no cloud clipboard. This is not application clipboard access.",
             ),
         ),
-        warnings=(NETWORK_ALLOWLIST_NOTE, CLOUD_MEMORY_STAYS_OFF) if cloud == "none" else (NETWORK_ALLOWLIST_NOTE,),
+        warnings=tuple(warnings),
     )
 
 

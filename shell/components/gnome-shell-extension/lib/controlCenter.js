@@ -4,16 +4,51 @@
 // Bunny Control Center modules: Bunny, AI, Privacy.
 //
 // Device panels still deep-link to GNOME. These three are Bunny-owned and
-// reuse Phase 1 tokens. Voice is off until wanted; AI is local-first;
-// cloud_context is named honestly and is not remote_dispatch.
+// reuse Phase 1 tokens. Voice is off until wanted; AI is one local-first
+// control (Automatic / Local only / Online enhanced); cloud_context is
+// named honestly and is not remote_dispatch.
 
 import {SCREEN_QUESTIONS} from './design/tokens.js';
 import {
+    ALLOWLISTED_CEILING_NOTE,
+    CLIPBOARD_BLUETOOTH_NOTE,
+    CLOUD_MEMORY_IS_OFF,
     CLOUD_MEMORY_STAYS_OFF,
     NETWORK_ALLOWLIST_NOTE,
     NETWORK_FULL_INTERNET,
     NETWORK_OFF,
 } from './trustPrompt.js';
+
+/** One AI control. Never High/Ultra. Default is Automatic (local-first). */
+export const AI_MODES = Object.freeze(['automatic', 'local-only', 'online-enhanced']);
+export const AI_MODE_LABELS = Object.freeze({
+    automatic: 'Automatic',
+    'local-only': 'Local only',
+    'online-enhanced': 'Online enhanced',
+});
+export const AI_MODE_HINTS = Object.freeze({
+    automatic:
+        'Picks a local model from measured resources on this computer. '
+        + 'Bunny does not go online because local is slower. An online answer still '
+        + 'needs Allow once for this request.',
+    'local-only':
+        'Refuses hosted providers. Bunny will not show a Trust prompt to generate '
+        + 'online. Typed Search still works.',
+    'online-enhanced':
+        'Still starts locally. Online generate is offered only when the router would '
+        + 'escalate, and only after Allow once for this request — not always cloud.',
+});
+
+export function resolveAiMode({localOnlyMode = false, aiMode = 'automatic'} = {}) {
+    if (localOnlyMode)
+        return 'local-only';
+    const mode = String(aiMode || 'automatic').trim().toLowerCase();
+    if (mode === 'online-enhanced')
+        return 'online-enhanced';
+    if (mode === 'local-only')
+        return 'local-only';
+    return 'automatic';
+}
 
 export const CONTROL_CENTER_MODULES = Object.freeze(['bunny', 'ai', 'privacy']);
 
@@ -70,21 +105,29 @@ export function buildBunnyModule({
 }
 
 export function buildAiModule({
-    localAiEnabled = true, localOnlyMode = false, voiceEnabled = true,
+    localOnlyMode = false, aiMode = 'automatic', voiceEnabled = true,
     microphoneEnabled = true,
 } = {}) {
+    const mode = resolveAiMode({localOnlyMode, aiMode});
+    const warnings = {
+        automatic: [
+            'Automatic never goes online just because a local model is slower.',
+        ],
+        'local-only': [
+            'Local only refuses hosted providers. Bunny will not ask to generate online.',
+        ],
+        'online-enhanced': [
+            'Online enhanced is still local-first. Cloud generate needs Allow once for this request — not always cloud.',
+        ],
+    }[mode];
     return moduleModel({
         id: 'ai',
         title: 'AI',
-        summary: 'Answers start on this computer. Online generate is a separate Allow once.',
+        summary: 'One control. Automatic is the default. Answers start on this computer.',
         rows: [
-            row('localAiEnabled', 'Local AI', localAiEnabled ? 'On' : 'Off', {
-                hint: 'Models on this machine. Nothing leaves until you allow a hop.',
-                control: 'toggle',
-            }),
-            row('localOnlyMode', 'Local-only', localOnlyMode ? 'On' : 'Off', {
-                hint: 'Refuses cloud failover. Local voice and local models stay available.',
-                control: 'toggle',
+            row('aiMode', 'AI mode', AI_MODE_LABELS[mode], {
+                hint: AI_MODE_HINTS[mode],
+                control: 'choice',
             }),
             row('voiceListening', 'Voice listening', 'Off until you ask', {
                 hint: 'Push-to-talk is Super+Alt+Space. Typed Search always works.',
@@ -96,9 +139,7 @@ export function buildAiModule({
                 control: 'toggle',
             }),
         ],
-        warnings: localOnlyMode
-            ? ['Local-only is on. Bunny will not fail over to an online model.']
-            : [],
+        warnings,
     });
 }
 
@@ -114,11 +155,20 @@ export function buildPrivacyModule({
         rows: [
             row('cloudContext', 'Cloud memory', CLOUD_CONTEXT_LABELS[cloud], {
                 hint: cloud === 'none'
-                    ? CLOUD_MEMORY_STAYS_OFF
+                    ? CLOUD_MEMORY_IS_OFF
                     : 'Minimized still cannot send saved memory, session memory, or a conversation summary.',
+            }),
+            row('remoteDispatch', 'Online for this request', 'Allow once each time', {
+                hint: CLOUD_MEMORY_STAYS_OFF,
             }),
             row('network', 'Application network', `${NETWORK_OFF} or ${NETWORK_FULL_INTERNET}`, {
                 hint: NETWORK_ALLOWLIST_NOTE,
+            }),
+            row('appClipboard', 'App clipboard', 'Not mediated', {
+                hint: CLIPBOARD_BLUETOOTH_NOTE,
+            }),
+            row('appBluetooth', 'App Bluetooth', 'Not mediated', {
+                hint: CLIPBOARD_BLUETOOTH_NOTE,
             }),
             row('pluginNetworkDefault', 'Plugin network', pluginNetworkDefault === 'deny' ? 'Deny until asked' : 'Ask', {
                 control: 'choice',
@@ -127,12 +177,15 @@ export function buildPrivacyModule({
                 hint: 'Off by default. Bunny does not phone home for analytics.',
             }),
             row('clipboardHistory', 'Clipboard history', clipboardHistory ? 'On' : 'Off', {
-                hint: 'Off by default. There is no cloud clipboard.',
+                hint: 'Off by default. There is no cloud clipboard. This is not application clipboard access.',
             }),
         ],
         warnings: [
             NETWORK_ALLOWLIST_NOTE,
-            cloud === 'none' ? CLOUD_MEMORY_STAYS_OFF : '',
+            ALLOWLISTED_CEILING_NOTE,
+            CLIPBOARD_BLUETOOTH_NOTE,
+            cloud === 'none' ? CLOUD_MEMORY_IS_OFF : '',
+            CLOUD_MEMORY_STAYS_OFF,
         ].filter(Boolean),
     });
 }

@@ -55,6 +55,12 @@ DEFINITIONS: dict[str, dict[str, Any]] = {
     "defaultProviderAlias": {"default": "local", "scope": "user", "owner": "bunny-core", "validate": _alias},
     "defaultModel": {"default": "automatic", "scope": "user", "owner": "bunny-core", "validate": _alias},
     "localOnlyMode": {"default": False, "scope": "user", "owner": "bunny-core", "validate": _boolean},
+    "aiMode": {
+        "default": "automatic",
+        "scope": "user",
+        "owner": "bunny-core",
+        "validate": _choice("automatic", "local-only", "online-enhanced"),
+    },
     "offlineMode": {"default": False, "scope": "user", "owner": "bunny-shell", "validate": _boolean},
     "cloudFailoverPolicy": {"default": "ask", "scope": "user", "owner": "bunny-core", "validate": _choice("never", "ask")},
     "memoryEnabled": {"default": True, "scope": "user", "owner": "bunny-core", "validate": _boolean},
@@ -141,17 +147,21 @@ class SettingsStore:
         ``speechRecognizerModel``, ``ttsEngine``, ``localAiEnabled``,
         ``agentModel``) are deliberately *not* dragged here. They are local
         capabilities — a local recogniser, a local TTS engine, a local agent
-        model — and ``localOnlyMode`` / ``offlineMode`` are about the remote
-        dimension. The remote voice/AI failover is already governed by
-        ``cloudFailoverPolicy``, which the existing coupling drags to ``never``.
-        Disabling local voice/AI under a local-only policy would contradict the
-        policy's intent: local-only means *use local*, not *use nothing*.
+        model — and ``localOnlyMode`` / ``offlineMode`` / ``aiMode`` are about
+        the remote dimension. The remote voice/AI failover is already governed
+        by ``cloudFailoverPolicy``, which the existing coupling drags to
+        ``never``. Disabling local voice/AI under a local-only policy would
+        contradict the policy's intent: local-only means *use local*, not *use
+        nothing*. A locked ``localOnlyMode`` does sync chrome ``aiMode`` to
+        ``local-only`` so Control Center cannot show Automatic while the
+        overlay refuses hosted providers.
         """
         for key, managed in self.managed.settings.items():
             values[key] = deepcopy(managed.value)
         if values.get("localOnlyMode") and "localOnlyMode" in self.managed.settings:
             values["cloudFailoverPolicy"] = "never"
             values["defaultProviderAlias"] = "local"
+            values["aiMode"] = "local-only"
         if values.get("offlineMode") and "offlineMode" in self.managed.settings:
             values["cloudFailoverPolicy"] = "never"
         return values
@@ -196,6 +206,17 @@ class SettingsStore:
             if key == "localOnlyMode" and checked:
                 values["cloudFailoverPolicy"] = "never"
                 values["defaultProviderAlias"] = "local"
+                values["aiMode"] = "local-only"
+            if key == "localOnlyMode" and not checked:
+                if values.get("aiMode") == "local-only":
+                    values["aiMode"] = "automatic"
+            if key == "aiMode":
+                if checked == "local-only":
+                    values["localOnlyMode"] = True
+                    values["cloudFailoverPolicy"] = "never"
+                    values["defaultProviderAlias"] = "local"
+                else:
+                    values["localOnlyMode"] = False
             if key == "offlineMode" and checked:
                 values["cloudFailoverPolicy"] = "never"
             state["values"] = values

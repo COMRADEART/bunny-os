@@ -20,7 +20,14 @@ from bunny_shell.command_surface import (
     build_command_surface,
     route_command_answer,
 )
-from bunny_shell.control_center import CONTROL_CENTER_MODULES, control_center
+from bunny_shell.control_center import (
+    AI_MODE_HINTS,
+    AI_MODE_LABELS,
+    AI_MODES,
+    CONTROL_CENTER_MODULES,
+    control_center,
+    resolve_ai_mode,
+)
 from bunny_shell.notification_center import (
     QUIET_DEFAULTS,
     build_notification_center,
@@ -28,16 +35,26 @@ from bunny_shell.notification_center import (
 )
 from bunny_shell.settings import DEFINITIONS, SettingsStore
 from bunny_shell.trust_copy import (
+    ALLOWLISTED_CEILING_NOTE,
+    ALLOW_ACCESSIBLE_NAME,
     ALLOW_ONCE_LABEL,
+    CLIPBOARD_BLUETOOTH_NOTE,
+    CLOUD_MEMORY_IS_OFF,
     CLOUD_MEMORY_STAYS_OFF,
+    DENY_ACCESSIBLE_NAME,
     DONT_ALLOW_LABEL,
     NETWORK_ALLOWLIST_NOTE,
     NETWORK_FULL_INTERNET,
     NETWORK_OFF,
+    bounded_allow_options,
     network_facing_label,
+    network_is_declared_only,
     remote_dispatch_disclosure,
 )
 from companion.user_copy import (
+    ALLOWLISTED_CEILING_NOTE as USER_ALLOWLISTED_CEILING,
+    CLIPBOARD_BLUETOOTH_NOTE as USER_CLIPBOARD_BT,
+    CLOUD_MEMORY_IS_OFF as USER_CLOUD_MEMORY_OFF,
     CLOUD_MEMORY_STAYS_OFF as USER_CLOUD_MEMORY,
     NETWORK_ALLOWLIST_NOTE as USER_ALLOWLIST_NOTE,
     NETWORK_FULL_INTERNET as USER_FULL_INTERNET,
@@ -78,23 +95,37 @@ class HonestyCopyTests(NodeBackedTestCase):
 
     def test_javascript_and_python_honesty_strings_are_byte_identical(self) -> None:
         measured = run_node(
-            f"import {{NETWORK_ALLOWLIST_NOTE, CLOUD_MEMORY_STAYS_OFF, "
+            f"import {{NETWORK_ALLOWLIST_NOTE, CLOUD_MEMORY_STAYS_OFF, CLOUD_MEMORY_IS_OFF, "
             f"NETWORK_OFF, NETWORK_FULL_INTERNET, ALLOW_ONCE_LABEL, "
-            f"DONT_ALLOW_LABEL}} from '{(LIB / 'trustPrompt.js').as_uri()}';\n"
+            f"DONT_ALLOW_LABEL, ALLOWLISTED_CEILING_NOTE, CLIPBOARD_BLUETOOTH_NOTE, "
+            f"ALLOW_ACCESSIBLE_NAME, DENY_ACCESSIBLE_NAME}} "
+            f"from '{(LIB / 'trustPrompt.js').as_uri()}';\n"
             "console.log(JSON.stringify({"
-            "NETWORK_ALLOWLIST_NOTE, CLOUD_MEMORY_STAYS_OFF, NETWORK_OFF, "
-            "NETWORK_FULL_INTERNET, ALLOW_ONCE_LABEL, DONT_ALLOW_LABEL}));\n"
+            "NETWORK_ALLOWLIST_NOTE, CLOUD_MEMORY_STAYS_OFF, CLOUD_MEMORY_IS_OFF, NETWORK_OFF, "
+            "NETWORK_FULL_INTERNET, ALLOW_ONCE_LABEL, DONT_ALLOW_LABEL, "
+            "ALLOWLISTED_CEILING_NOTE, CLIPBOARD_BLUETOOTH_NOTE, "
+            "ALLOW_ACCESSIBLE_NAME, DENY_ACCESSIBLE_NAME}));\n"
         )
         self.assertEqual(measured["NETWORK_ALLOWLIST_NOTE"], NETWORK_ALLOWLIST_NOTE)
         self.assertEqual(measured["CLOUD_MEMORY_STAYS_OFF"], CLOUD_MEMORY_STAYS_OFF)
+        self.assertEqual(measured["CLOUD_MEMORY_IS_OFF"], CLOUD_MEMORY_IS_OFF)
         self.assertEqual(measured["NETWORK_OFF"], NETWORK_OFF)
         self.assertEqual(measured["NETWORK_FULL_INTERNET"], NETWORK_FULL_INTERNET)
         self.assertEqual(measured["ALLOW_ONCE_LABEL"], ALLOW_ONCE_LABEL)
         self.assertEqual(measured["DONT_ALLOW_LABEL"], DONT_ALLOW_LABEL)
+        self.assertEqual(measured["ALLOWLISTED_CEILING_NOTE"], ALLOWLISTED_CEILING_NOTE)
+        self.assertEqual(measured["CLIPBOARD_BLUETOOTH_NOTE"], CLIPBOARD_BLUETOOTH_NOTE)
+        self.assertEqual(measured["ALLOW_ACCESSIBLE_NAME"], ALLOW_ACCESSIBLE_NAME)
+        self.assertEqual(measured["DENY_ACCESSIBLE_NAME"], DENY_ACCESSIBLE_NAME)
         self.assertEqual(USER_ALLOWLIST_NOTE, NETWORK_ALLOWLIST_NOTE)
         self.assertEqual(USER_CLOUD_MEMORY, CLOUD_MEMORY_STAYS_OFF)
+        self.assertEqual(USER_CLOUD_MEMORY_OFF, CLOUD_MEMORY_IS_OFF)
         self.assertEqual(USER_NETWORK_OFF, NETWORK_OFF)
         self.assertEqual(USER_FULL_INTERNET, NETWORK_FULL_INTERNET)
+        self.assertEqual(USER_ALLOWLISTED_CEILING, ALLOWLISTED_CEILING_NOTE)
+        self.assertEqual(USER_CLIPBOARD_BT, CLIPBOARD_BLUETOOTH_NOTE)
+        self.assertEqual(NETWORK_FULL_INTERNET, "On (full internet)")
+        self.assertNotEqual(CLOUD_MEMORY_IS_OFF, CLOUD_MEMORY_STAYS_OFF)
 
     def test_permission_card_reuses_the_allowlist_sentence(self) -> None:
         card = run_node(
@@ -111,23 +142,49 @@ class HonestyCopyTests(NodeBackedTestCase):
         py = control_center(cloud_context="none")["privacy"]
         self.assertIn(NETWORK_ALLOWLIST_NOTE, js["warnings"])
         self.assertIn(CLOUD_MEMORY_STAYS_OFF, js["warnings"])
+        self.assertIn(CLOUD_MEMORY_IS_OFF, js["warnings"])
+        self.assertIn(ALLOWLISTED_CEILING_NOTE, js["warnings"])
+        self.assertIn(CLIPBOARD_BLUETOOTH_NOTE, js["warnings"])
         self.assertIn(NETWORK_ALLOWLIST_NOTE, py.warnings)
         self.assertIn(CLOUD_MEMORY_STAYS_OFF, py.warnings)
+        self.assertIn(CLOUD_MEMORY_IS_OFF, py.warnings)
+        self.assertIn(ALLOWLISTED_CEILING_NOTE, py.warnings)
+        self.assertIn(CLIPBOARD_BLUETOOTH_NOTE, py.warnings)
+        ids = {row["id"] for row in js["rows"]}
+        self.assertIn("appClipboard", ids)
+        self.assertIn("appBluetooth", ids)
+        self.assertIn("remoteDispatch", ids)
+        cloud = next(item for item in js["rows"] if item["id"] == "cloudContext")
+        hop = next(item for item in js["rows"] if item["id"] == "remoteDispatch")
+        self.assertEqual(cloud["hint"], CLOUD_MEMORY_IS_OFF)
+        self.assertEqual(hop["hint"], CLOUD_MEMORY_STAYS_OFF)
+        blob = json.dumps(js).casefold()
+        self.assertNotIn("always allow everything", blob)
+        self.assertNotIn("waiting for domains", blob)
 
-    def test_a_hostname_is_full_internet_and_is_not_reprinted(self) -> None:
-        self.assertEqual(network_facing_label("api.example.com"), NETWORK_FULL_INTERNET)
+    def test_a_hostname_or_allowlisted_ceiling_reads_as_off(self) -> None:
+        self.assertEqual(network_facing_label("api.example.com"), NETWORK_OFF)
+        self.assertTrue(network_is_declared_only("allowlisted"))
+        self.assertTrue(network_is_declared_only("extensions.libreoffice.org"))
+        self.assertFalse(network_is_declared_only("On"))
         self.assertEqual(network_facing_label("On"), NETWORK_FULL_INTERNET)
         self.assertEqual(network_facing_label("none"), NETWORK_OFF)
+        self.assertEqual(network_facing_label("allowlisted"), NETWORK_OFF)
         measured = run_node(
-            f"import {{networkFacingLabel}} from '{(LIB / 'trustPrompt.js').as_uri()}';\n"
+            f"import {{networkFacingLabel, networkIsDeclaredOnly}} "
+            f"from '{(LIB / 'trustPrompt.js').as_uri()}';\n"
             "console.log(JSON.stringify({"
             "listed: networkFacingLabel('api.example.com'),"
             "on: networkFacingLabel('On'),"
-            "off: networkFacingLabel('none')}));\n"
+            "off: networkFacingLabel('none'),"
+            "office: networkFacingLabel('allowlisted'),"
+            "declared: networkIsDeclaredOnly('extensions.libreoffice.org')}));\n"
         )
-        self.assertEqual(measured["listed"], NETWORK_FULL_INTERNET)
+        self.assertEqual(measured["listed"], NETWORK_OFF)
         self.assertEqual(measured["on"], NETWORK_FULL_INTERNET)
         self.assertEqual(measured["off"], NETWORK_OFF)
+        self.assertEqual(measured["office"], NETWORK_OFF)
+        self.assertTrue(measured["declared"])
 
     def test_remote_dispatch_disclosure_only_when_cloud_memory_is_off(self) -> None:
         self.assertEqual(
@@ -243,19 +300,51 @@ class ControlCenterTests(NodeBackedTestCase):
             self.assertFalse(module["companionRequired"])
             self.assertTrue(module["canFocus"])
 
-    def test_voice_listening_is_off_until_wanted_and_ai_is_local_first(self) -> None:
+    def test_voice_listening_is_off_until_wanted_and_ai_is_one_local_first_control(self) -> None:
         py = control_center()["ai"]
         listening = next(row for row in py.rows if row.id == "voiceListening")
         self.assertEqual(listening.value, "Off until you ask")
         self.assertIn("Super+Alt+Space", listening.hint)
+        mode = next(row for row in py.rows if row.id == "aiMode")
+        self.assertEqual(mode.value, "Automatic")
+        self.assertEqual(resolve_ai_mode({}), "automatic")
+        self.assertEqual(AI_MODES, ("automatic", "local-only", "online-enhanced"))
         js = run_node(
-            f"import {{buildAiModule}} from '{(LIB / 'controlCenter.js').as_uri()}';\n"
-            "console.log(JSON.stringify(buildAiModule({localAiEnabled: true})));\n"
+            f"import {{buildAiModule, AI_MODES, AI_MODE_LABELS, AI_MODE_HINTS, resolveAiMode}} "
+            f"from '{(LIB / 'controlCenter.js').as_uri()}';\n"
+            "console.log(JSON.stringify({"
+            "module: buildAiModule({}),"
+            "modes: AI_MODES,"
+            "labels: AI_MODE_LABELS,"
+            "hints: AI_MODE_HINTS,"
+            "local: resolveAiMode({localOnlyMode: true, aiMode: 'automatic'}),"
+            "online: buildAiModule({aiMode: 'online-enhanced'})}));\n"
         )
-        row = next(item for item in js["rows"] if item["id"] == "voiceListening")
+        row = next(item for item in js["module"]["rows"] if item["id"] == "voiceListening")
         self.assertEqual(row["value"], "Off until you ask")
-        local = next(item for item in js["rows"] if item["id"] == "localAiEnabled")
-        self.assertEqual(local["value"], "On")
+        ai_row = next(item for item in js["module"]["rows"] if item["id"] == "aiMode")
+        self.assertEqual(ai_row["value"], "Automatic")
+        self.assertEqual(tuple(js["modes"]), AI_MODES)
+        self.assertEqual(js["labels"], AI_MODE_LABELS)
+        self.assertEqual(js["hints"], AI_MODE_HINTS)
+        self.assertEqual(js["local"], "local-only")
+        ids = {item["id"] for item in js["module"]["rows"]}
+        self.assertNotIn("localAiEnabled", ids)
+        self.assertNotIn("localOnlyMode", ids)
+        blob = json.dumps(js).casefold()
+        self.assertNotIn("high/ultra", blob)
+        self.assertNotIn("gguf", blob)
+        self.assertNotIn("tok/s", blob)
+        self.assertNotIn("vram", blob)
+        self.assertNotIn("always cloud", json.dumps(js["online"]).casefold().replace("not always cloud", ""))
+        self.assertIn("not always cloud", json.dumps(js["online"]).casefold())
+        self.assertEqual(
+            next(item for item in js["online"]["rows"] if item["id"] == "aiMode")["value"],
+            "Online enhanced",
+        )
+        local_py = control_center({"localOnlyMode": True})["ai"]
+        self.assertEqual(next(row for row in local_py.rows if row.id == "aiMode").value, "Local only")
+        self.assertTrue(any("will not ask to generate online" in note for note in local_py.warnings))
 
 
 class NotificationCenterTests(NodeBackedTestCase):
@@ -312,10 +401,78 @@ class PermissionChromeTests(NodeBackedTestCase):
         body = " ".join(line["text"] for line in model["body"])
         self.assertIn(NETWORK_ALLOWLIST_NOTE, body)
         self.assertIn(CLOUD_MEMORY_STAYS_OFF, body)
+        names = {button["accessibleName"] for button in model["buttons"]}
+        self.assertEqual(names, {ALLOW_ACCESSIBLE_NAME, DENY_ACCESSIBLE_NAME})
+
+    def test_unbounded_grants_are_dropped(self) -> None:
+        self.assertEqual(
+            bounded_allow_options(
+                [{"scope": "always", "label": "Always allow everything"}],
+                "files",
+            ),
+            [],
+        )
+        self.assertEqual(
+            [item["scope"] for item in bounded_allow_options(
+                [{"scope": "session", "label": "Allow while using"},
+                 {"scope": "always", "label": "Always allow"}],
+                "network",
+            )],
+            ["session"],
+        )
+        model = run_node(
+            f"import {{buildPrompt, boundedAllowOptions}} from '{(LIB / 'trustPrompt.js').as_uri()}';\n"
+            "const record = {requestId: 'r', headline: 'Network?', category: 'network',"
+            "options: [{scope: 'always', label: 'Always allow everything'},"
+            "{scope: 'session', label: 'Allow while using'}],"
+            "denyOption: {verdict: 'deny', label: \"Don't allow\"}};\n"
+            "console.log(JSON.stringify({model: buildPrompt(record),"
+            "kept: boundedAllowOptions(record.options, 'network')}));\n"
+        )
+        labels = [button["label"] for button in model["model"]["buttons"]]
+        self.assertNotIn("Always allow everything", labels)
+        self.assertNotIn("Always allow", labels)
+        self.assertIn("Don't allow", labels)
+        self.assertEqual(model["model"]["initialFocus"], "deny")
+        blob = json.dumps(model).casefold()
+        self.assertNotIn("always allow everything", blob)
+
+    def test_libreoffice_allowlisted_ceiling_reads_as_no_network(self) -> None:
+        model = run_node(
+            f"import {{buildApproval}} from '{(LIB / 'trustPrompt.js').as_uri()}';\n"
+            "console.log(JSON.stringify(buildApproval({requestId: 'r',"
+            "prompt: {applicationName: 'LibreOffice',"
+            "network: 'allowlisted', kind: 'capsule-task'}})));\n"
+        )
+        network = next(row for row in model["confinement"] if row["key"] == "network")
+        self.assertEqual(network["value"], NETWORK_OFF)
+        self.assertEqual(network["standing"], "blocked")
+        body = " ".join(line["text"] for line in model["body"])
+        self.assertIn(ALLOWLISTED_CEILING_NOTE, body)
+        self.assertNotIn("waiting for domains", body.casefold())
+        self.assertNotIn("extensions.libreoffice.org", json.dumps(model))
+
+    def test_clipboard_and_bluetooth_prompts_do_not_imply_mediation(self) -> None:
+        model = run_node(
+            f"import {{buildPrompt}} from '{(LIB / 'trustPrompt.js').as_uri()}';\n"
+            "console.log(JSON.stringify(buildPrompt({requestId: 'r',"
+            "headline: 'Notes wants to read what you copied.',"
+            "category: 'clipboard', categoryTitle: 'Clipboard',"
+            "options: [{scope: 'once', label: 'Allow once'}],"
+            "denyOption: {verdict: 'deny', label: \"Don't allow\"}})));\n"
+        )
+        body = " ".join(line["text"] for line in model["body"])
+        self.assertIn(CLIPBOARD_BLUETOOTH_NOTE, body)
+        self.assertFalse(model["enforced"])
+        self.assertEqual(model["standing"], "unenforced")
+        names = {button["accessibleName"] for button in model["buttons"]}
+        self.assertEqual(names, {ALLOW_ACCESSIBLE_NAME, DENY_ACCESSIBLE_NAME})
 
     def test_gtk_privacy_and_settings_surfaces_include_the_honesty_copy(self) -> None:
         ui = (ROOT / "shell/services/bunny_shell/ui.py").read_text(encoding="utf-8")
-        self.assertIn("NETWORK_ALLOWLIST_NOTE", ui)
+        self.assertIn("ALLOWLISTED_CEILING_NOTE", ui)
+        self.assertIn("CLIPBOARD_BLUETOOTH_NOTE", ui)
+        self.assertIn("CLOUD_MEMORY_IS_OFF", ui)
         self.assertIn("CLOUD_MEMORY_STAYS_OFF", ui)
         self.assertIn("privacy_module", ui)
         self.assertIn("route_command_answer", ui)
@@ -323,9 +480,24 @@ class PermissionChromeTests(NodeBackedTestCase):
 
     def test_notification_summary_defaults_on(self) -> None:
         self.assertTrue(DEFINITIONS["bunnyNotificationSummary"]["default"])
+        self.assertEqual(DEFINITIONS["aiMode"]["default"], "automatic")
+        self.assertTrue(DEFINITIONS["voiceEnabled"]["default"])
+        self.assertTrue(DEFINITIONS["microphoneEnabled"]["default"])
         with tempfile.TemporaryDirectory() as directory:
             store = SettingsStore(Path(directory) / "settings.json")
             self.assertTrue(store.get_all()["bunnyNotificationSummary"])
+            self.assertEqual(store.get_all()["aiMode"], "automatic")
+            self.assertFalse(store.get_all()["localOnlyMode"])
+            store.set("aiMode", "local-only")
+            values = store.get_all()
+            self.assertTrue(values["localOnlyMode"])
+            self.assertEqual(values["aiMode"], "local-only")
+            self.assertEqual(values["cloudFailoverPolicy"], "never")
+            store.set("aiMode", "online-enhanced")
+            values = store.get_all()
+            self.assertFalse(values["localOnlyMode"])
+            self.assertEqual(values["aiMode"], "online-enhanced")
+            self.assertTrue(values["voiceEnabled"])
 
 
 class FrozenEvidenceTests(unittest.TestCase):

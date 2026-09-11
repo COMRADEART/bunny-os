@@ -236,11 +236,15 @@ class GenericityTests(NodeBackedTestCase):
         self.assertEqual(off["confinement"][0]["standing"], "blocked")
         self.assertEqual(off["confinement"][0]["value"], "Off")
         self.assertEqual(on["confinement"][0]["standing"], "granted")
-        self.assertEqual(on["confinement"][0]["value"], "Full internet")
-        self.assertEqual(listed["confinement"][0]["value"], "Full internet")
+        self.assertEqual(on["confinement"][0]["value"], "On (full internet)")
+        self.assertEqual(listed["confinement"][0]["value"], "Off")
+        self.assertEqual(listed["confinement"][0]["standing"], "blocked")
         body = " ".join(line["text"] for line in on["body"])
         self.assertIn("Site allowlists aren’t available yet", body)
+        listed_body = " ".join(line["text"] for line in listed["body"])
+        self.assertIn("not waiting for a site list", listed_body)
         self.assertNotIn("api.example.com", json.dumps(listed))
+        self.assertNotIn("waiting for domains", json.dumps(listed).casefold())
 
     def test_remote_dispatch_with_cloud_memory_off_says_the_hop_is_not_memory(self) -> None:
         """Security #52: remote_dispatch is not cloud_context."""

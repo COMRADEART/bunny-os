@@ -141,6 +141,7 @@ class VoiceAiManagedCouplingTests(unittest.TestCase):
         settings.set("localOnlyMode", True)
         values = settings.get_all()
         self.assertTrue(values["localOnlyMode"])
+        self.assertEqual(values["aiMode"], "local-only")
         self.assertTrue(values["voiceEnabled"])
         self.assertTrue(values["microphoneEnabled"])
         self.assertTrue(values["localAiEnabled"])
