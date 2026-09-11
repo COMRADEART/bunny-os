@@ -113,13 +113,16 @@ class WhenADisplayAnswers(unittest.TestCase):
     """The other half: a usable environment must reach the real widgets."""
 
     def setUp(self):
+        # DISPLAY can be set on a host that still lacks GTK 4 (this cloud VM:
+        # X11 :1, PyGObject present, `gi.require_version("Gtk", "4.0")` raises
+        # ValueError). Catch that with the same helper the refusal tests use;
+        # ImportError alone left the live path as ERROR rather than SKIP.
+        _gi_or_skip()
         try:
             self.Gtk = setup._gtk()
         except SetupDisplayUnavailable as error:
             raise unittest.SkipTest(
                 f"this host cannot draw; the live path needs a display: {error}")
-        except ImportError as error:
-            raise unittest.SkipTest(f"GTK4 bindings are not available: {error}")
 
     def test_the_boundary_hands_back_an_initialised_module_with_a_display(self):
         from gi.repository import Gdk
