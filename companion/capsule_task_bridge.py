@@ -241,7 +241,7 @@ class PreparedCapsuleTask:
             ),
             "disclosure": self.resource_display,
             "fileAccess": f"{self.resource_display} only",
-            "network": "Off" if self.descriptor.network == "none" else "On",
+            "network": "On" if self.descriptor.network == "internet" else "Off",
             "privateAppData": "Isolated",
         }
 

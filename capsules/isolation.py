@@ -41,6 +41,11 @@ grant on a file whose path is now a directory does not become a directory bind.
 sandbox. Refused rather than resolved, because either resolution silently gives
 one grant the other's contents.
 
+**An unfilterable network class is refused, not mapped.** A grant of
+``allowlisted``, ``loopback`` or ``local-network`` does not drop
+``--unshare-net``. Mapping those onto the internet is how a capsule granted
+one domain reached another.
+
 **The environment is built, not inherited.** ``LD_PRELOAD``, ``LD_LIBRARY_PATH``,
 ``PYTHONPATH``, ``GIO_MODULE_DIR``, ``GTK_MODULES``, proxy variables and every
 token-shaped variable in the session are ways to change what runs inside a
@@ -56,7 +61,12 @@ from pathlib import Path
 from typing import Any, Mapping, Sequence
 
 from trust.decision import Grant
-from trust.resources import NETWORK_CLASSES, NETWORK_DECLARED_ONLY, real_path
+from trust.resources import (
+    NETWORK_DECLARED_ONLY,
+    NETWORK_ENFORCEABLE_CLASSES,
+    network_class_of,
+    real_path,
+)
 
 from .backends import LIMIT_CONTROLLERS, BackendDescriptor
 from .errors import CapsuleContainmentError, CapsuleIsolationError, CapsuleSchemaError
@@ -72,6 +82,7 @@ __all__ = [
     "BindMount",
     "IsolationPlan",
     "LAUNCHER_ENVIRONMENT_KEYS",
+    "UNFILTERABLE_NETWORK_REFUSAL",
     "plan_isolation",
 ]
 
@@ -101,21 +112,23 @@ CREDENTIAL_DIRECTORIES = frozenset({
 #: Read-only, individually named, and absent entirely when the network class is
 #: ``none`` — a capsule with no network has no use for a resolver and no reason
 #: to learn the addresses of the machine's DNS servers.
-#: The network classes this build actually enforces, derived from the one
-#: declaration-only list in :mod:`trust.resources` so the two cannot drift.
+
+#: The network classes this build actually enforces, the same pair
+#: :mod:`trust.resources` names so policy and the planner cannot drift.
 #:
 #: ``none`` is a network namespace with nothing in it — a kernel boundary.
 #: ``internet`` is the absence of one. ``loopback``, ``local-network`` and
-#: ``allowlisted`` are declared by the catalogue and mapped onto ``internet``,
-#: because nothing here filters by subnet, by interface or by name.
-#:
-#: Measured rather than assumed: the qualification granted a capsule an
-#: allowlist naming one domain, and the capsule connected to a different one.
-#: Recorded, disclosed at every surface, and not papered over — asking the
-#: application to respect the list would be enforcement by cooperation, which is
-#: not enforcement.
-NETWORK_ENFORCED_CLASSES = tuple(
-    network_class for network_class in NETWORK_CLASSES if network_class not in NETWORK_DECLARED_ONLY
+#: ``allowlisted`` are catalogue declarations this planner will not apply: a
+#: grant of one is refused rather than mapped onto ``internet``. Mapping was
+#: how a capsule granted ``example.com`` reached ``example.org``. Asking the
+#: application to respect the list would be enforcement by cooperation, which
+#: is not enforcement. See ``SECURITY_NETWORK_ALLOWLIST_PLAN.md``.
+NETWORK_ENFORCED_CLASSES = NETWORK_ENFORCEABLE_CLASSES
+
+#: Why a declared-only network grant is dropped at plan time. Shown in Settings
+#: as a plan refusal, the same way a credential directory is.
+UNFILTERABLE_NETWORK_REFUSAL = (
+    "this build cannot filter that network class, so the grant is not applied"
 )
 
 NETWORK_SYSTEM_FILES = (
@@ -270,9 +283,11 @@ class IsolationPlan:
     refusals: tuple[tuple[str, str], ...]
     #: Whether the plan restricts anything beyond resource usage.
     confining: bool
-    #: Whether the granted network class is one this build can enforce. ``False``
-    #: for ``loopback``, ``local-network`` and ``allowlisted``, which are
-    #: declarations — see :data:`trust.resources.NETWORK_DECLARED_ONLY`.
+    #: Whether the granted network class is one this build can enforce. A
+    #: well-formed plan is only ever ``none`` or ``internet``; declared-only
+    #: grants are refused rather than recorded as unenforced. ``False`` remains
+    #: possible if a class this build cannot filter somehow became ``network``,
+    #: which would be a planner bug and must still show as not a boundary.
     network_enforced: bool = True
 
     def reachable_paths(self) -> tuple[str, ...]:
@@ -429,7 +444,14 @@ def plan_isolation(
 
         if category == "network":
             requested = grant.resource.identifier
-            head, _, tail = requested.partition(":")
+            head = network_class_of(requested)
+            if head in NETWORK_DECLARED_ONLY:
+                # Fail closed: do not map an unfilterable class onto the
+                # internet. A stale stored allow still sits in the grant
+                # list; refusing it here is what keeps ``--unshare-net``.
+                refusals.append((grant.grant_id, UNFILTERABLE_NETWORK_REFUSAL))
+                continue
+            tail = requested.partition(":")[2]
             network = head
             network_domains = tuple(sorted(tail.split(","))) if tail else ()
             continue

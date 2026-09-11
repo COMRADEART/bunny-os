@@ -76,14 +76,48 @@ class PolicyTests(unittest.TestCase):
         outcome = self.resolve(self.request("network", resource=trust.network_resource("internet")))
         self.assertEqual(outcome.reason_code, "beyond-ceiling")
 
-    def test_a_network_class_inside_the_declared_ceiling_is_asked_about(self) -> None:
+    def test_an_allowlisted_network_class_is_refused_as_not_enforceable(self) -> None:
+        """Named destinations are a catalogue declaration. This build has no
+        destination filter, so the request is denied rather than recorded as an
+        unenforced grant — the clipboard/Bluetooth pattern, not a silent
+        upgrade to the internet."""
         outcome = self.resolve(
             self.request(
                 "network",
                 resource=trust.network_resource("allowlisted", allowlist=("updates.example.com",)),
             )
         )
+        self.assertEqual(outcome.verdict, "deny")
+        self.assertEqual(outcome.reason_code, "not-enforceable")
+        self.assertEqual(outcome.offered_scopes, ())
+
+    def test_an_enforceable_internet_class_inside_the_ceiling_is_asked_about(self) -> None:
+        declaration = PermissionDeclaration(
+            application_id="org.example.PhotoEditor",
+            optional=frozenset({"network"}),
+            network_ceiling="internet",
+        )
+        outcome = self.resolve(
+            self.request("network", resource=trust.network_resource("internet")),
+            declaration=declaration,
+        )
         self.assertEqual(outcome.verdict, "prompt")
+        self.assertEqual(outcome.reason_code, "needs-user")
+
+    def test_loopback_and_local_network_are_not_enforceable_even_under_internet(self) -> None:
+        declaration = PermissionDeclaration(
+            application_id="org.example.PhotoEditor",
+            optional=frozenset({"network"}),
+            network_ceiling="internet",
+        )
+        for class_name in ("loopback", "local-network"):
+            with self.subTest(class_name=class_name):
+                outcome = self.resolve(
+                    self.request("network", resource=trust.network_resource(class_name)),
+                    declaration=declaration,
+                )
+                self.assertEqual(outcome.verdict, "deny")
+                self.assertEqual(outcome.reason_code, "not-enforceable")
 
     def test_a_wider_allowlist_than_declared_is_refused(self) -> None:
         """An entry naming one host cannot become an entry naming two."""
@@ -190,6 +224,66 @@ class PolicyTests(unittest.TestCase):
         )
         self.assertEqual(outcome.verdict, "deny")
         self.assertEqual(outcome.reason_code, "not-enforceable")
+
+    def test_a_stale_allowlisted_grant_stops_allowing(self) -> None:
+        """A grant written when allowlisted still mapped onto the internet must
+        not keep allowing: the class check sits before standing grants."""
+        from trust.decision import Grant
+        from trust.store import utc_now
+
+        self.world.store.put(
+            Grant(
+                grant_id="g-stale-allowlist",
+                application_id="org.example.PhotoEditor",
+                category="network",
+                resource=trust.network_resource("allowlisted", allowlist=("updates.example.com",)),
+                purpose="use",
+                scope="always",
+                verdict="allow",
+                source="user",
+                decided_at=utc_now(),
+            )
+        )
+        outcome = self.resolve(
+            self.request(
+                "network",
+                resource=trust.network_resource("allowlisted", allowlist=("updates.example.com",)),
+            )
+        )
+        self.assertEqual(outcome.verdict, "deny")
+        self.assertEqual(outcome.reason_code, "not-enforceable")
+
+    def test_an_install_consent_never_covers_an_allowlisted_class(self) -> None:
+        declaration = PermissionDeclaration(
+            application_id="org.example.PhotoEditor",
+            required=frozenset({"network"}),
+            network_ceiling="allowlisted",
+            network_domains=frozenset({"updates.example.com"}),
+        )
+        outcome = self.resolve(
+            self.request(
+                "network",
+                resource=trust.network_resource("allowlisted", allowlist=("updates.example.com",)),
+            ),
+            declaration=declaration,
+            install_consent=True,
+        )
+        self.assertEqual(outcome.verdict, "deny")
+        self.assertEqual(outcome.reason_code, "not-enforceable")
+
+    def test_an_allowlisted_resource_does_not_present_domains_as_a_boundary(self) -> None:
+        """Companion UX: no user-facing domain list until a filter exists."""
+        resource = trust.network_resource("allowlisted", allowlist=("api.example.com",))
+        self.assertNotIn("api.example.com", resource.display)
+        self.assertEqual(resource.display, "named destinations")
+        self.assertIn("api.example.com", resource.identifier)
+
+    def test_network_display_for_ignores_a_stored_domain_list(self) -> None:
+        from trust.resources import network_display_for
+
+        self.assertEqual(network_display_for("allowlisted:api.example.com"), "named destinations")
+        self.assertEqual(network_display_for("loopback"), "this computer")
+        self.assertEqual(network_display_for("internet"), "the internet")
 
     # -- fail closed ------------------------------------------------------
 

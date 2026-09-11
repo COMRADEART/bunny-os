@@ -24,6 +24,13 @@ completely different facts.
    render the prompt.
 4. **Beyond the declared network ceiling.** Denied, ``beyond-ceiling``. An entry
    that declared "reaches api.example.com" cannot ask for the internet.
+4b. **A network class this build cannot filter.** Denied, ``not-enforceable``,
+   before standing grants and before the catalogue default. ``loopback``,
+   ``local-network`` and ``allowlisted`` are catalogue declarations; mapping
+   them onto the internet would be a silent upgrade, and recording an
+   unenforced allowlist would be the clipboard/Bluetooth defect in another
+   category. Only ``none`` and ``internet`` may be granted until a real
+   destination filter exists.
 5. **A standing denial.** Denied, ``user-denied``. Denials sort ahead of allows
    in :meth:`~trust.store.TrustStore.matching`, so a later deny on one file beats
    an earlier allow on the folder containing it.
@@ -54,7 +61,7 @@ from .decision import Grant, Resolution
 from .declaration import PermissionDeclaration
 from .errors import TrustError, TrustStoreUnreadable
 from .request import PermissionRequest
-from .resources import network_covers
+from .resources import network_class_enforceable, network_covers
 from .store import TrustStore
 
 __all__ = [
@@ -128,6 +135,11 @@ def resolve(
     if request.resource.kind == "network":
         if not network_within_ceiling(request.resource.identifier, declaration.ceiling_identifier()):
             return Resolution(verdict="deny", reason_code="beyond-ceiling")
+        # 4b. Unenforceable class. After the ceiling so "internet under an
+        #    allowlisted ceiling" stays beyond-ceiling (the catalogue never
+        #    declared it) rather than looking like a missing filter.
+        if not network_class_enforceable(request.resource.identifier):
+            return Resolution(verdict="deny", reason_code="not-enforceable")
 
     # 4.5. A category nothing in this build enforces. Refused before standing
     #    grants and before the catalogue default, deliberately: a stale stored

@@ -169,13 +169,15 @@ class PromptLineTests(unittest.TestCase):
         self.assertEqual(resolution.verdict, "deny")
         self.assertEqual(resolution.reason_code, "not-enforceable")
 
-    def test_a_declared_only_network_class_says_what_it_really_opens(self) -> None:
-        """A prompt headlined 'connect to api.example.com' must not let the
-        person believe the grant stops anywhere short of the internet."""
+    def test_an_unenforceable_network_class_never_reaches_a_prompt(self) -> None:
+        """A prompt headlined 'connect to api.example.com' would claim a filter
+        this build does not have. Policy refuses before anyone is asked."""
         declaration = PermissionDeclaration(
-            application_id="org.example.PhotoEditor", optional=frozenset({"network"})
+            application_id="org.example.PhotoEditor",
+            optional=frozenset({"network"}),
+            network_ceiling="allowlisted",
+            network_domains=frozenset({"api.example.com"}),
         )
-        from trust.explain import build_prompt
         from trust.policy import resolve
 
         request = trust.PermissionRequest.build(
@@ -186,15 +188,42 @@ class PromptLineTests(unittest.TestCase):
             resource=trust.network_resource("allowlisted", allowlist=("api.example.com",)),
             purpose="use",
         )
+        resolution = resolve(request, store=self.world.store, declaration=declaration)
+        self.assertEqual(resolution.verdict, "deny")
+        self.assertEqual(resolution.reason_code, "not-enforceable")
+        self.assertEqual(resolution.offered_scopes, ())
+
+    def test_a_hand_built_allowlisted_prompt_does_not_claim_a_filter(self) -> None:
+        """Policy never offers this prompt. If a surface assembled one anyway,
+        it must not name a domain or say that allowing opens the internet."""
+        from trust.decision import Resolution
+        from trust.explain import build_prompt
+
+        declaration = PermissionDeclaration(
+            application_id="org.example.PhotoEditor",
+            optional=frozenset({"network"}),
+            network_ceiling="allowlisted",
+            network_domains=frozenset({"api.example.com"}),
+        )
+        request = trust.PermissionRequest.build(
+            request_id="r-1",
+            application_id="org.example.PhotoEditor",
+            category="network",
+            session_id="session-1",
+            resource=trust.network_resource("allowlisted", allowlist=("api.example.com",)),
+            purpose="use",
+        )
         prompt = build_prompt(
             request,
-            resolve(request, store=self.world.store, declaration=declaration),
+            Resolution(verdict="prompt", reason_code="needs-user", offered_scopes=("session",)),
             declaration,
             application_name="Photo Editor",
         )
+        self.assertNotIn("api.example.com", prompt.headline)
+        self.assertNotIn("api.example.com", prompt.spoken)
         self.assertIsNotNone(prompt.enforcement_note)
-        self.assertIn("anything on the internet", prompt.enforcement_note)
-        self.assertIn("anything on the internet", prompt.spoken)
+        self.assertNotIn("anything on the internet", prompt.enforcement_note)
+        self.assertIn("will not record", prompt.enforcement_note)
 
     def test_a_plain_internet_request_carries_no_enforcement_note(self) -> None:
         """'internet' is enforced by the absence of a boundary; there is nothing

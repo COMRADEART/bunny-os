@@ -51,11 +51,12 @@ __all__ = [
     "capsule_status",
 ]
 
-#: How each network class reads to a person. The classes this build does not
-#: filter on get a phrase that does not imply a boundary — "On" rather than
-#: "Your local network" or "This computer only", because only the first is
-#: true: everything except ``none`` opens the whole network. See
-#: :data:`trust.resources.NETWORK_DECLARED_ONLY`.
+#: How each network class reads to a person. Only ``none`` is an absolute
+#: Off. Every other class that can still appear on a plan is On — the whole
+#: network — because this build does not filter destinations. Declared-only
+#: classes are refused at policy and at plan time, so a well-formed plan
+#: never carries them; the phrases remain so a buggy plan cannot render
+#: "example.com only". See :data:`trust.resources.NETWORK_DECLARED_ONLY`.
 NETWORK_PHRASES: Mapping[str, str] = {
     "none": "Off",
     "loopback": "On",
@@ -150,6 +151,9 @@ def capsule_status(capsule: Capsule, plan: IsolationPlan) -> CapsuleStatus:
             "processor time " + name + " uses: " + ", ".join(plan.unapplied_limits) + "."
         )
     if not plan.network_enforced and plan.network != "none":
+        # Last-resort honesty if a planner bug left an unfilterable class on
+        # the plan. Fail-closed means this should not fire: those grants are
+        # refused and ``network`` stays ``none``.
         caveats.append(
             f"{name} was allowed a limited network ('{plan.network}'), and Bunny cannot hold it "
             f"to that limit in this build. It can reach anything on the internet."

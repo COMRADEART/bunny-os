@@ -261,15 +261,16 @@ CATEGORIES: Mapping[str, CategoryDescriptor] = {
             risk="medium",
             resource_kind="network",
             allow_scopes=("session", "always"),
-            # Two of the four classes are a kernel boundary and two are not.
+            # Two of the five classes are a kernel boundary and three are not.
             # `enforced_by_default` is per category and cannot express that, so
             # it says what is true of the category as a whole — the restriction
-            # exists — and capsules.isolation.NETWORK_ENFORCED_CLASSES carries
-            # the per-class truth, which the plan and Settings both surface.
+            # exists for Off and the full internet — and
+            # trust.resources.NETWORK_ENFORCEABLE_CLASSES carries the per-class
+            # truth. Unfilterable classes are refused at policy, not granted.
             enforcement=(
                 "network namespace: 'nothing' and 'the internet' are enforced by the kernel; "
-                "'local network' and named-domain allowlists are declarations this build does "
-                "not filter on"
+                "'local network' and named-domain allowlists are not filtered in this build "
+                "and are refused rather than granted"
             ),
             enforced_by_default=True,
             revocation="next-launch",

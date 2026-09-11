@@ -44,7 +44,7 @@ from .categories import CategoryDescriptor, descriptor
 from .decision import Decision, Resolution
 from .declaration import PermissionDeclaration
 from .request import PermissionRequest, Reason
-from .resources import NETWORK_DECLARED_ONLY, Resource
+from .resources import NETWORK_DECLARED_ONLY, Resource, network_class_of
 
 __all__ = [
     "DENY_LABEL",
@@ -84,13 +84,14 @@ _ENFORCEMENT_NOTE = (
     "The restriction is not enforced in this build."
 )
 
-#: Said when the requested network class is a declaration rather than a
-#: boundary. The person deciding must hear what the grant actually opens, not
-#: what the request politely asked for — measured, not assumed: a capsule
-#: granted one domain reached a different one.
+#: Said if a prompt is assembled for a network class this build will not grant.
+#: Policy refuses those classes before a prompt exists; this sentence is the
+#: belt so a surface that rendered anyway cannot claim a destination filter or
+#: offer the internet as what the grant "really" opens.
 _NETWORK_DECLARED_ONLY_NOTE = (
-    "Bunny cannot hold {app} to that limit in this build. "
-    "Allowing this lets it reach anything on the internet."
+    "Bunny cannot filter destinations in this build, so it will not record "
+    "this permission for {app}. Only turning the network off, or allowing "
+    "the full internet, can be enforced."
 )
 
 #: Where the generic capability note is not specific enough because the *purpose*
@@ -219,7 +220,7 @@ def build_prompt(
     if (
         enforcement_note is None
         and request.category == "network"
-        and request.resource.identifier.split(":", 1)[0] in NETWORK_DECLARED_ONLY
+        and network_class_of(request.resource.identifier) in NETWORK_DECLARED_ONLY
     ):
         enforcement_note = _NETWORK_DECLARED_ONLY_NOTE.format(app=name)
     spoken_parts = [line, capability_note]

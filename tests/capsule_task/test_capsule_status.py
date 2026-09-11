@@ -14,6 +14,7 @@ from __future__ import annotations
 import unittest
 
 import trust
+from companion.capsule_settings import application_settings
 from companion.capsule_status import NETWORK_PHRASES, capsule_status
 
 from tests.capsule_support import World, manifest_for, unconfined_probe
@@ -106,43 +107,110 @@ class HonestyTests(unittest.TestCase):
         self.assertFalse(decision.allowed)
         self.assertEqual(decision.reason_code, "not-enforceable")
 
-    def test_an_unfilterable_network_class_never_reads_as_a_boundary(self) -> None:
+    def test_an_unenforceable_network_class_never_reads_as_a_boundary(self) -> None:
         """The sentence this test exists to prevent is 'Network: example.com only'
-        for a class this build does not filter on."""
+        for a class this build does not filter on. Fail-closed: the request is
+        denied, the plan stays Off, and no domain name appears."""
         capsule = self.world.install(
             manifest_for(optional=("network",), network_ceiling="allowlisted",
                          network_domains=("example.com",))
         )
         self.world.answer(("network", "allow", "always"))
-        self.world.request(
+        decision = self.world.request(
             capsule, category="network",
             resource=trust.network_resource("allowlisted", allowlist=("example.com",)),
         )
+        self.assertFalse(decision.allowed)
+        self.assertEqual(decision.reason_code, "not-enforceable")
         reopened = self.world.runtime.open("org.example.PhotoEditor")
         plan = self.world.runtime.build_plan(reopened)
         status = capsule_status(reopened, plan)
-        self.assertFalse(plan.network_enforced)
-        self.assertEqual(dict(status.plain)["Network"], "On")
+        self.assertEqual(plan.network, "none")
+        self.assertTrue(plan.network_enforced)
+        self.assertEqual(dict(status.plain)["Network"], "Off")
         self.assertNotIn("example.com", dict(status.plain)["Network"])
-        self.assertTrue(any("cannot hold it" in caveat for caveat in status.caveats))
-        self.assertTrue(any("anything on the internet" in caveat for caveat in status.caveats))
+        self.assertFalse(any("anything on the internet" in caveat for caveat in status.caveats))
 
-    def test_a_local_network_grant_reads_as_on_not_as_a_subnet(self) -> None:
-        """'Your local network' implies a boundary nothing in this build holds."""
+    def test_a_local_network_request_does_not_open_the_network(self) -> None:
+        """'Your local network' implies a boundary nothing in this build holds.
+        Fail-closed: denied, Off, no internet caveat claiming it was granted."""
         capsule = self.world.install(
             manifest_for(optional=("network",), network_ceiling="local-network")
         )
         self.world.answer(("network", "allow", "always"))
-        self.world.request(
+        decision = self.world.request(
             capsule, category="network",
             resource=trust.network_resource("local-network"),
         )
+        self.assertEqual(decision.reason_code, "not-enforceable")
         reopened = self.world.runtime.open("org.example.PhotoEditor")
         plan = self.world.runtime.build_plan(reopened)
         status = capsule_status(reopened, plan)
-        self.assertFalse(plan.network_enforced)
-        self.assertEqual(dict(status.plain)["Network"], "On")
-        self.assertTrue(any("anything on the internet" in caveat for caveat in status.caveats))
+        self.assertEqual(plan.network, "none")
+        self.assertTrue(plan.network_enforced)
+        self.assertEqual(dict(status.plain)["Network"], "Off")
+        self.assertFalse(any("anything on the internet" in caveat for caveat in status.caveats))
+
+    def test_settings_shows_a_stale_allowlist_as_refused_not_as_a_domain(self) -> None:
+        """A grant stored when display was the domain list must not reappear as
+        Allowed / example.com. The plan is Off; the row must match."""
+        from trust.decision import Grant
+        from trust.resources import Resource, resource_digest
+        from trust.store import utc_now
+
+        self.world.install(
+            manifest_for(
+                optional=("network",),
+                network_ceiling="allowlisted",
+                network_domains=("example.com",),
+            )
+        )
+        identifier = "allowlisted:example.com"
+        self.world.store.put(
+            Grant(
+                grant_id="g-stale-settings-allowlist",
+                application_id="org.example.PhotoEditor",
+                category="network",
+                resource=Resource(
+                    kind="network",
+                    identifier=identifier,
+                    display="example.com",
+                    digest=resource_digest("network", identifier),
+                ),
+                purpose="use",
+                scope="always",
+                verdict="allow",
+                source="user",
+                decided_at=utc_now(),
+            )
+        )
+        capsule = self.world.runtime.open("org.example.PhotoEditor")
+        page = application_settings(self.world.runtime, capsule, audit=self.world.audit)
+        row = next(item for item in page.permissions if item.category == "network")
+        self.assertEqual(row.standing, "denied")
+        self.assertEqual(row.resource, "named destinations")
+        self.assertNotIn("example.com", row.resource or "")
+        self.assertTrue(row.enforced)
+        self.assertEqual(page.network_class, "none")
+        self.assertTrue(page.network_enforced)
+
+    def test_settings_still_shows_an_internet_grant_as_granted(self) -> None:
+        capsule = self.world.install(
+            manifest_for(optional=("network",), network_ceiling="internet")
+        )
+        self.world.answer(("network", "allow", "always"))
+        self.world.request(
+            capsule, category="network", resource=trust.network_resource("internet")
+        )
+        page = application_settings(
+            self.world.runtime,
+            self.world.runtime.open("org.example.PhotoEditor"),
+            audit=self.world.audit,
+        )
+        row = next(item for item in page.permissions if item.category == "network")
+        self.assertEqual(row.standing, "granted")
+        self.assertEqual(row.resource, "the internet")
+        self.assertEqual(page.network_class, "internet")
 
     def test_a_non_confining_plan_says_so_in_the_plain_layer(self) -> None:
         world = World.build(probe=unconfined_probe())

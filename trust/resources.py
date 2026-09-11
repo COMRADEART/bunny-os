@@ -61,10 +61,15 @@ __all__ = [
     "MAX_IDENTIFIER_LENGTH",
     "NETWORK_CLASSES",
     "NETWORK_DECLARED_ONLY",
+    "NETWORK_DISPLAY",
+    "NETWORK_ENFORCEABLE_CLASSES",
     "Resource",
     "contains",
     "device_resource",
+    "network_class_enforceable",
+    "network_class_of",
     "network_covers",
+    "network_display_for",
     "network_resource",
     "no_resource",
     "path_resource",
@@ -88,12 +93,31 @@ MAX_DISPLAY_LENGTH = 96
 #: on your LAN" are different questions and must not share a grant.
 NETWORK_CLASSES = ("none", "loopback", "local-network", "allowlisted", "internet")
 
-#: The classes that are *declarations* in this build: recorded, disclosed, and
-#: mapped onto plain internet access, because nothing here filters by name,
-#: subnet or interface. ``none`` is a kernel boundary and ``internet`` is the
-#: absence of one; everything between is a promise the build cannot keep yet.
-#: Surfaces must speak of these as declarations, never as boundaries.
-NETWORK_DECLARED_ONLY = ("loopback", "local-network", "allowlisted")
+#: The classes this build can actually hold. ``none`` is ``--unshare-net``.
+#: ``internet`` is the absence of that unshare. Everything else would need a
+#: destination, subnet or interface filter that does not exist yet — see
+#: ``SECURITY_NETWORK_ALLOWLIST_PLAN.md``. Until one does, those classes are
+#: refused rather than recorded as unenforced grants.
+NETWORK_ENFORCEABLE_CLASSES = ("none", "internet")
+
+#: Catalogue declarations this build will not grant. Derived so adding a class
+#: to :data:`NETWORK_CLASSES` cannot silently become a grant.
+NETWORK_DECLARED_ONLY = tuple(
+    network_class
+    for network_class in NETWORK_CLASSES
+    if network_class not in NETWORK_ENFORCEABLE_CLASSES
+)
+
+#: What a person is told the class *is*. Domain names stay out: a stored grant
+#: from before fail-closed may still carry ``example.com`` as ``display``, and
+#: reprinting that would claim a filter this build does not have.
+NETWORK_DISPLAY: Mapping[str, str] = {
+    "none": "nothing on the network",
+    "loopback": "this computer",
+    "local-network": "your local network",
+    "allowlisted": "named destinations",
+    "internet": "the internet",
+}
 
 _DEVICE_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9 ._:+/-]{0,127}\Z")
 _PEER_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}\Z")
@@ -218,6 +242,33 @@ class Resource:
         if self.kind == "network":
             return network_covers(self.identifier, other.identifier)
         return False
+
+
+def network_class_of(identifier: str) -> str:
+    """The class token of a network resource identifier, without domains."""
+    head, _, _tail = identifier.partition(":")
+    return head
+
+
+def network_class_enforceable(identifier: str) -> bool:
+    """Whether this build can hold the class in ``identifier``.
+
+    Domain lists are ignored: an ``allowlisted`` identifier is unenforceable
+    even when the list is a single well-formed name. The historical guest
+    measurement was exactly that case — grant ``example.com``, connect to
+    ``example.org``.
+    """
+    return network_class_of(identifier) in NETWORK_ENFORCEABLE_CLASSES
+
+
+def network_display_for(identifier: str) -> str:
+    """Current user-facing class name for a stored network identifier.
+
+    Never a domain list. Settings uses this so a grant written when display
+    was ``example.com`` cannot reappear as a per-domain permission.
+    """
+    class_name = network_class_of(identifier)
+    return NETWORK_DISPLAY.get(class_name, class_name)
 
 
 def _split_network(identifier: str) -> tuple[str, frozenset[str]]:
@@ -398,13 +449,7 @@ def network_resource(value: str, *, allowlist: tuple[str, ...] = ()) -> Resource
     # allowlists must not compare as one grant, and `covers` has to be able to
     # read the set back out of a stored identifier to answer "is this a subset".
     identifier = value if not domains else value + ":" + ",".join(domains)
-    display = {
-        "none": "nothing on the network",
-        "loopback": "only this computer",
-        "local-network": "devices on your local network",
-        "allowlisted": ", ".join(domains),
-        "internet": "the internet",
-    }[value]
+    display = NETWORK_DISPLAY[value]
     return Resource(
         kind="network",
         identifier=identifier,
