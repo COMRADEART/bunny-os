@@ -131,8 +131,12 @@ GDM remains the stock Fedora greeter. Live GNOME remains **not verified**.
 
 Bunny Files is companion-aware overlay on Nautilus: Ask / Summarise / Workspace
 / Provenance / Checkpoint / Open. Opens go through Trust (Allow once / Don't
-allow, Don't allow focused). Captions stay in the bubble — not a chatbot wall.
-No file is uploaded automatically.
+allow, Don't allow focused). Allow once now executes the open for that granted
+file and application only (`gio open` / the approved handler). Don't allow,
+close, and timeout open nothing. Path or app drift after Allow is fail-closed.
+Captions stay in the bubble — not a chatbot wall.
+No file is uploaded automatically. No Pictures-folder widening. No Always
+allow everything. No session broaden. No site allowlists.
 
 Terminal, Software, and Updates chrome reuse Phase 1 primitives. Software
 launches GNOME Software when installed and does not vendor a second store.

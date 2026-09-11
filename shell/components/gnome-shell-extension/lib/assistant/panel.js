@@ -248,7 +248,7 @@ export class AssistantPanel extends Card {
             : phase === 'speaking' ? 'Stop Bunny speaking' : 'Speak to Bunny';
     }
 
-    /** Numbered, bounded results. Paths are display labels, never launch input. */
+    /** Numbered, bounded results. Open still goes through Trust before launch. */
     showFileResults(results) {
         this._fileResultItems = Array.isArray(results) ? results.slice(0, 24) : [];
         this._renderFileResults(false);
@@ -275,7 +275,7 @@ export class AssistantPanel extends Card {
             text.add_child(location);
             row.add_child(text);
             row.add_child(this._textButton('Open', () =>
-                this._context.onFileResult?.(index + 1, 'open')));
+                this._context.onFileResult?.(index + 1, 'open', result)));
             row.add_child(this._textButton('Folder', () =>
                 this._context.onFileResult?.(index + 1, 'show_containing_folder')));
             this._fileResults.add_child(row);

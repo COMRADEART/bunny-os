@@ -75,8 +75,8 @@ import {TaskOverlay} from './assistant/taskOverlay.js';
 import {consentSurfaceForLayout} from './companionVocabulary.js';
 import {buildCommandSurface, routeCommandAnswer} from './commandSurface.js';
 import {
-    FILE_NOT_UPLOADED, FILE_OPEN_HEADLINE, buildBunnyFiles, parseFilesUri,
-    routeFilesAction,
+    FILE_NOT_UPLOADED, FILE_OPEN_DENIED, FILE_OPEN_HEADLINE, applyFileOpenAfterTrust,
+    buildBunnyFiles, parseFilesUri, routeFilesAction,
 } from './bunnyFiles.js';
 import {buildSoftwareChrome, buildTerminalChrome, buildUpdatesChrome} from './appChrome.js';
 import {desktopPresentationForTier} from './companionPresence.js';
@@ -1427,12 +1427,14 @@ export class DesktopShell {
 
     /**
      * Opening a file is a Trust question, not a bubble caption pretending
-     * to be one. Don't allow is focused. Bunny does not open the file itself.
+     * to be one. Don't allow is focused. Allow once opens that file only.
      */
     _presentFileOpenTrust(routed) {
         const prompt = routed.trust && typeof routed.trust === 'object' ? routed.trust : {};
         const heading = String(prompt.heading || prompt.headline || FILE_OPEN_HEADLINE);
         const requestId = String(prompt.requestId || 'file-open');
+        const approvedPath = String(routed.paths?.[0] || prompt.resource || prompt.fileAccess || '');
+        const approvedApp = String(routed.application || prompt.application || '');
         this._presentApproval({
             requestId,
             reason: routed.note || FILE_NOT_UPLOADED,
@@ -1445,12 +1447,19 @@ export class DesktopShell {
             },
         }, (decision, id) => {
             this._clearPresentedApproval(id);
-            const denied = decision === 'deny' || decision === 'denied';
-            this._bubble?.say(
-                denied
-                    ? "Don't allow. The file was not opened."
-                    : 'Allow once is recorded. Bunny does not open the file itself.',
-                {wave: false});
+            const livePath = String(routed.paths?.[0] || prompt.resource || prompt.fileAccess || '');
+            const liveApp = String(routed.application || prompt.application || '');
+            const result = applyFileOpenAfterTrust({
+                decision,
+                path: livePath,
+                approvedPath,
+                application: liveApp,
+                approvedApplication: approvedApp,
+                action: routed.action || 'open',
+                extraPaths: Array.isArray(routed.paths) ? routed.paths.slice(1) : [],
+            }, (_command, filePath, application) =>
+                this.launcher?.openGrantedFile?.(filePath, application) === true);
+            this._bubble?.say(result.message || FILE_OPEN_DENIED, {wave: false});
         });
     }
 
@@ -1925,7 +1934,7 @@ export class DesktopShell {
         });
     }
 
-    _openFileResult(index, command) {
+    _openFileResult(index, command, result = null) {
         const ordinals = ['first', 'second', 'third', 'fourth', 'fifth', 'sixth'];
         if (!Number.isInteger(index) || index < 1 || index > 24)
             return;
@@ -1934,7 +1943,10 @@ export class DesktopShell {
             this._ask(`Show result ${selector} in its containing folder`);
             return;
         }
-        this._handleFilesUri(`bunny://files/open?selection=${encodeURIComponent(`result ${selector}`)}`);
+        const path = String(result?.path || result?.uri || '');
+        if (!path)
+            return;
+        this._handleFilesUri(`bunny://files/open?selection=${encodeURIComponent(path)}`);
     }
 
     /**
