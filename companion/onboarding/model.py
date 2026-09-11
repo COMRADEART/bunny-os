@@ -66,9 +66,9 @@ class OnboardingStep:
 #: different sentences.
 ONBOARDING_STEPS: tuple[OnboardingStep, ...] = (
     OnboardingStep(
-        "welcome", "Welcome to Bunny OS",
-        "Bunny is a companion that lives on this machine. This takes a couple of minutes and "
-        "everything in it can be changed later. You can close this window at any point and the "
+        "welcome", "Hi. I'm Bunny.",
+        "Hi. I'm Bunny. I'll help you get ready on this computer. This takes a couple of minutes "
+        "and everything in it can be changed later. You can close this window at any point and the "
         "desktop stays usable.",
         action="Get started", skip="", required=True,
     ),
@@ -76,14 +76,17 @@ ONBOARDING_STEPS: tuple[OnboardingStep, ...] = (
         "privacy", "Local first, and it means it",
         "Bunny answers using AI that runs on this machine whenever one is available. Nothing "
         "leaves this computer unless you configure a remote provider yourself and approve the "
-        "transfer. There is no telemetry in Bunny OS: no usage counters, no crash uploads, "
-        "nothing sent in the background. Diagnostics are exported to a file you read first.",
+        "transfer. Session, durable and cloud memory stay off until you turn them on. There is "
+        "no telemetry in Bunny OS: no usage counters, no crash uploads, nothing sent in the "
+        "background. Diagnostics are exported to a file you read first.",
         action="Continue", skip="",
     ),
     OnboardingStep(
         "character", "Meet Bunny",
-        "This is how Bunny will appear on your machine. The presentation adapts to what your "
-        "graphics can do, and everything Bunny says is also available as text.",
+        "This is how Bunny will appear on your machine: Full 3D, Lightweight 2D, or Minimal. "
+        "This computer recommends one from what it can draw; you can choose another, and the "
+        "drawing never goes above what the graphics can honour. Everything Bunny says is also "
+        "available as text.",
         action="Looks good", skip="", survey="character",
     ),
     OnboardingStep(
@@ -129,7 +132,7 @@ ONBOARDING_STEPS: tuple[OnboardingStep, ...] = (
     ),
     OnboardingStep(
         "finish", "Ready",
-        "Bunny starts automatically when you log in. If it ever fails to start you will get a "
+        "Ready. Bunny starts automatically when you log in. If it ever fails to start you will get a "
         "recovery window rather than nothing, with a safe mode that turns off 3D, audio and "
         "desktop actions.",
         action="Finish", skip="", required=True,

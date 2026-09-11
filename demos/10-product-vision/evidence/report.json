@@ -1,0 +1,43 @@
+{
+  "demo": "product-vision-host",
+  "honest": true,
+  "capturedAt": "20260911T022712Z",
+  "stableRelease": "NO-GO",
+  "pilots": "BLOCKED",
+  "guestBoot": "NOT_RUN",
+  "guestBootReason": "QEMU is not installed on this host",
+  "passed": true,
+  "tests": {"ok": true, "run": 29},
+  "pages": {"ok": true, "forbiddenLabelsSeen": []},
+  "onboarding": {
+    "welcome": "Hi. I'm Bunny.",
+    "finish": "Ready"
+  },
+  "appearance": {
+    "laptop": {"recommended": "full-3d", "effective": "full-3d", "bounded": false},
+    "embedded-64mb": {"recommended": "minimal", "effective": "minimal", "bounded": true}
+  },
+  "voice": {
+    "intentKind": "system_metric",
+    "plannedTool": "system.get_metric",
+    "stt": "NOT_RUN",
+    "modelBytesVendored": false,
+    "physicalMicrophoneValidated": false,
+    "unrestrictedShell": false
+  },
+  "screenshots": [
+    "visual-idle.png",
+    "visual-listening.png",
+    "visual-thinking.png",
+    "visual-working.png",
+    "visual-searching.png",
+    "visual-success.png",
+    "appearance-laptop.png",
+    "appearance-embedded-64mb.png",
+    "outcomes.png",
+    "memory.png",
+    "onboarding-hello.png",
+    "onboarding-ready.png",
+    "voice.png"
+  ]
+}

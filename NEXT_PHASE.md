@@ -2,6 +2,38 @@
 
 Do not start a custom shell, compositor, visual redesign, installer experience, app store, or consumer release.
 
+## Update 2026-09-11 — product-vision host surfaces (no guest, no release GO)
+
+A reviewer can now run one command on a development host and see the product
+vision's Companion face, appearance modes, outcome routing, memory boundaries,
+first-run copy, and the offline voice story — without a Fedora image-builder
+or nested KVM guest:
+
+```text
+python3 demos/10-product-vision/run.py
+```
+
+**What moved.** Visual Keys 1–3 are a projection from the existing presentation
+phase plus tool activity (speech bubbles, eleven character states, a reactive
+scene). Appearance is Full 3D / Lightweight 2D / Minimal, recommended from
+capability presentation signals, overridable, and never force-3D. Outcome
+routing explains local vs offline-refuse vs memory pressure without a model
+shop. Session, durable and cloud memory default off. First-run copy is
+"Hi. I'm Bunny." … "Ready." The voice story is Vosk → bounded intent → TTS
+with honest `NOT_RUN` when the microphone, library or model is missing.
+
+**What did not move.** `gate-stable-release` is still `NO-GO`. All three
+pilot gates are still `BLOCKED`. Guest AT-SPI photographs of these surfaces
+inside Bunny Shell still need a composed Fedora `shell-test` QCOW2. Physical
+microphone + packaged Vosk model, physical Secure Boot / TPM / Orca, independent
+reviews and production keys are untouched. No GGUF or Vosk model bytes are
+vendored. Deny-by-default is unchanged; there is no `Always allow everything`
+control and no unrestricted agent shell.
+
+**Still required to photograph inside Bunny Shell:** a Fedora 44 image-builder
+host, `make build-shell-test-image`, then `python3 demos/09-guest-trust/run.py`.
+
+
 ## Update 2026-09-11 — guest Trust journey harness (Fedora+KVM still required to photograph)
 
 The one-command guest path now exists. A Fedora 44 image-builder host that has

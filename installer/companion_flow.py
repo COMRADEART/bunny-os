@@ -276,7 +276,7 @@ PROGRESS_STAGES: tuple[tuple[str, str], ...] = (
 FIRST_RUN_STAGES: tuple[Stage, ...] = (
     Stage(
         key="hello",
-        says="You're set up. Let me show you three things and then get out of your way.",
+        says="Hi. I'm Bunny. You're set up — let me show you three things, then I'll get out of your way.",
         heading="Hello",
         authority="companion",
         companion="idle",
@@ -316,7 +316,7 @@ FIRST_RUN_STAGES: tuple[Stage, ...] = (
     ),
     Stage(
         key="done",
-        says="That's everything. I'll be in the corner if you need me.",
+        says="Ready. I'll be in the corner if you need me.",
         heading="Ready",
         authority="companion",
         companion="success",
