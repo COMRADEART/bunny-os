@@ -92,6 +92,9 @@ class AgentProviderService:
                 else default_machine_resources()
             ),
         )
+        bind = getattr(adapters.get("llamacli"), "bind_machine_resources", None)
+        if callable(bind):
+            bind(self.registry.machine_resources)
         self.ledger = options.ledger if options.ledger is not None else UsageLedger()
         self.builder = ContextBuilder()
         self.journal = GenerationJournal(options.root / "agents" / "journal.jsonl")

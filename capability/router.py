@@ -30,6 +30,7 @@ from dataclasses import dataclass, field
 from typing import Any, Mapping, Protocol, Sequence
 
 from .budget import Budget
+from .escalation import EscalationObservables, assess_escalation
 from .model import Inventory
 from .policy import Policy
 from .scores import ScoreSet
@@ -161,6 +162,9 @@ class TaskRequest:
     local_memory_bytes: int | None = None
     #: Score dimensions this task needs locally, e.g. ``{"local_ai": 40}``.
     local_requirements: Mapping[str, float] = field(default_factory=dict)
+    #: Mid-flight ADR 0012 observables. ``None`` means initial placement:
+    #: local-first, no escalation assessment. Never carries model confidence.
+    escalation: EscalationObservables | None = None
 
     def __post_init__(self) -> None:
         if self.privacy not in PRIVACY_CLASSES:
@@ -266,12 +270,31 @@ def route(
     # 2. Could it run here?
     feasible, local_reasons = _local_feasible(task, scores, budget)
     if feasible:
-        return RouteDecision(
-            task.id, "local",
-            reasons=(*reasons, "local execution satisfies every requirement, and local is preferred"),
-        )
-
-    reasons.extend(f"local execution is not possible: {item}" for item in local_reasons)
+        if task.escalation is not None:
+            assessment = assess_escalation(task.escalation, local_feasible=True)
+            if assessment.action == "stay-local":
+                return RouteDecision(
+                    task.id, "local",
+                    reasons=(
+                        *reasons,
+                        "local execution satisfies every requirement, and local is preferred",
+                        *assessment.reasons,
+                    ),
+                )
+            # Observables fired *and* local is stuck (health / n_ctx / missing
+            # capability / failed generation). Fall through to remote consideration
+            # with those reasons attached — never a silent hop.
+            reasons.extend(assessment.reasons)
+        else:
+            return RouteDecision(
+                task.id, "local",
+                reasons=(*reasons, "local execution satisfies every requirement, and local is preferred"),
+            )
+    else:
+        reasons.extend(f"local execution is not possible: {item}" for item in local_reasons)
+        if task.escalation is not None:
+            assessment = assess_escalation(task.escalation, local_feasible=False)
+            reasons.extend(assessment.reasons)
 
     if not may_leave:
         return RouteDecision(
@@ -320,6 +343,12 @@ def route(
         if not provider.available():
             reasons.append(f"provider {declaration.id!r} is configured but not currently available")
             continue
+
+        if declaration.locality == "hosted":
+            reasons.append(
+                f"provider {declaration.id!r} is hosted: a disclosed cross-boundary hop, "
+                "not a silent failover"
+            )
 
         needs_approval = policy.remote_execution.require_user_approval and not task.user_approved
         return RouteDecision(

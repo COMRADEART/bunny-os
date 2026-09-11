@@ -50,6 +50,7 @@ from ..adapter import (
 )
 from ..credentials import Secret
 from ..request import GenerationRequest
+from ..resources import MachineResources, llama_cli_gpu_layers
 from ..stream import MAX_DELTA_BYTES, StreamEvent
 from .common import chunked, estimated_usage
 
@@ -139,9 +140,14 @@ class LlamaCliAdapter:
     #: every local question to a blocked task instead of to the model.
     supports_structured_output = True
 
-    def __init__(self) -> None:
+    def __init__(self, *, machine_resources: MachineResources | None = None) -> None:
         self._guard = threading.Lock()
         self._live: dict[str, tuple[subprocess.Popen[bytes], CancellationSignal]] = {}
+        self._machine_resources = machine_resources
+
+    def bind_machine_resources(self, resources: MachineResources | None) -> None:
+        """Called by the service after construction; tests inject a snapshot."""
+        self._machine_resources = resources
 
     @property
     def adapter_id(self) -> str:
@@ -216,107 +222,128 @@ class LlamaCliAdapter:
         # by ``_prompt_from``; the schema reference is metadata for the
         # prompt-based parse + repair path, not a native grammar hook, so a
         # plain text completion is what the planner validates.
-        argv = [
-            program,
-            "-m", str(model_path),
-            "-n", str(request.maximum_output_tokens),
-            "--temp", f"{request.sampling.temperature:.3f}",
-            "--top-p", f"{request.sampling.top_p:.3f}",
-            "--seed", str(request.sampling.seed),
-            "-no-cnv",
-            "--no-display-prompt",
-            "--simple-io",
-            "-p", _prompt_from(request),
-        ]
-        try:
-            process = subprocess.Popen(
-                argv,
-                stdin=subprocess.DEVNULL,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                env=_child_environment(),
-                cwd=str(Path.home()),
-            )
-        except OSError as error:
-            return failed("connection", f"could not start {program}: {error}")
-        with self._guard:
-            self._live[request.request_id] = (process, cancellation)
-
-        stderr_chunks: list[bytes] = []
-        stderr_thread = threading.Thread(
-            target=self._drain_stderr, args=(process, stderr_chunks),
-            name="agents-llamacli-stderr", daemon=True,
+        gpu_layers = llama_cli_gpu_layers(self._machine_resources)
+        # GPU attempt first when the runtime is known usable; CPU (no flag)
+        # always remains the fallback. Unknown GPU → one CPU attempt, no flag.
+        layer_attempts: tuple[int | None, ...] = (
+            (gpu_layers, None) if gpu_layers is not None else (None,)
         )
-        stderr_thread.start()
-        watchdog_fired = threading.Event()
-        watchdog = threading.Thread(
-            target=self._watchdog,
-            args=(process, cancellation, request.deadline_seconds, watchdog_fired),
-            name="agents-llamacli-watchdog", daemon=True,
-        )
-        watchdog.start()
-
+        last_failure: GenerationOutcome | None = None
         emit(events.started())
-        decoder = codecs.getincrementaldecoder("utf-8")(errors="replace")
-        output_bytes = 0
-        try:
-            assert process.stdout is not None
-            while True:
-                chunk = process.stdout.read(4096)
-                if not chunk:
-                    break
-                output_bytes += len(chunk)
-                text = decoder.decode(chunk)
-                for piece in chunked(text, bound=MAX_DELTA_BYTES):
-                    emit(events.delta(piece))
-            tail = decoder.decode(b"", final=True)
-            for piece in chunked(tail, bound=MAX_DELTA_BYTES):
-                emit(events.delta(piece))
-        finally:
-            # The reap is unconditional: exit status is collected on every
-            # path, including a raise out of emit, or a zombie survives into
-            # the §24 child-process column. A normal EOF is given a grace to
-            # exit with its real code before escalation begins — terminating
-            # an exiting process would rewrite a success into a signal death.
+        for layers in layer_attempts:
+            argv = [
+                program,
+                "-m", str(model_path),
+            ]
+            if layers is not None:
+                argv.extend(["--n-gpu-layers", str(layers)])
+            argv.extend([
+                "-n", str(request.maximum_output_tokens),
+                "--temp", f"{request.sampling.temperature:.3f}",
+                "--top-p", f"{request.sampling.top_p:.3f}",
+                "--seed", str(request.sampling.seed),
+                "-no-cnv",
+                "--no-display-prompt",
+                "--simple-io",
+                "-p", _prompt_from(request),
+            ])
             try:
-                process.wait(timeout=_GRACE_SECONDS)
-            except subprocess.TimeoutExpired:
-                process.terminate()
+                process = subprocess.Popen(
+                    argv,
+                    stdin=subprocess.DEVNULL,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    env=_child_environment(),
+                    cwd=str(Path.home()),
+                )
+            except OSError as error:
+                return failed("connection", f"could not start {program}: {error}")
+            with self._guard:
+                self._live[request.request_id] = (process, cancellation)
+
+            stderr_chunks: list[bytes] = []
+            stderr_thread = threading.Thread(
+                target=self._drain_stderr, args=(process, stderr_chunks),
+                name="agents-llamacli-stderr", daemon=True,
+            )
+            stderr_thread.start()
+            watchdog_fired = threading.Event()
+            watchdog = threading.Thread(
+                target=self._watchdog,
+                args=(process, cancellation, request.deadline_seconds, watchdog_fired),
+                name="agents-llamacli-watchdog", daemon=True,
+            )
+            watchdog.start()
+
+            decoder = codecs.getincrementaldecoder("utf-8")(errors="replace")
+            output_bytes = 0
+            try:
+                assert process.stdout is not None
+                while True:
+                    chunk = process.stdout.read(4096)
+                    if not chunk:
+                        break
+                    output_bytes += len(chunk)
+                    text = decoder.decode(chunk)
+                    for piece in chunked(text, bound=MAX_DELTA_BYTES):
+                        emit(events.delta(piece))
+                tail = decoder.decode(b"", final=True)
+                for piece in chunked(tail, bound=MAX_DELTA_BYTES):
+                    emit(events.delta(piece))
+            finally:
+                # The reap is unconditional: exit status is collected on every
+                # path, including a raise out of emit, or a zombie survives into
+                # the §24 child-process column. A normal EOF is given a grace to
+                # exit with its real code before escalation begins — terminating
+                # an exiting process would rewrite a success into a signal death.
                 try:
                     process.wait(timeout=_GRACE_SECONDS)
                 except subprocess.TimeoutExpired:
-                    process.kill()
-                    process.wait()
-            watchdog_fired.set()
-            stderr_thread.join(timeout=2.0)
-            watchdog.join(timeout=2.0)
-            with self._guard:
-                self._live.pop(request.request_id, None)
+                    process.terminate()
+                    try:
+                        process.wait(timeout=_GRACE_SECONDS)
+                    except subprocess.TimeoutExpired:
+                        process.kill()
+                        process.wait()
+                watchdog_fired.set()
+                stderr_thread.join(timeout=2.0)
+                watchdog.join(timeout=2.0)
+                with self._guard:
+                    self._live.pop(request.request_id, None)
 
-        stderr_text = b"".join(stderr_chunks)[:_MAX_STDERR_BYTES].decode("utf-8", errors="replace")
-        if cancellation.cancelled:
-            emit(events.cancelled(cancellation.reason))
+            stderr_text = b"".join(stderr_chunks)[:_MAX_STDERR_BYTES].decode("utf-8", errors="replace")
+            if cancellation.cancelled:
+                emit(events.cancelled(cancellation.reason))
+                return GenerationOutcome(
+                    request_id=request.request_id, provider_id=request.provider_id,
+                    ok=False, cancelled=True, detail=cancellation.reason,
+                )
+            if process.returncode != 0:
+                last_failure = failed(
+                    "invalid-response",
+                    f"llama-cli exited {process.returncode}: {stderr_text[-400:]}",
+                )
+                # GPU requested and produced nothing: fall back to CPU. Do not
+                # invent a layer split from VRAM; just drop --n-gpu-layers.
+                if layers is not None and output_bytes == 0:
+                    continue
+                emit(events.failed(f"llama-cli exited {process.returncode}"))
+                return last_failure
+            usage = estimated_usage(
+                request, output_bytes=output_bytes,
+                units_per_kilotoken=configuration.estimated_units_per_kilotoken,
+                pricing_reference=configuration.pricing_reference,
+            )
+            emit(events.usage(usage.to_json()))
+            emit(events.completed())
             return GenerationOutcome(
                 request_id=request.request_id, provider_id=request.provider_id,
-                ok=False, cancelled=True, detail=cancellation.reason,
+                ok=True, usage=usage,
             )
-        if process.returncode != 0:
-            emit(events.failed(f"llama-cli exited {process.returncode}"))
-            return failed(
-                "invalid-response",
-                f"llama-cli exited {process.returncode}: {stderr_text[-400:]}",
-            )
-        usage = estimated_usage(
-            request, output_bytes=output_bytes,
-            units_per_kilotoken=configuration.estimated_units_per_kilotoken,
-            pricing_reference=configuration.pricing_reference,
-        )
-        emit(events.usage(usage.to_json()))
-        emit(events.completed())
-        return GenerationOutcome(
-            request_id=request.request_id, provider_id=request.provider_id,
-            ok=True, usage=usage,
-        )
+        if last_failure is not None:
+            emit(events.failed(last_failure.detail))
+            return last_failure
+        return failed("model-unavailable", "llama-cli produced no attempt")
 
     @staticmethod
     def _drain_stderr(process: subprocess.Popen[bytes], into: list[bytes]) -> None:
