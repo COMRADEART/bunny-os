@@ -579,15 +579,29 @@ export const OS_PRESENTATION_MODES = {
 };
 
 /**
- * Rendering effort, heaviest first. FULL is implemented; BALANCED / LIGHT /
- * MINIMAL are named stubs that map onto the existing fidelity ladder so a
- * later phase can fill them without renaming.
+ * Rendering effort, heaviest first, mapped onto the existing fidelity ladder.
+ *
+ * FULL is the only fully featured tier (full-3d, overlay blur, companion
+ * motion). BALANCED / LIGHT / MINIMAL are implemented as real ceilings on
+ * that ladder — not stubs, and not a claim that they draw full-3d.
  */
 export const RENDERING_TIERS = {
-    FULL: {fidelity: 'full-3d', blur: 'overlay', motion: 'companionNormal', implemented: true},
-    BALANCED: {fidelity: 'lightweight-3d', blur: 'panel', motion: 'companionFast', implemented: false},
-    LIGHT: {fidelity: 'static-image', blur: 'none', motion: 'reduced', implemented: false},
-    MINIMAL: {fidelity: 'text-only', blur: 'none', motion: 'reduced', implemented: false},
+    FULL: {
+        fidelity: 'full-3d', blur: 'overlay', motion: 'companionNormal',
+        implemented: true, fullyFeatured: true,
+    },
+    BALANCED: {
+        fidelity: 'lightweight-3d', blur: 'panel', motion: 'companionFast',
+        implemented: true, fullyFeatured: false,
+    },
+    LIGHT: {
+        fidelity: 'static-image', blur: 'none', motion: 'reduced',
+        implemented: true, fullyFeatured: false,
+    },
+    MINIMAL: {
+        fidelity: 'text-only', blur: 'none', motion: 'reduced',
+        implemented: true, fullyFeatured: false,
+    },
 };
 
 /**

@@ -252,6 +252,9 @@ export function solve(screen, {scale = 1, metric = null, profile = 'full'} = {})
         profile: 'full',
         rects,
         dropped,
+        edge: EDGE,
+        gap: GAP,
+        companionCorner: 'bottom-right',
     };
 }
 
@@ -295,6 +298,8 @@ function solveSkeleton({width, height, EDGE, GAP, TOP_BAR_HEIGHT, DOCK_HEIGHT, r
         rects,
         dropped,
         companionCorner: 'bottom-right',
+        edge: EDGE,
+        gap: GAP,
     };
 }
 
@@ -350,3 +355,109 @@ export function overlappingPairs(solution) {
     }
     return found;
 }
+
+/** Named viewports the Phase 4 brief asks to honour. */
+export const NAMED_VIEWPORTS = {
+    hd1366: {width: 1366, height: 768, name: '1366'},
+    fhd: {width: 1920, height: 1080, name: '1080'},
+    uhd: {width: 3840, height: 2160, name: '4K'},
+};
+
+export const SNAP_TARGETS = ['left', 'right', 'maximize', 'restore'];
+
+function inflate(rect, pad) {
+    return {
+        x: rect.x - pad,
+        y: rect.y - pad,
+        width: rect.width + pad * 2,
+        height: rect.height + pad * 2,
+    };
+}
+
+/**
+ * The rectangle snapped windows must not cover: companion at bottom-right
+ * plus a gap. Restore is the previous window size; it is not computed here.
+ */
+export function companionReserved(solution) {
+    const character = solution?.rects?.character;
+    if (!character)
+        return null;
+    const gap = solution.gap ?? BASE_METRICS.gap;
+    return inflate(character, gap);
+}
+
+/**
+ * Usable column for work: left of the companion reserved zone, below the
+ * bar, above the dock. This is how the companion stays visible without
+ * covering snapped windows.
+ */
+export function workColumn(solution) {
+    const {rects} = solution;
+    const gap = solution.gap ?? BASE_METRICS.gap;
+    const edge = solution.edge ?? BASE_METRICS.edge;
+    const reserved = companionReserved(solution);
+    const top = (rects.topBar?.y ?? 0) + (rects.topBar?.height ?? 0) + gap;
+    const bottom = rects.dock ? rects.dock.y - gap : top + 400;
+    const left = edge;
+    const right = reserved ? Math.min(reserved.x, (rects.topBar?.width ?? 0) - edge) : (rects.topBar?.width ?? 0) - edge;
+    return {
+        x: left,
+        y: top,
+        width: Math.max(320, right - left),
+        height: Math.max(240, bottom - top),
+    };
+}
+
+export function snapRect(target, solution) {
+    const work = workColumn(solution);
+    const name = SNAP_TARGETS.includes(target) ? target : 'maximize';
+    if (name === 'restore')
+        return null;
+    if (name === 'left')
+        return {...work, width: Math.max(320, Math.floor(work.width / 2))};
+    if (name === 'right') {
+        const leftWidth = Math.max(320, Math.floor(work.width / 2));
+        return {
+            x: work.x + leftWidth,
+            y: work.y,
+            width: Math.max(320, work.width - leftWidth),
+            height: work.height,
+        };
+    }
+    return work;
+}
+
+export function companionCoversWork(solution, windowRect) {
+    const reserved = companionReserved(solution);
+    if (!reserved || !windowRect)
+        return false;
+    return overlaps(reserved, windowRect);
+}
+
+/**
+ * Snap + companion layout for one screen. Pure; live Mutter tiling is not claimed.
+ */
+export function snapLayout(screen, options = {}) {
+    const solution = solve(screen, options);
+    const reserved = companionReserved(solution);
+    const work = workColumn(solution);
+    const snaps = {};
+    for (const target of SNAP_TARGETS) {
+        if (target === 'restore')
+            continue;
+        snaps[target] = snapRect(target, solution);
+    }
+    const covering = Object.entries(snaps)
+        .filter(([, rect]) => companionCoversWork(solution, rect))
+        .map(([name]) => name);
+    return {
+        ...solution,
+        reserved,
+        work,
+        snaps,
+        covering,
+        companionCoversWork: covering.length > 0,
+        companionCorner: solution.companionCorner || 'bottom-right',
+    };
+}
+

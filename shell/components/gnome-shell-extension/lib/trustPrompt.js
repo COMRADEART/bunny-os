@@ -119,6 +119,11 @@ export const DONT_ALLOW_LABEL = "Don't allow";
 export const ALLOW_ACCESSIBLE_NAME = 'Allow this Bunny action';
 export const DENY_ACCESSIBLE_NAME = 'Deny this Bunny action';
 
+/** Phase 4: opening a file in an application is a Trust question. */
+export const FILE_OPEN_HEADLINE = 'Bunny wants to open this file';
+export const FILE_OPEN_BUBBLE = 'Review this open request.';
+export const FILE_NOT_UPLOADED = 'No file is uploaded automatically.';
+
 function nonEmpty(value) {
     return typeof value === 'string' && value.trim().length > 0;
 }

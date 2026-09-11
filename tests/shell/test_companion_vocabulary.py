@@ -132,7 +132,7 @@ class VocabularyTests(NodeBackedTestCase):
 
 
 class RenderingTierTests(NodeBackedTestCase):
-    def test_unimplemented_tiers_still_resolve_to_a_fidelity(self) -> None:
+    def test_named_tiers_resolve_to_a_fidelity(self) -> None:
         mapping = run_node(
             f"import {{fidelityForTier}} from '{(LIB / 'companionVocabulary.js').as_uri()}';\n"
             "console.log(JSON.stringify({"
@@ -146,15 +146,25 @@ class RenderingTierTests(NodeBackedTestCase):
         self.assertEqual(mapping["LIGHT"], "static-image")
         self.assertEqual(mapping["MINIMAL"], "text-only")
 
-    def test_only_full_is_implemented(self) -> None:
+    def test_named_tiers_are_implemented_and_only_full_is_fully_featured(self) -> None:
         measured = run_node(
-            f"import {{tierIsImplemented, RENDERING_TIER_NAMES}} from '{(LIB / 'companionVocabulary.js').as_uri()}';\n"
-            "const out = {};\n"
-            "for (const name of RENDERING_TIER_NAMES)\n"
-            "  out[name] = tierIsImplemented(name);\n"
-            "console.log(JSON.stringify(out));\n"
+            f"import {{tierIsImplemented, tierIsFullyFeatured, RENDERING_TIER_NAMES}} "
+            f"from '{(LIB / 'companionVocabulary.js').as_uri()}';\n"
+            "const implemented = {};\n"
+            "const featured = {};\n"
+            "for (const name of RENDERING_TIER_NAMES) {\n"
+            "  implemented[name] = tierIsImplemented(name);\n"
+            "  featured[name] = tierIsFullyFeatured(name);\n"
+            "}\n"
+            "console.log(JSON.stringify({implemented, featured}));\n"
         )
-        self.assertEqual(measured, {
+        self.assertEqual(measured["implemented"], {
+            "FULL": True,
+            "BALANCED": True,
+            "LIGHT": True,
+            "MINIMAL": True,
+        })
+        self.assertEqual(measured["featured"], {
             "FULL": True,
             "BALANCED": False,
             "LIGHT": False,

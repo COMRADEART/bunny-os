@@ -67,8 +67,10 @@ Presentation modes: **FULL** / **COMPACT** / **AMBIENT**. Default anchor is
 bottom-right, with drag / scale / hide hooks. Absolute Wayland placement is
 not claimed.
 
-Rendering tiers: **FULL** (implemented) / **BALANCED** / **LIGHT** / **MINIMAL**
-(named stubs mapping onto the existing fidelity ladder).
+Rendering tiers: **FULL** (fully featured) / **BALANCED** / **LIGHT** /
+**MINIMAL** (implemented as ceilings on the existing fidelity ladder). FULL is
+the only fully featured tier. Lower tiers keep the same character identity and
+must not claim full-3d.
 
 The drawable poses remain the ten in `lib/character/state.js`. The seventeen
 states project onto those poses so a bubble, a figure and a task card cannot
@@ -124,6 +126,26 @@ Onboarding is a short guided intro (name, timezone, accessibility, companion,
 voice, privacy) that ends Ready with the companion in the corner. Login and
 lock chrome may show the figure; they stay usable if it is hidden or fails.
 GDM remains the stock Fedora greeter. Live GNOME remains **not verified**.
+
+## Phase 4 files, remaining chrome, snap, rendering (draft)
+
+Bunny Files is companion-aware overlay on Nautilus: Ask / Summarise / Workspace
+/ Provenance / Checkpoint / Open. Opens go through Trust (Allow once / Don't
+allow, Don't allow focused). Captions stay in the bubble — not a chatbot wall.
+No file is uploaded automatically.
+
+Terminal, Software, and Updates chrome reuse Phase 1 primitives. Software
+launches GNOME Software when installed and does not vendor a second store.
+Updates keep OS image apply behind the broker and do not claim IMAGE, BOOT, or
+PASS.
+
+Snap / workspaces leave a reserved bottom-right companion inset so snapped
+windows do not cover the figure. Geometry is host-tested at 1366, 1080, and 4K
+and at 100 / 150 / 200 % text. Reduced motion zeros chrome duration. Live Mutter
+tiling is **not verified**.
+
+BALANCED / LIGHT / MINIMAL are live ceilings on the fidelity ladder. FULL
+remains the only fully featured tier. Live GNOME remains **not verified**.
 
 ## Primitives
 

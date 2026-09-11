@@ -84,6 +84,7 @@ export class CharacterViewport {
 
         this._renderer = createRenderer(context.rendererKind ?? 'vector', {
             definition: context.definition ?? DEFAULT_CHARACTER,
+            statusWord: context.statusWord || 'Bunny',
         });
         this.actor.add_child(this._renderer.actor);
 

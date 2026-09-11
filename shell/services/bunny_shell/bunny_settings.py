@@ -38,6 +38,12 @@ PROACTIVITY_LABELS = {
     "gentle": "Gentle — may offer, never act",
 }
 ANIMATION_LABELS = {"full": "Full", "reduced": "Reduced", "none": "None"}
+RENDERING_TIER_LABELS = {
+    "FULL": "Full — fully featured 3D when the machine can",
+    "BALANCED": "Balanced — lighter 3D, not a Full claim",
+    "LIGHT": "Light — still picture, same character",
+    "MINIMAL": "Minimal — status word, same identity",
+}
 
 
 def normalise_personality(value: Any = None) -> str:
@@ -84,6 +90,9 @@ def bunny_companion_module(
     visible = False if companion_hidden else bool(settings.get("visible", True))
     mode = str(settings.get("companionMode") or settings.get("companion_mode") or "full")
     voice_on = bool(settings.get("voiceEnabled", True))
+    rendering = str(settings.get("renderingTier") or settings.get("rendering_tier") or "FULL").upper()
+    if rendering not in RENDERING_TIER_LABELS:
+        rendering = "FULL"
     return ControlModule(
         id="bunny",
         title="Bunny",
@@ -128,6 +137,13 @@ def bunny_companion_module(
                 f"{max(0, min(100, intensity_pct))}%",
                 hint="How far poses travel. Expression stays readable at 0%.",
                 control="slider",
+            ),
+            ControlRow(
+                "renderingTier",
+                "Rendering",
+                RENDERING_TIER_LABELS[rendering],
+                hint="Full is the only fully featured tier. Balanced, Light, and Minimal are real ceilings on the same character — not a second Bunny, and not a fake Full claim.",
+                control="choice",
             ),
             ControlRow(
                 "dock",

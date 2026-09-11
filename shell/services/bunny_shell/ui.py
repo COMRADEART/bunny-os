@@ -14,12 +14,15 @@ import subprocess
 import sys
 from typing import Any
 
+from .app_chrome import build_software_chrome, build_terminal_chrome, build_updates_chrome
+from .bunny_files import build_bunny_files, parse_files_uri, route_files_action
 from .command_surface import build_command_surface, route_command_answer
 from .control_center import ai_module, bunny_module, privacy_module
 from .bunny_settings import ai_models_module, bunny_companion_module, settings_privacy_module
 from .core_state import read_snapshot, shell_status
 from .launcher import LauncherState, application_search, route_intent
 from .lock_screen import build_lock_screen, build_login_screen
+from .multitasking import build_multitasking
 from .notification_center import build_notification_center
 from .project import project_status
 from .search import SearchIndex
@@ -30,6 +33,8 @@ from .trust_copy import (
     CLIPBOARD_BLUETOOTH_NOTE,
     CLOUD_MEMORY_IS_OFF,
     CLOUD_MEMORY_STAYS_OFF,
+    FILE_NOT_UPLOADED,
+    FILE_OPEN_BUBBLE,
     NETWORK_ALLOWLIST_NOTE,
     NO_ONLINE_MODELS_IS_LOCAL_ONLY,
 )
@@ -156,6 +161,10 @@ class BunnyApplication:
             "command": self._command,
             "lock": self._lock,
             "login": self._login,
+            "files": self._files,
+            "software": self._software,
+            "updates": self._updates,
+            "terminal-chrome": self._terminal_chrome,
         }
         content = builders.get(self.surface, self._command)()
         root.append(content)
@@ -244,7 +253,8 @@ class BunnyApplication:
                 if item.id == "appearance":
                     detail.append(self._label(f"Bunny surface theme: {settings['theme']} · Reduced motion: {settings['reducedMotion']} · Reduced transparency: {settings['reducedTransparency']}"))
             elif item.id == "updates":
-                detail.append(self._label("OS image updates remain separate from Bunny application updates and require broker authorization."))
+                chrome = build_updates_chrome()
+                self._render_app_chrome(detail, chrome)
                 detail.append(self._button("Inspect OS update status", lambda _b: _fixed_spawn(["/usr/bin/gnome-terminal", "--", "/usr/bin/bunny-os", "update", "status"])))
             elif item.id == "recovery":
                 detail.append(self._label("Recovery, previous deployments, safe graphics, and diagnostics remain available without Bunny Core."))
@@ -295,6 +305,51 @@ class BunnyApplication:
                 if row.hint:
                     line = f"{line}\n{row.hint}"
                 detail.append(self._label(line))
+
+    def _render_app_chrome(self, detail: Any, chrome: dict[str, Any]) -> None:
+        detail.append(self._label(str(chrome.get("title") or ""), "title-1"))
+        detail.append(self._label(str(chrome.get("summary") or "")))
+        for row in chrome.get("rows") or ():
+            detail.append(self._label(f"{row.get('label')}: {row.get('value')}"))
+        for warning in chrome.get("warnings") or ():
+            detail.append(self._label(str(warning)))
+        detail.append(self._label(str(chrome.get("next") or "")))
+
+    def _files(self) -> Any:
+        box = self.Gtk.Box(orientation=self.Gtk.Orientation.VERTICAL, spacing=12)
+        model = build_bunny_files()
+        parse_files_uri("bunny://files/ask?selection=")
+        route_files_action(action="ask", paths=())
+        box.append(self._label(str(model["title"]), "title-1"))
+        box.append(self._label(str(model["summary"])))
+        box.append(self._label(str(model["note"])))
+        search = self.Gtk.SearchEntry(placeholder_text="Find a file in approved folders")
+        search.update_property([self.Gtk.AccessibleProperty.LABEL], [model["accessibleName"]])
+        box.append(search)
+        box.append(self._label(FILE_OPEN_BUBBLE))
+        box.append(self._label(FILE_NOT_UPLOADED))
+        box.append(self._button("Open Files (Nautilus)", lambda _b: _fixed_spawn(["/usr/bin/nautilus"])))
+        return box
+
+    def _software(self) -> Any:
+        box = self.Gtk.Box(orientation=self.Gtk.Orientation.VERTICAL, spacing=12)
+        self._render_app_chrome(box, build_software_chrome(installed=False))
+        return box
+
+    def _updates(self) -> Any:
+        box = self.Gtk.Box(orientation=self.Gtk.Orientation.VERTICAL, spacing=12)
+        self._render_app_chrome(box, build_updates_chrome())
+        box.append(self._button(
+            "Inspect OS update status",
+            lambda _b: _fixed_spawn(["/usr/bin/gnome-terminal", "--", "/usr/bin/bunny-os", "update", "status"]),
+        ))
+        return box
+
+    def _terminal_chrome(self) -> Any:
+        box = self.Gtk.Box(orientation=self.Gtk.Orientation.VERTICAL, spacing=12)
+        self._render_app_chrome(box, build_terminal_chrome())
+        box.append(self._button("Open Terminal", lambda _b: launch_terminal()))
+        return box
 
     def _lock(self) -> Any:
         model = build_lock_screen()
@@ -569,8 +624,11 @@ class BunnyApplication:
 
     def _workspaces(self) -> Any:
         box = self.Gtk.Box(orientation=self.Gtk.Orientation.VERTICAL, spacing=12)
-        box.append(self._label("Workspaces", "title-1"))
+        model = build_multitasking(workspaces=WorkspaceStore().list(include_archived=True))
+        box.append(self._label(str(model["title"]), "title-1"))
+        box.append(self._label(str(model["summary"])))
         box.append(self._label("Removing workspace metadata never deletes project files."))
+        box.append(self._label(f"Companion stays {model['companionCorner']}. Snap does not cover the figure."))
         for workspace in WorkspaceStore().list(include_archived=True):
             state = "Archived" if workspace.get("archivedAt") else "Active"
             project = workspace.get("projectPath", "No project attached")

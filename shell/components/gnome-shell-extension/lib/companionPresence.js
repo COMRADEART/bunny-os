@@ -75,11 +75,11 @@ export const MOTION_BUDGET_MS = {
 };
 
 /**
- * Phase 1 rendering-tier names, mapped onto the fidelity ladder.
+ * Phase 4 rendering-tier names, mapped onto the fidelity ladder.
  *
- * FULL is implemented. BALANCED / LIGHT / MINIMAL are named stubs: asking
- * for them still returns a fidelity rung so callers do not invent a fifth
- * renderer. It is not a claim that those tiers are live.
+ * All four are implemented as ceilings. FULL is the only fully featured
+ * tier. Asking for BALANCED never returns full-3d; LIGHT never animates;
+ * MINIMAL is words, not a second character.
  */
 export const RENDERING_TIER_TO_FIDELITY = {
     FULL: 'full-3d',
@@ -88,7 +88,90 @@ export const RENDERING_TIER_TO_FIDELITY = {
     MINIMAL: 'text-only',
 };
 
-export const IMPLEMENTED_RENDERING_TIERS = ['FULL'];
+export const IMPLEMENTED_RENDERING_TIERS = ['FULL', 'BALANCED', 'LIGHT', 'MINIMAL'];
+
+export const FULLY_FEATURED_RENDERING_TIERS = ['FULL'];
+
+/** Token motion names → milliseconds. LIGHT / MINIMAL are still. */
+export const TIER_MOTION_MS = {
+    FULL: 360,
+    BALANCED: 300,
+    LIGHT: 0,
+    MINIMAL: 0,
+};
+
+export const TIER_BLUR = {
+    FULL: 'overlay',
+    BALANCED: 'panel',
+    LIGHT: 'none',
+    MINIMAL: 'none',
+};
+
+export const CHARACTER_IDENTITY = 'bunny-default';
+
+function worseFidelity(a, b) {
+    return FIDELITY[Math.max(tierIndex(a), tierIndex(b))];
+}
+
+/**
+ * Live ceiling for one named rendering tier.
+ *
+ * Pure. The desktop vector, the GTK 3D window, and the text indicator all
+ * consume this so they cannot disagree about what FULL vs LIGHT means.
+ *
+ * @param {string} tier FULL | BALANCED | LIGHT | MINIMAL
+ * @param {object} options
+ * @param {object} [options.machine] affordableFidelity inputs
+ * @param {boolean} [options.reducedMotion] zeros motion; does not drop fidelity
+ * @param {string} [options.selected] runtime-selected fidelity; cannot raise
+ *   the tier's ceiling
+ */
+export function resolveRenderingTier(tier = 'FULL', {
+    machine = {}, reducedMotion = false, selected = null,
+} = {}) {
+    const name = String(tier || 'FULL').toUpperCase();
+    const requested = RENDERING_TIER_TO_FIDELITY[name] ? name : 'FULL';
+    const ceiling = RENDERING_TIER_TO_FIDELITY[requested];
+    const fromRuntime = FIDELITY.includes(selected) ? selected : ceiling;
+    const fidelity = affordableFidelity(worseFidelity(ceiling, fromRuntime), machine);
+    const fullyFeatured = requested === 'FULL' && fidelity === 'full-3d';
+    const budget = MOTION_BUDGET_MS[fidelity] ?? 0;
+    const tierBudget = TIER_MOTION_MS[requested] ?? 0;
+    const motionMs = reducedMotion ? 0 : Math.min(budget, tierBudget);
+    const drawCharacter = fidelity !== 'text-only';
+    const rendererKind = fidelity === 'text-only'
+        ? 'none'
+        : (fidelity === 'static-image' ? 'image' : 'vector');
+    return {
+        tier: requested,
+        fidelity,
+        ceiling,
+        blur: TIER_BLUR[requested],
+        motionMs,
+        animate: motionMs > 0,
+        drawCharacter,
+        rendererKind,
+        identity: CHARACTER_IDENTITY,
+        implemented: true,
+        fullyFeatured,
+        claimsFull3d: fullyFeatured,
+        reducedMotion: Boolean(reducedMotion),
+    };
+}
+
+/**
+ * How the desktop figure should present this tier. Identity is constant.
+ */
+export function desktopPresentationForTier(tier = 'FULL', options = {}) {
+    const resolved = resolveRenderingTier(tier, options);
+    return {
+        ...resolved,
+        poseSource: 'lib/character/state.js',
+        definition: 'lib/character/definition.js',
+        secondCharacter: false,
+        statusWord: resolved.drawCharacter ? '' : 'Bunny',
+    };
+}
 
 function tierIndex(tier) {
     const index = FIDELITY.indexOf(tier);
@@ -146,16 +229,29 @@ export function affordableFidelity(selected, machine = {}) {
  * @param {object} options.accessibility {reducedMotion, textOnly, highContrast, largeText, screenReader}
  * @param {object} options.machine      {frameRate, thermalThrottled, onBattery, batteryPercent, memoryPressure}
  */
-export function resolve({preference = 'full', phase = 'idle', selected = 'animated-2d', accessibility = {}, machine = {}} = {}) {
+export function resolve({
+    preference = 'full', phase = 'idle', selected = 'animated-2d',
+    accessibility = {}, machine = {}, renderingTier = null,
+} = {}) {
     const {reducedMotion = false, textOnly = false, screenReader = false, highContrast = false, largeText = false} = accessibility;
 
     const wanted = PRESENCE.includes(preference) ? preference : 'full';
     const attention = ATTENTION_PHASES.includes(phase);
 
-    // Text-only is a presence *and* a fidelity: a person who asked for a
-    // text-only Companion asked for words, and giving them a silent character
-    // that also emits words would be two Companions.
-    let fidelity = textOnly ? 'text-only' : affordableFidelity(selected, machine);
+    // A named rendering tier is a ceiling, not a second renderer. It cannot
+    // raise the runtime's selected fidelity and it cannot claim FULL when the
+    // ceiling is BALANCED / LIGHT / MINIMAL. The tier resolver already
+    // applies machine degradation once — do not apply it again here.
+    let fidelity;
+    let motionFromTier = null;
+    if (textOnly)
+        fidelity = 'text-only';
+    else if (renderingTier) {
+        const resolved = resolveRenderingTier(renderingTier, {machine, reducedMotion, selected});
+        fidelity = resolved.fidelity;
+        motionFromTier = resolved.motionMs;
+    } else
+        fidelity = affordableFidelity(selected, machine);
 
     // A screen reader user is not automatically a text-only user — many use one
     // alongside a visible desktop — so this does not force the tier. What it
@@ -169,7 +265,9 @@ export function resolve({preference = 'full', phase = 'idle', selected = 'animat
     if (attention && presence === 'off')
         presence = 'off'; // stays off; the question goes to a notification.
 
-    const motionMs = reducedMotion ? 0 : MOTION_BUDGET_MS[fidelity];
+    const motionMs = motionFromTier !== null
+        ? motionFromTier
+        : (reducedMotion ? 0 : MOTION_BUDGET_MS[fidelity]);
 
     return {
         presence,

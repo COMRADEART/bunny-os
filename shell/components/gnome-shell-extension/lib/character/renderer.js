@@ -65,11 +65,42 @@ const POSE_EASE_PER_SECOND = 3.6;
 
 export function createRenderer(kind, options) {
     switch (kind) {
+    case 'none':
+        return new TextCharacterRenderer(options);
     case 'image':
         return new ImageCharacterRenderer(options);
     case 'vector':
     default:
         return new VectorCharacterRenderer(options);
+    }
+}
+
+/**
+ * MINIMAL: the same character identity, as a word. Falling through to the
+ * vector here would draw Full while claiming text-only.
+ */
+export class TextCharacterRenderer {
+    constructor({statusWord = 'Bunny'} = {}) {
+        this.kind = 'none';
+        this.actor = new St.Label({
+            text: String(statusWord || 'Bunny'),
+            style_class: 'bunny-character-status',
+            y_align: Clutter.ActorAlign.CENTER,
+            x_align: Clutter.ActorAlign.CENTER,
+        });
+        this.actor.accessible_name = String(statusWord || 'Bunny');
+    }
+
+    setState(_state) {}
+
+    setLevel(_level) {}
+
+    setSize(width, height) {
+        this.actor.set_size(width, height);
+    }
+
+    destroy() {
+        this.actor.destroy();
     }
 }
 

@@ -38,16 +38,20 @@ class OsCompanionTests(unittest.TestCase):
         self.assertEqual(os_state_from_phase("success", celebrating=True), "celebrating")
         self.assertEqual(pose_for_os_state("asking"), "warning")
 
-    def test_unimplemented_tiers_are_named_stubs(self) -> None:
-        from companion.os_companion import tier_is_implemented
+    def test_named_tiers_are_implemented_and_only_full_is_featured(self) -> None:
+        from companion.os_companion import tier_is_fully_featured, tier_is_implemented
 
         self.assertEqual(RENDERING_TIERS, ("FULL", "BALANCED", "LIGHT", "MINIMAL"))
         self.assertEqual(fidelity_for_tier("LIGHT"), "static-image")
         self.assertEqual(fidelity_for_tier("MINIMAL"), "text-only")
         self.assertTrue(tier_is_implemented("FULL"))
-        self.assertFalse(tier_is_implemented("BALANCED"))
-        self.assertFalse(tier_is_implemented("LIGHT"))
-        self.assertFalse(tier_is_implemented("MINIMAL"))
+        self.assertTrue(tier_is_implemented("BALANCED"))
+        self.assertTrue(tier_is_implemented("LIGHT"))
+        self.assertTrue(tier_is_implemented("MINIMAL"))
+        self.assertTrue(tier_is_fully_featured("FULL"))
+        self.assertFalse(tier_is_fully_featured("BALANCED"))
+        self.assertFalse(tier_is_fully_featured("LIGHT"))
+        self.assertFalse(tier_is_fully_featured("MINIMAL"))
         self.assertEqual(os_state_from_phase("waiting_for_approval"), "asking")
         self.assertEqual(os_state_from_phase("waiting_for_permission"), "asking")
         self.assertEqual(pose_for_os_state("asking"), "warning")

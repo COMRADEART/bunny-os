@@ -36,6 +36,9 @@ ALLOW_ONCE_LABEL = "Allow once"
 DONT_ALLOW_LABEL = "Don't allow"
 ALLOW_ACCESSIBLE_NAME = "Allow this Bunny action"
 DENY_ACCESSIBLE_NAME = "Deny this Bunny action"
+FILE_OPEN_HEADLINE = "Bunny wants to open this file"
+FILE_OPEN_BUBBLE = "Review this open request."
+FILE_NOT_UPLOADED = "No file is uploaded automatically."
 
 _EXPLICIT_OFF = {"off", "none", "blocked", "nothing on the network"}
 _EXPLICIT_ON = {

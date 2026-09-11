@@ -51,7 +51,7 @@ import St from 'gi://St';
 
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
-import {solve, LEFT_COLUMN, RIGHT_COLUMN} from './layout.js';
+import {LEFT_COLUMN, RIGHT_COLUMN, snapLayout} from './layout.js';
 import {ThemeManager} from './themeManager.js';
 import {setCurrentTheme} from './design/current.js';
 import {box, glass} from './widgets.js';
@@ -74,6 +74,12 @@ import {TrustOverlay} from './assistant/trustOverlay.js';
 import {TaskOverlay} from './assistant/taskOverlay.js';
 import {consentSurfaceForLayout} from './companionVocabulary.js';
 import {buildCommandSurface, routeCommandAnswer} from './commandSurface.js';
+import {
+    FILE_NOT_UPLOADED, FILE_OPEN_HEADLINE, buildBunnyFiles, parseFilesUri,
+    routeFilesAction,
+} from './bunnyFiles.js';
+import {buildSoftwareChrome, buildTerminalChrome, buildUpdatesChrome} from './appChrome.js';
+import {desktopPresentationForTier} from './companionPresence.js';
 
 import {SystemOverview} from './cards/systemOverview.js';
 import {QuickAccess} from './cards/quickAccess.js';
@@ -494,9 +500,12 @@ export class DesktopShell {
             onOverview: () => Main.overview.toggle(),
         }));
 
+        const presentation = this._desktopPresentation();
         this._characterViewport = this._optional('character', () => new CharacterViewport({
             stateManager: this.characterState,
             onActivate: () => this._openCommandSurface('character-click'),
+            rendererKind: presentation.rendererKind,
+            statusWord: presentation.statusWord || 'Bunny',
         }));
 
         this._bubble = this._optional('speech bubble', () => new AssistantBubble({blur}));
@@ -959,7 +968,7 @@ export class DesktopShell {
         // are no struts, and using the work area would leave the dock floating
         // above a band of wallpaper on a session that once had a panel.
         const screen = {width: monitor.width, height: monitor.height};
-        const solution = solve(screen, {
+        const solution = snapLayout(screen, {
             scale: this._textScale(),
             metric: this.theme?.metric ?? null,
             profile: this._layoutProfile(),
@@ -1061,6 +1070,29 @@ export class DesktopShell {
      */
     _layoutProfile() {
         return 'skeleton';
+    }
+
+    /**
+     * Phase 4 rendering ceiling. FULL is the only fully featured tier.
+     * The GSettings schema has no rendering-tier key yet, so the live
+     * session defaults to FULL. CharacterViewport still consumes
+     * rendererKind from desktopPresentationForTier, so LIGHT/MINIMAL
+     * are real ceilings when a caller passes them — not a fake Full draw.
+     */
+    _renderingTier() {
+        return 'FULL';
+    }
+
+    _desktopPresentation() {
+        const reduced = this.theme?.reducedMotion === true;
+        return desktopPresentationForTier(this._renderingTier(), {reducedMotion: reduced});
+    }
+
+    _snapLayout() {
+        return snapLayout(
+            {width: this._workArea?.width ?? 1920, height: this._workArea?.height ?? 1080},
+            {scale: this._textScale(), profile: this._layoutProfile()},
+        );
     }
 
     /**
@@ -1293,6 +1325,7 @@ export class DesktopShell {
             this._activateAssistant();
             break;
         case 'files':
+            this._openBunnyFiles();
             if (!this.launcher.launch('files'))
                 this.notifications.warning('Files is not installed on this system.');
             break;
@@ -1311,19 +1344,33 @@ export class DesktopShell {
     _launchFromSidebar(id) {
         this.characterState.noteActivity();
         if (id === 'terminal') {
+            const chrome = buildTerminalChrome({reducedMotion: this.theme?.reducedMotion === true});
+            this._bubble?.say(chrome.next, {wave: false});
             if (!this.launcher.launch('terminal'))
                 this.notifications.warning('No terminal is installed on this system.');
             return;
         }
         if (id === 'store') {
+            const chrome = buildSoftwareChrome({
+                installed: Boolean(this.launcher.available?.('software')),
+                reducedMotion: this.theme?.reducedMotion === true,
+            });
+            this._bubble?.say(chrome.next, {wave: false});
             if (!this.launcher.launch('software'))
                 this.notifications.warning('The software store is not installed on this system.');
+            return;
+        }
+        if (id === 'updates') {
+            const chrome = buildUpdatesChrome({reducedMotion: this.theme?.reducedMotion === true});
+            this._bubble?.say(chrome.next, {wave: false});
+            if (!this.launcher.launch('settings'))
+                this.notifications.warning('Settings is not installed on this system.');
         }
     }
 
     _runSuggestedAction(id) {
         this.characterState.noteActivity();
-        if (id === 'terminal' || id === 'store')
+        if (id === 'terminal' || id === 'store' || id === 'updates')
             this._launchFromSidebar(id);
         else
             this._select(id);
@@ -1357,6 +1404,54 @@ export class DesktopShell {
         this.characterState.noteActivity();
         this.topBar?.focusSearch();
         this._bubble?.say('Search or ask. Type here, or Escape to dismiss.', {wave: false});
+    }
+
+    _openBunnyFiles() {
+        const files = buildBunnyFiles({reducedMotion: this.theme?.reducedMotion === true});
+        log_('bunny files opened; companion is not required; opens need Trust');
+        this.characterState.noteActivity();
+        this._bubble?.say(files.next, {wave: false});
+    }
+
+    _handleFilesUri(uri) {
+        const parsed = parseFilesUri(uri);
+        if (!parsed.valid)
+            return;
+        const routed = routeFilesAction({action: parsed.action, paths: parsed.paths});
+        if (routed.needsTrust) {
+            this._presentFileOpenTrust(routed);
+            return;
+        }
+        this._presentCommandAnswer(routed.bubble.text, {working: routed.surface === 'task-card'});
+    }
+
+    /**
+     * Opening a file is a Trust question, not a bubble caption pretending
+     * to be one. Don't allow is focused. Bunny does not open the file itself.
+     */
+    _presentFileOpenTrust(routed) {
+        const prompt = routed.trust && typeof routed.trust === 'object' ? routed.trust : {};
+        const heading = String(prompt.heading || prompt.headline || FILE_OPEN_HEADLINE);
+        const requestId = String(prompt.requestId || 'file-open');
+        this._presentApproval({
+            requestId,
+            reason: routed.note || FILE_NOT_UPLOADED,
+            safeDefault: 'denied',
+            prompt: {
+                presentation: heading,
+                expectedEffect: 'Open this file in that application for this request only.',
+                disclosure: routed.note || FILE_NOT_UPLOADED,
+                network: 'Off',
+            },
+        }, (decision, id) => {
+            this._clearPresentedApproval(id);
+            const denied = decision === 'deny' || decision === 'denied';
+            this._bubble?.say(
+                denied
+                    ? "Don't allow. The file was not opened."
+                    : 'Allow once is recorded. Bunny does not open the file itself.',
+                {wave: false});
+        });
     }
 
     /**
@@ -1835,10 +1930,11 @@ export class DesktopShell {
         if (!Number.isInteger(index) || index < 1 || index > 24)
             return;
         const selector = ordinals[index - 1] ?? String(index);
-        const request = command === 'show_containing_folder'
-            ? `Show result ${selector} in its containing folder`
-            : `Open result ${selector}`;
-        this._ask(request);
+        if (command === 'show_containing_folder') {
+            this._ask(`Show result ${selector} in its containing folder`);
+            return;
+        }
+        this._handleFilesUri(`bunny://files/open?selection=${encodeURIComponent(`result ${selector}`)}`);
     }
 
     /**
