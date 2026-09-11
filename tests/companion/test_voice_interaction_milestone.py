@@ -968,14 +968,20 @@ class ShellVoiceBoundaryTests(unittest.TestCase):
         prompt = (EXTENSION / "lib/trustPrompt.js").read_text(encoding="utf-8")
         # Visible chrome after PR #42 is "Don't allow" / "Allow once". AT-SPI
         # names stay DENY/ALLOW_ACCESSIBLE_NAME (buildApproval accessibleName;
-        # TrustComponent falls back to the same strings). Bare quoted 'Deny' /
-        # 'Allow' left this check stale after the design-system wording change,
-        # and 'Allow' alone would accept a weaker unbounded grant.
+        # TrustComponent falls back to the same strings). Pin the JS constant
+        # definitions to the Python names, then the identifier form at
+        # accessibleName — not accessibleName: 'Deny this Bunny action', which
+        # is not what TrustPrompt writes. 'Allow' alone would accept a weaker
+        # unbounded grant.
         self.assertIn('"Don\'t allow"', prompt)
         self.assertIn("'Allow once'", prompt)
         self.assertIn("defaultAction: 'deny'", prompt)
-        self.assertIn(f"accessibleName: '{DENY_ACCESSIBLE_NAME}'", prompt)
-        self.assertIn(f"accessibleName: '{ALLOW_ACCESSIBLE_NAME}'", prompt)
+        self.assertIn(
+            f"export const DENY_ACCESSIBLE_NAME = '{DENY_ACCESSIBLE_NAME}'", prompt)
+        self.assertIn(
+            f"export const ALLOW_ACCESSIBLE_NAME = '{ALLOW_ACCESSIBLE_NAME}'", prompt)
+        self.assertIn("accessibleName: DENY_ACCESSIBLE_NAME", prompt)
+        self.assertIn("accessibleName: ALLOW_ACCESSIBLE_NAME", prompt)
         self.assertIn("resolveApproval(", shell)
 
     def test_stop_keeps_indicator_until_companion_confirms_device_closed(self) -> None:
