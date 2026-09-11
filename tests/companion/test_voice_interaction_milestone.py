@@ -960,13 +960,18 @@ class ShellVoiceBoundaryTests(unittest.TestCase):
         # The Allow/Deny controls moved into the trust component when the
         # permission question became one (lib/components/trust.js, the design
         # system phase); the panel delegates to it and must keep delegating.
-        # This assertion went stale then and failed on both platforms without
-        # anyone noticing until the Stage 2 full-suite baseline.
+        # Visible chrome after PR #42 is "Allow once" / "Don't allow"; the
+        # accessible names stay the harness contract (`Allow this Bunny action`
+        # / `Deny this Bunny action`). Verdict ids remain allow/deny.
         self.assertIn("TrustComponent", panel)
         self.assertIn("buildApproval", panel)
         prompt = (EXTENSION / "lib/trustPrompt.js").read_text(encoding="utf-8")
-        self.assertIn("'Deny'", prompt)
-        self.assertIn("'Allow'", prompt)
+        trust = (EXTENSION / "lib/components/trust.js").read_text(encoding="utf-8")
+        for surface in (prompt, trust):
+            self.assertIn("Don't allow", surface)
+            self.assertIn("Allow once", surface)
+            self.assertIn("Deny this Bunny action", surface)
+            self.assertIn("Allow this Bunny action", surface)
         self.assertIn("resolveApproval(", shell)
 
     def test_stop_keeps_indicator_until_companion_confirms_device_closed(self) -> None:
