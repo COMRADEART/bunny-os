@@ -1,6 +1,9 @@
 #!/usr/bin/python3
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Start the Bunny or Bunny Safe Shell GNOME session."""
+"""Start the transitional Bunny (GNOME) or Bunny Safe Shell GNOME session.
+
+The primary Bunny session is Hyprland — see bunny-hyprland-session.py.
+"""
 
 from __future__ import annotations
 

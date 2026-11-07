@@ -511,12 +511,26 @@ INSTALL_ROUTES: tuple[InstallRoute, ...] = (
         "/usr/libexec/bunny-shell-session", 0o555, profiles=DESKTOP_PROFILES,
     ),
     _file_route(
+        "hyprland-session-executable", "shell/session/bunny-hyprland-session.py",
+        "/usr/libexec/bunny-hyprland-session", 0o555, profiles=DESKTOP_PROFILES,
+    ),
+    _file_route(
         "wayland-session", "shell/session/bunny.desktop",
         "/usr/share/wayland-sessions/bunny.desktop", 0o644, profiles=DESKTOP_PROFILES,
     ),
     _file_route(
+        "wayland-gnome-session", "shell/session/bunny-gnome.desktop",
+        "/usr/share/wayland-sessions/bunny-gnome.desktop", 0o644, profiles=DESKTOP_PROFILES,
+    ),
+    _file_route(
         "wayland-safe-session", "shell/session/bunny-safe.desktop",
         "/usr/share/wayland-sessions/bunny-safe.desktop", 0o644, profiles=DESKTOP_PROFILES,
+    ),
+    # Image-owned Hyprland customization tree. The primary bunny session points
+    # Hyprland --config at hyprland.conf inside this destination.
+    InstallRoute(
+        "hyprland-config", "tree", "shell/components/hyprland",
+        "/usr/share/bunny-shell/hyprland", 0o644, profiles=DESKTOP_PROFILES,
     ),
     # A session that ships is not a session anyone gets: GDM starts plain
     # GNOME for a user with no AccountsService record, where the Bunny

@@ -1,4 +1,6 @@
-# Mature Wayland desktop and portal integration; no custom compositor.
+# Display manager, GNOME fallback/safe path, and shared Wayland graphics.
+# Bunny desktop customization is Hyprland — see build/packages/hyprland.txt
+# and ADR-031. GDM still owns greeter multi-user login for all sessions.
 gdm
 gnome-shell
 gnome-session-wayland-session

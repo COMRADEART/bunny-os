@@ -1,18 +1,19 @@
 # Bunny Shell
 
-Bunny Shell is a GNOME 50 desktop experience, not a compositor. GDM offers `Bunny`, the retained base GNOME session, and `Bunny (Safe Shell)`. The Bunny wrapper exports an explicit session mode, starts `bunny-shell.target`, and executes the distribution GNOME session. The safe wrapper stops that target and the image-owned extension becomes a no-op.
+Bunny Shell is the Bunny desktop experience. **Desktop customization uses Hyprland** (see `docs/HYPRLAND.md` and ADR-031). GDM offers `Bunny` (Hyprland), `Bunny (GNOME)` (transitional GNOME 50 extension session), the retained base GNOME session, and `Bunny (Safe Shell)`. The Hyprland wrapper exports session mode, starts `bunny-shell.target`, and executes Hyprland with image-owned config. The GNOME wrapper retains the prior path. The safe wrapper stops the Bunny target and the image-owned GNOME extension becomes a no-op.
 
 ## Boundaries
 
 ```text
-GNOME/Mutter/portals/logind
-        |
-image-owned GNOME extension and GTK surfaces
-        |
-bunny-shell-status | bunny-search | bunny-workspace
-        |
-Bunny Core summary API        Phase 1 broker
-(server-authoritative)        (typed privileged methods)
+Hyprland (customization)  |  GNOME/Mutter (safe / transitional)
+        |                              |
+ image-owned hyprland/          GNOME extension + GTK surfaces
+        \____________ portals/logind ____________/
+                         |
+        bunny-shell-status | bunny-search | bunny-workspace
+                         |
+        Bunny Core summary API        Phase 1 broker
+        (server-authoritative)        (typed privileged methods)
 ```
 
 The shell runs as the logged-in user. It has no root, provider credential, Bunny database access, arbitrary shell command endpoint, screen capture backend, or direct system mutation. System actions must become contract-1.0.0 broker requests and retain Polkit. Bunny decisions must go to Bunny Core; the shell consumes only the bounded private `core-summary` projection. The Phase 2 source does not fabricate an approval result when Core is absent.

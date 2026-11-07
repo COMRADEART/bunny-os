@@ -6,8 +6,9 @@
 flowchart TB
   H[Hardware] --> K[Linux kernel and upstream drivers]
   K --> U[Fedora 44 base userspace]
-  U --> S[systemd, SELinux, NetworkManager, firewalld, GNOME]
-  S --> I[bootc image-managed OS layer]
+  U --> S[systemd, SELinux, NetworkManager, firewalld, GDM]
+  S --> W[Hyprland customization / GNOME Safe path]
+  W --> I[bootc image-managed OS layer]
   I --> O[Bunny OS broker, updater, health, recovery, info]
   O --> H[Bunny Shell session and user services]
   H --> C[Bunny Core and loopback app-server]
@@ -15,7 +16,7 @@ flowchart TB
   H --> A[Files, Terminal, Settings, applications]
 ```
 
-The kernel owns scheduling, memory, filesystems, devices, networking, and mandatory access control. systemd owns boot, services, sessions, power, and shutdown. GNOME/Mutter owns the Wayland session. `bootc` owns OS deployment state. Bunny OS exposes only explicit integration operations.
+The kernel owns scheduling, memory, filesystems, devices, networking, and mandatory access control. systemd owns boot, services, sessions, power, and shutdown. Hyprland owns the primary Wayland customization session; GNOME/Mutter remains for Safe Shell and the transitional GNOME session. `bootc` owns OS deployment state. Bunny OS exposes only explicit integration operations.
 
 ## Processes and authority
 
@@ -38,11 +39,11 @@ An OS update is: HTTPS manifest fetch → Ed25519 verification → channel/archi
 
 ## Desktop and display
 
-GNOME/Mutter is the Phase 1 desktop and compositor. Wayland is default, XWayland is compatibility-only, and X11 fallback is a documented troubleshooting choice rather than an automatic security downgrade. Screen capture, remote desktop, and synthetic input use explicit user-mediated desktop portals/accessibility APIs; Bunny receives no silent capture or injection permission.
+Hyprland is the primary desktop customization compositor (ADR-031). GNOME/Mutter remains for Safe Shell and transitional Bunny (GNOME). Wayland is default, XWayland is compatibility-only, and X11 fallback is a documented troubleshooting choice rather than an automatic security downgrade. Screen capture, remote desktop, and synthetic input use explicit user-mediated desktop portals/accessibility APIs; Bunny receives no silent capture or injection permission.
 
 ## Bunny Shell desktop layer
 
-Phase 2 retains GNOME/Mutter and adds an image-owned GNOME Shell 50 extension, GTK4 surfaces, desktop/Nautilus integration, private XDG state, and bounded systemd user services. GDM offers Bunny, base GNOME, and Bunny Safe Shell. Safe Shell stops the Bunny target and the extension becomes a no-op.
+Phase 2 originally retained GNOME/Mutter with an image-owned GNOME Shell 50 extension. The customization surface is now Hyprland configs under `shell/components/hyprland/`, with GTK4 surfaces, desktop/Nautilus integration, private XDG state, and bounded systemd user services retained. GDM offers Bunny (Hyprland), Bunny (GNOME), base GNOME, and Bunny Safe Shell. Safe Shell stops the Bunny target and the GNOME extension becomes a no-op.
 
 Launcher intent, workspace metadata, search metadata, settings, terminal proposals, and Bunny Core projections have separate versioned schemas. The shell cannot grant Bunny permissions, mutate a Bunny database, call a generic root command, or claim security evidence it has not observed. System actions still traverse the Phase 1 broker and Polkit. Files, Terminal, Settings, workspaces, update/recovery access, and base GNOME continue without Bunny Core.
 

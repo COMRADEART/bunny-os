@@ -6,10 +6,11 @@
     "common",
     "desktop",
     "shell",
+    "hyprland",
     "installer",
     "applications"
   ],
-  "desktop": "bunny-live-gnome-wayland",
+  "desktop": "bunny-live-hyprland-wayland",
   "imageTypes": [
     "bootc-generic-iso"
   ],

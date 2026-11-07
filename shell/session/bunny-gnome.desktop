@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=Bunny (GNOME)
+Comment=Transitional Bunny Shell on GNOME and Wayland
+Exec=/usr/libexec/bunny-shell-session
+TryExec=/usr/libexec/bunny-shell-session
+Type=Application
+DesktopNames=Bunny;GNOME;
+# Transitional dual-path session. The primary Bunny session is Hyprland
+# (bunny.desktop). Keep this entry so existing GNOME Shell extension work and
+# qualification harnesses remain selectable from GDM.
+# X-GDM-SessionRegisters is deliberately absent — see bunny-safe.desktop.

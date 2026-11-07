@@ -2,7 +2,7 @@
 
 Bunny OS is an independently branded, Linux-based operating-system layer for the existing Bunny platform. Linux remains the kernel, systemd remains the lifecycle authority, and Fedora supplies the maintained hardware/userspace base. Bunny is an application and system-intelligence layer; it is not a kernel, init system, driver stack, or generic root facility.
 
-Phase 1 selected Fedora 44 bootc, GNOME on Wayland, SELinux, firewalld, a versioned local integration contract, a narrowly scoped privileged broker, signed-manifest update scaffolding, conventional recovery, and unified OSBuild `image-builder` QCOW2 definitions. Phase 2 layers Bunny Shell on GNOME 50: selectable normal/safe sessions, a typed launcher, project workspaces, private desktop search, task/plan/approval projections, Bunny-aware command proposals, settings/privacy surfaces, original visual identity, and bounded user services.
+Phase 1 selected Fedora 44 bootc, GNOME on Wayland, SELinux, firewalld, a versioned local integration contract, a narrowly scoped privileged broker, signed-manifest update scaffolding, conventional recovery, and unified OSBuild `image-builder` QCOW2 definitions. Phase 2 layers Bunny Shell on that foundation. **Desktop customization now uses Hyprland** (ADR-031 / `docs/HYPRLAND.md`), with GNOME retained for Safe Shell and a transitional Bunny (GNOME) session: selectable sessions, a typed launcher, project workspaces, private desktop search, task/plan/approval projections, Bunny-aware command proposals, settings/privacy surfaces, original visual identity, and bounded user services.
 
 The current checkout has source definitions and passing host gates, but this Windows host has no Podman, unified `image-builder`, Linux systemd, or QEMU/KVM. No Phase 1 or Phase 2 disk artifact, graphical boot, VM interaction, or hardware result is claimed. The signed upstream Bunny Linux artifact also remains unavailable, so Bunny/Core end-to-end surfaces correctly degrade to unavailable.
 
@@ -113,7 +113,7 @@ Release builds additionally require `BUNNY_RELEASE_BUILD=1`, a digest-pinned `BU
 - `systemd/`, `config/`, `selinux/`: service, policy, firewall, sysctl, and MAC inputs.
 - `tools/bunny-os/`: conventional management CLI and local hardware inventory.
 - `schemas/`: OS contract, update manifest, and Bunny artifact schemas.
-- `shell/`: Bunny Shell services, schemas, GNOME integration, sessions, themes, icons, and wallpapers.
+- `shell/`: Bunny Shell services, schemas, Hyprland customization configs, GNOME integration, sessions, themes, icons, and wallpapers.
 - `tests/`: host tests plus shell/image/boot/VM fixtures and procedures.
 - `demos/01-os-foundation/`: repeatable Phase 1 demonstrations.
 - `demos/02-bunny-shell/`: Phase 2 demonstrations and expected degraded/full behavior.

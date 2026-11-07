@@ -10,7 +10,10 @@ from bunny_shell.core_state import shell_status
 class ShellTests(unittest.TestCase):
     def test_login_sessions_retain_bunny_and_safe_choices(self) -> None:
         self.assertTrue((ROOT / "shell/session/bunny.desktop").is_file())
+        self.assertTrue((ROOT / "shell/session/bunny-gnome.desktop").is_file())
         self.assertTrue((ROOT / "shell/session/bunny-safe.desktop").is_file())
+        bunny = (ROOT / "shell/session/bunny.desktop").read_text(encoding="utf-8")
+        self.assertIn("bunny-hyprland-session", bunny)
 
     def test_safe_shell_stops_bunny_target(self) -> None:
         source = (ROOT / "shell/session/bunny-shell-session.py").read_text(encoding="utf-8")

@@ -1,14 +1,10 @@
 [Desktop Entry]
 Name=Bunny
-Comment=Bunny Shell on GNOME and Wayland
-Exec=/usr/libexec/bunny-shell-session
-TryExec=/usr/libexec/bunny-shell-session
+Comment=Bunny Shell on Hyprland — the desktop customization compositor
+Exec=/usr/libexec/bunny-hyprland-session
+TryExec=/usr/libexec/bunny-hyprland-session
 Type=Application
-DesktopNames=Bunny;GNOME;
-# X-GDM-SessionRegisters is deliberately absent. The wrapper execs
-# gnome-session --session=gnome, and that session never registers with
-# GDM: with the flag set, GDM waited for a registration that never came,
-# kept the greeter session alive (and its whole bunny unit family with
-# it) for the life of every login. Measured on the Phase 3 machine:
-# greeter session c1 present at the end of every Bunny-session boot,
-# gone the boot after this flag was removed.
+DesktopNames=Bunny;Hyprland;
+# X-GDM-SessionRegisters is deliberately absent. Hyprland does not register a
+# GNOME-style session with GDM; with the flag set GDM waited for a registration
+# that never came (measured on the GNOME wrapper path; keep the same rule here).
