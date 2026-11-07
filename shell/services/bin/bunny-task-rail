@@ -1,0 +1,75 @@
+#!/usr/bin/python3
+# SPDX-FileCopyrightText: 2026 ComradeArt
+# SPDX-License-Identifier: GPL-3.0-or-later
+"""Open the Adaptive Hybrid task rail (Focus/Studio) on Hyprland.
+
+Reads Companion presentation through the authenticated local IPC client.
+Does not start a second runtime or invent task progress.
+"""
+
+from __future__ import annotations
+
+from pathlib import Path
+import sys
+
+system = Path("/usr/lib/bunny-shell")
+sys.path.insert(0, str(system if system.exists() else Path(__file__).resolve().parents[1]))
+
+# Companion package lives under /usr/lib/bunny-os/python when installed.
+_candidates = [Path("/usr/lib/bunny-os/python")]
+_here = Path(__file__).resolve()
+if len(_here.parents) > 3:
+    _candidates.append(_here.parents[3])
+for _candidate in _candidates:
+    if _candidate.is_dir() and str(_candidate) not in sys.path:
+        sys.path.insert(0, str(_candidate))
+
+
+def main(argv: list[str] | None = None) -> int:
+    arguments = list(sys.argv[1:] if argv is None else argv)
+    from bunny_shell.adaptive_cli import load_state
+    from bunny_shell.task_rail_runtime import TaskRailRuntime
+
+    layout_state = load_state()
+    runtime = TaskRailRuntime(layout_state=layout_state)
+
+    if arguments and arguments[0] == "model":
+        import json
+
+        # Headless model dump for tests / Waybar consumers.
+        runtime.client = None
+        runtime.disconnected = True
+        runtime.connection_error = "model-only (no live Companion attach)"
+        runtime.set_layout(layout_state.layout)
+        print(json.dumps(runtime.surface_model(), indent=2, sort_keys=True))
+        return 0
+
+    if arguments and arguments[0] == "tree":
+        import json
+
+        from bunny_shell.task_rail_gtk import build_accessible_tree
+
+        runtime.client = None
+        runtime.set_layout(layout_state.layout or "focus")
+        if runtime.layout_state.layout == "desktop":
+            runtime.set_layout("focus")
+        print(json.dumps(build_accessible_tree(runtime.surface_model()), indent=2))
+        return 0
+
+    # Live path: attach Companion when the socket exists.
+    try:
+        from companion.protocol import CompanionClient, default_endpoint_path
+
+        client = CompanionClient(default_endpoint_path())
+        runtime.client = client
+    except Exception as exc:  # noqa: BLE001
+        print(f"bunny-task-rail: Companion client unavailable ({exc})", file=sys.stderr)
+        runtime.client = None
+
+    from bunny_shell.task_rail_gtk import run_task_rail_window
+
+    return run_task_rail_window(runtime)
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

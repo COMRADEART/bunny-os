@@ -6,6 +6,8 @@
 **Repository:** [COMRADEART/bunny-os](https://github.com/COMRADEART/bunny-os)  
 **Read-only design baseline:** `main` at `22e970d096d4867f986933fc86fb6768631fc30d` (11 September 2026)
 
+> **Primary-session update (2026-11-07):** ADR-031 and project preference select **Hyprland** as the primary Bunny customization compositor. Safe Shell and transitional `bunny-gnome` remain GNOME. Layout, rail, a11y, and security invariants in this Spec still apply. See `docs/ADAPTIVE_HYBRID_HYPRLAND_RECONCILIATION.md`.
+
 ## 1. Decision and intended outcome
 
 Bunny OS will use an **adaptive hybrid desktop**: a conventional, fully usable Linux desktop with a task-centered AI workspace and a responsive humanoid companion. The user can move between ordinary applications, an expanded agent workspace, and a focused creation canvas without changing the operating system or task authority. A task continues across layout transitions, companion renderer degradation, UI restarts, model unavailability, and supported service recovery.

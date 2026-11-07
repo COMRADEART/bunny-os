@@ -48,7 +48,7 @@ Desktop / Focus / Studio are presentation layouts on the **Hyprland** primary se
 | Waybar indicator | `custom/bunny-layout` in `waybar/config.jsonc` |
 | Contract | `docs/ADAPTIVE_HYBRID_INTERACTION_CONTRACT.md` |
 
-`bunny-adaptive-layout set|cycle --apply` runs `hyprctl keyword` for gaps when available; without a live Hyprland session that apply step is **NOT_RUN**, not a fake PASS. Absolute window placement is not claimed.
+`bunny-adaptive-layout set|cycle --apply` runs `hyprctl keyword` for gaps when available and syncs the GTK task rail (`bunny-task-rail`) for Focus/Studio (hidden on Desktop). Without a live Hyprland session / display that apply step is **NOT_RUN**, not a fake PASS. Absolute window placement is not claimed. See M1R: `docs/M1R_HYPRLAND_LIVE_INTEGRATION.md`.
 
 ## Open product decisions
 

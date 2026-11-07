@@ -50,6 +50,63 @@ def _screen_from_args(args: argparse.Namespace) -> ScreenRect:
     return ScreenRect(width=int(args.width), height=int(args.height))
 
 
+def _sync_task_rail_consumer(layout: str, *, dry_run: bool) -> dict[str, Any]:
+    """Show or hide the GTK task rail for Focus/Studio vs Desktop.
+
+    Desktop hides the rail. Focus/Studio launch ``bunny-task-rail`` when a
+    display is available. Without a display or binary, status is NOT_RUN.
+    """
+    layout = normalise_layout(layout)
+    binary = shutil.which("bunny-task-rail")
+    display = os.environ.get("WAYLAND_DISPLAY") or os.environ.get("DISPLAY") or ""
+    result: dict[str, Any] = {
+        "layout": layout,
+        "binary": binary or "",
+        "display": display,
+        "action": "hide" if layout == "desktop" else "show",
+        "status": "DRY_RUN" if dry_run else "NOT_RUN",
+    }
+    if dry_run:
+        return result
+    if layout == "desktop":
+        # Best-effort close of an existing rail window via hyprctl when present.
+        hyprctl = shutil.which("hyprctl")
+        if hyprctl:
+            subprocess.run(
+                [hyprctl, "clients", "-j"],
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+            # Closing by class is optional; missing clients are not failures.
+            closed = subprocess.run(
+                [hyprctl, "dispatch", "closewindow", "class:^(bunny-task-rail)$"],
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+            result["status"] = "APPLIED" if closed.returncode == 0 else "NOT_RUN"
+            result["returncode"] = closed.returncode
+        else:
+            result["reason"] = "hyprctl absent; Desktop layout state saved only"
+        return result
+    if not binary:
+        result["reason"] = "bunny-task-rail not on PATH"
+        return result
+    if not display:
+        result["reason"] = "no WAYLAND_DISPLAY/DISPLAY; GTK rail NOT_RUN"
+        return result
+    launched = subprocess.Popen(  # noqa: S603 - fixed image-owned binary
+        [binary],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        start_new_session=True,
+    )
+    result["status"] = "APPLIED"
+    result["pid"] = launched.pid
+    return result
+
+
 def _maybe_apply_hyprland(plan: dict[str, Any], *, dry_run: bool) -> dict[str, Any]:
     """Apply the supported keyword subset when hyprctl exists; else NOT_RUN."""
     hyprctl = shutil.which("hyprctl")
@@ -58,14 +115,19 @@ def _maybe_apply_hyprland(plan: dict[str, Any], *, dry_run: bool) -> dict[str, A
         "applied": [],
         "skipped": [],
         "status": "DRY_RUN" if dry_run else "NOT_RUN",
+        "taskRail": {},
     }
     if dry_run:
         result["skipped"] = [item for item in plan.get("supported", [])]
+        result["taskRail"] = _sync_task_rail_consumer(str(plan.get("layout") or "desktop"), dry_run=True)
         return result
     if not hyprctl:
         result["skipped"] = list(plan.get("supported", []))
         result["status"] = "NOT_RUN"
         result["reason"] = "hyprctl not on PATH (host without Hyprland session)"
+        result["taskRail"] = _sync_task_rail_consumer(
+            str(plan.get("layout") or "desktop"), dry_run=False
+        )
         return result
 
     applied: list[dict[str, Any]] = []
@@ -92,6 +154,9 @@ def _maybe_apply_hyprland(plan: dict[str, Any], *, dry_run: bool) -> dict[str, A
     result["applied"] = applied
     result["skipped"] = skipped
     result["status"] = "APPLIED" if applied else "NOT_RUN"
+    result["taskRail"] = _sync_task_rail_consumer(
+        str(plan.get("layout") or "desktop"), dry_run=False
+    )
     return result
 
 
