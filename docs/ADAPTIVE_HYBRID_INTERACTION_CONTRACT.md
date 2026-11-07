@@ -3,7 +3,9 @@
 **Status:** Source contract for Hyprland-primary Bunny sessions  
 **Compositor:** Hyprland (`BUNNY_DESKTOP_COMPOSITOR=hyprland`); GNOME remains for Safe Shell and transitional `bunny-gnome`  
 **Design authority:** `docs/Bunny_OS_2_Adaptive_Hybrid_Spec.md`  
-**Task truth:** `CompanionRuntime` + `PresentationProjector` only
+**Compositor reconciliation:** `docs/ADAPTIVE_HYBRID_HYPRLAND_RECONCILIATION.md` (Spec §10.1 primary session superseded by ADR-031)  
+**Task truth:** `CompanionRuntime` + `PresentationProjector` only  
+**Live rail:** `bunny-task-rail` ← `TaskRailRuntime` ← `get_presentation_state` (Focus/Studio); Desktop hides
 
 ## Layouts
 
