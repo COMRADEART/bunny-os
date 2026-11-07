@@ -69,6 +69,22 @@ def diagnose(document: dict) -> str:
     for number in (18, 19, 20):
         step = steps.get(number, {})
         lines.append(f"step {number}: presentation={step.get('presentation')!r} ok={step.get('ok')!r}")
+    # Step 24's evidence is the whole of a "task never restarted" failure.
+    # Without it the message only printed steps 17-21 — exactly what the
+    # Gate-state flake on main@cf3c333 showed, and why the investigation
+    # could not see whether before/after diverged or health/transport failed.
+    twenty_four = steps.get(24, {})
+    lines.append(
+        "step 24: ok={ok!r} healthOk={health!r} transportFault={fault!r} "
+        "runningTasks={running!r}".format(
+            ok=twenty_four.get("ok"),
+            health=twenty_four.get("healthOk"),
+            fault=twenty_four.get("transportFault"),
+            running=twenty_four.get("runningTasks"),
+        )
+    )
+    lines.append(f"  before: {twenty_four.get('before')!r}")
+    lines.append(f"  after:  {twenty_four.get('after')!r}")
     return "\n".join(lines)
 
 
@@ -245,6 +261,23 @@ class VerticalSliceAndPerformanceTests(unittest.TestCase):
         self.assertFalse(document["gtkWidgetsExercised"])
         for step in document["steps"]:
             self.assertIn(step.get("ok"), (True, None))
+        steps = {item["step"]: item for item in document["steps"]}
+        # The character slice pins voice/speech/agents off — same isolation
+        # boundary the desktop slice uses — so suite load cannot dress a
+        # gateway hiccup as a task restart at step 24.
+        self.assertEqual(steps[1].get("voiceEnabled"), False)
+        self.assertEqual(steps[1].get("speechEnabled"), False)
+        self.assertEqual(steps[1].get("agentsEnabled"), False)
+        self.assertEqual(steps[24]["before"], steps[24]["after"])
+        self.assertEqual(steps[24]["after"]["state"], "completed")
+        self.assertTrue(steps[24].get("healthOk"))
+        self.assertFalse(steps[24].get("transportFault"))
+        # diagnose must name step 24's before/after; a Gate-state flake that
+        # only printed steps 17-21 was otherwise uninvestigable.
+        message = diagnose(document)
+        self.assertIn("step 24:", message)
+        self.assertIn("before:", message)
+        self.assertIn("after:", message)
 
     def test_the_slice_reports_the_shipped_3d_renderer_truthfully(self) -> None:
         """The 3D renderer ships; a slice that does not exercise it says so.

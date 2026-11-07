@@ -373,16 +373,34 @@ def run_character_slice(root: Path) -> CharacterSliceReport:
     endpoint = root / "runtime" / "runtime.sock"
 
     # 1. Start the canonical companion service.
+    #
+    # Voice, speech input and agent providers are off on purpose. This slice
+    # asks about the character renderer and the task record; those three
+    # subsystems start workers that publish into ``get_presentation_state`` and
+    # contend for the same store under a full suite. The desktop slice already
+    # pins the same boundary for the same reason. Leaving them on is how a
+    # host-load flake arrives dressed as "the task restarted" at step 24 —
+    # ``before`` held a presentation summary from earlier, ``after`` re-read
+    # through a busy gateway, and the two disagreed without the renderer
+    # having touched the task.
     service = CompanionService(ServiceOptions(
         # Longer than the slice's own answering deadline, so the loop always
         # wins the race rather than the runtime's consent lapsing underneath it.
         root=root, endpoint=endpoint, machine="laptop", consent_wait_seconds=_WAIT * 3,
+        voice_enabled=False,
+        speech_enabled=False,
+        agents_enabled=False,
     )).start()
     presenter: CharacterPresenter | None = None
     clock = _SliceClock()
     try:
-        report.record(1, "start the canonical companion service", True,
-                      endpoint=service.server.describe()["endpoint"])
+        report.record(
+            1, "start the canonical companion service", True,
+            endpoint=service.server.describe()["endpoint"],
+            voiceEnabled=False,
+            speechEnabled=False,
+            agentsEnabled=False,
+        )
 
         # 2. Start the client. The window's behaviour without its widgets.
         model = CompanionViewModel(client=CompanionClient(endpoint, timeout=15.0))
@@ -526,11 +544,19 @@ def run_character_slice(root: Path) -> CharacterSliceReport:
             transportFault=_transport_fault(model),
         )
 
+        # Capture the task the same way step 24 will re-read it: one fresh
+        # ``get_task`` and one fresh ``refresh``, taken immediately before the
+        # renderer is put under pressure. The earlier ``state`` binding is from
+        # before lip-sync and the success frame; comparing that held summary to
+        # a later refresh is how a gateway hiccup under suite load fails this
+        # step while leaving 17-23 green and the task itself untouched.
+        before_presentation = model.refresh()
         before = {
             "taskId": task_id,
             "state": model.client.get_task(task_id)["task"]["state"],
-            "resultSummary": state.result_summary,
+            "resultSummary": before_presentation.result_summary,
         }
+        before_transport = _transport_fault(model)
 
         # 17-21. Pressure, the two degradations, and hysteretic recovery —
         # the *capability selector's* behaviour, asked of a healthy renderer.
@@ -601,18 +627,26 @@ def run_character_slice(root: Path) -> CharacterSliceReport:
         )
 
         # 24. And none of that touched the task.
+        after_presentation = model.refresh()
+        after_transport = _transport_fault(model)
         after = {
             "taskId": model.task_id,
             "state": model.client.get_task(task_id)["task"]["state"],
-            "resultSummary": model.refresh().result_summary,
+            "resultSummary": after_presentation.result_summary,
         }
         health = model.client.health()
+        transport = after_transport or before_transport
         report.record(
             24, "verify the task never restarted or was cancelled",
-            before == after and after["state"] == "completed" and bool(health.get("ok")),
+            before == after
+            and after["state"] == "completed"
+            and bool(health.get("ok"))
+            and not transport,
             before=before,
             after=after,
             runningTasks=list(health.get("runningTasks", [])),
+            transportFault=transport or None,
+            healthOk=bool(health.get("ok")),
         )
     except CompanionClientError as exc:  # pragma: no cover - reported, not raised
         report.record(0, "the slice reached the runtime", False, error=str(exc))
