@@ -1,0 +1,30 @@
+/* SPDX-FileCopyrightText: 2026 ComradeArt
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ *
+ * Minimal Waybar chrome using Bunny dark tokens. Not a full design-system
+ * port — intentional scaffold until product theme decisions land.
+ */
+
+* {
+  font-family: system-ui, sans-serif;
+  font-size: 12px;
+  color: #F7F8FA;
+}
+
+window#waybar {
+  background: rgba(17, 21, 32, 0.94);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+#workspaces button.active {
+  background: rgba(124, 58, 237, 0.35);
+  border-radius: 8px;
+}
+
+#clock,
+#pulseaudio,
+#network,
+#battery,
+#tray {
+  padding: 0 10px;
+}

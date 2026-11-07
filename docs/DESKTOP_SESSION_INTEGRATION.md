@@ -4,8 +4,10 @@ GNOME/GDM provides multi-user sessions, lock/logout, power events, themes, notif
 
 Suspend/resume, lock/logout, tray behavior and power events must be exercised with the actual signed Tauri Linux artifact. Screen capture and input injection are not implicit desktop integration features and require visible OS-mediated authorization.
 
-## Phase 2 session choices
+## Phase 2 session choices (updated for Hyprland)
 
-`/usr/share/wayland-sessions/bunny.desktop` starts the ordinary GNOME session after exporting `BUNNY_SHELL_MODE=normal` and starting `bunny-shell.target`. The image-owned GNOME 50 extension adds only fixed Bunny entry points. `/usr/share/wayland-sessions/bunny-safe.desktop` exports safe mode, stops the Bunny target, and the extension becomes a no-op. Base GNOME remains installed and selectable.
+`/usr/share/wayland-sessions/bunny.desktop` is the primary session: it runs `/usr/libexec/bunny-hyprland-session`, which exports `BUNNY_SHELL_MODE=normal`, starts `bunny-shell.target`, and executes Hyprland with `/usr/share/bunny-shell/hyprland/hyprland.conf`. AccountsService templates still seed `Session=bunny`.
 
-The shell uses user-owned XDG config/state/cache/runtime paths and systemd user isolation. It cannot access another user's state or portals. GDM login, multi-account isolation, logout, lock, suspend/resume, extension crash recovery, and Safe Shell are specified but remain VM tests.
+`/usr/share/wayland-sessions/bunny-gnome.desktop` retains the transitional GNOME 50 extension path via `/usr/libexec/bunny-shell-session`. `/usr/share/wayland-sessions/bunny-safe.desktop` exports safe mode, stops the Bunny target, and the GNOME extension becomes a no-op. Base GNOME remains installed and selectable.
+
+The shell uses user-owned XDG config/state/cache/runtime paths and systemd user isolation. It cannot access another user's state or portals. GDM login, multi-account isolation, logout, lock, suspend/resume, Hyprland crash recovery, extension crash recovery, and Safe Shell are specified but remain VM tests. See `docs/HYPRLAND.md`.

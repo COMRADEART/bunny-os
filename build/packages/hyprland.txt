@@ -1,0 +1,29 @@
+# Bunny desktop customization compositor — Hyprland on Wayland.
+#
+# GNOME/Mutter remains packaged via desktop.txt and shell.txt for Bunny Safe
+# Shell and the transitional bunny-gnome session. Hyprland is the image-owned
+# customization surface for the primary Bunny session (see ADR-031).
+#
+# Package names follow Fedora's hyprland stack. Hermetic builds must re-run
+# `make resolve-package-lock` (and materialise the snapshot) after this set
+# changes so package-lock.json and the retained snapshot include these RPMs.
+
+# category: compositor
+hyprland
+xdg-desktop-portal-hyprland
+xdg-desktop-portal-gtk
+
+# category: session companions used by the image-owned Hyprland config
+hyprpaper
+hypridle
+hyprlock
+waybar
+wofi
+wl-clipboard
+grim
+slurp
+
+# category: optional helpers referenced by keybinds.conf
+# brightnessctl is used for XF86MonBrightness*; wireplumber provides wpctl
+# via the desktop audio stack already declared in desktop.txt.
+brightnessctl

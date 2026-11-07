@@ -6,10 +6,11 @@
     "common",
     "desktop",
     "shell",
+    "hyprland",
     "developer",
     "companion-runtime"
   ],
-  "desktop": "bunny-gnome-wayland",
+  "desktop": "bunny-hyprland-wayland",
   "imageTypes": [
     "qcow2"
   ],
