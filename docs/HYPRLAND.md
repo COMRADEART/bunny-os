@@ -35,12 +35,28 @@ Installed destination: `/usr/share/bunny-shell/hyprland/`. The wrapper starts Hy
 
 Adding the hyprland package set updates `package-lock.json` `namedPackages`. A hermetic image build still needs `make resolve-package-lock` (and snapshot materialisation) so NEVRA entries and RPMs exist for the new names.
 
+## Adaptive Hybrid layouts (M1)
+
+Desktop / Focus / Studio are presentation layouts on the **Hyprland** primary session:
+
+| Piece | Path |
+|---|---|
+| Geometry + retained task cursor | `shell/services/bunny_shell/adaptive_layout.py` |
+| Task rail projection | `shell/services/bunny_shell/task_rail.py` |
+| CLI | `bunny-adaptive-layout` (`shell/services/bin/bunny-adaptive-layout`) |
+| Keybinds | `shell/components/hyprland/keybinds.conf` |
+| Waybar indicator | `custom/bunny-layout` in `waybar/config.jsonc` |
+| Contract | `docs/ADAPTIVE_HYBRID_INTERACTION_CONTRACT.md` |
+
+`bunny-adaptive-layout set|cycle --apply` runs `hyprctl keyword` for gaps when available; without a live Hyprland session that apply step is **NOT_RUN**, not a fake PASS. Absolute window placement is not claimed.
+
 ## Open product decisions
 
 These are intentionally not locked by this scaffolding:
 
 - Final accent/theme (light vs nocturne vs story themes from `shell/themes`)
-- Full keybind map (companion, trust, launcher parity with the GNOME extension)
-- Whether Waybar is permanent or replaced by a Bunny chrome surface
+- Full Trust/companion keybind parity with the historical GNOME extension chrome
+- Whether Waybar remains permanent or is replaced by a denser Bunny chrome surface
 - Raster wallpaper pipeline (SVG may not load in every hyprpaper build)
 - When to retire the transitional `bunny-gnome` session
+- Spec text reconciliation: Adaptive Hybrid Spec still names GNOME/Mutter while ADR-031 + preference select Hyprland

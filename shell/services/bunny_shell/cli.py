@@ -211,6 +211,10 @@ def main(program: str | None = None, argv: list[str] | None = None) -> int:
             return _terminal(arguments)
         if name == "bunny-launcher":
             return _launcher(arguments)
+        if name == "bunny-adaptive-layout":
+            from .adaptive_cli import run as run_adaptive
+
+            return run_adaptive(arguments)
         if name in {
             "bunny-approvals", "bunny-tasks", "bunny-plans", "bunny-project",
             "bunny-command", "bunny-privacy", "bunny-notifications", "bunny-quick-settings",

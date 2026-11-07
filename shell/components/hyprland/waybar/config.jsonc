@@ -2,7 +2,7 @@
   "layer": "top",
   "position": "top",
   "height": 36,
-  "modules-left": ["hyprland/workspaces", "hyprland/window"],
+  "modules-left": ["hyprland/workspaces", "custom/bunny-layout", "hyprland/window"],
   "modules-center": ["clock"],
   "modules-right": ["pulseaudio", "network", "battery", "tray"],
   "clock": {
@@ -12,6 +12,13 @@
   "hyprland/workspaces": {
     "disable-scroll": true,
     "all-outputs": true
+  },
+  "custom/bunny-layout": {
+    "exec": "bunny-adaptive-layout waybar",
+    "return-type": "json",
+    "interval": 2,
+    "on-click": "bunny-adaptive-layout cycle --apply",
+    "tooltip": true
   },
   "pulseaudio": {
     "format": "{volume}%",
