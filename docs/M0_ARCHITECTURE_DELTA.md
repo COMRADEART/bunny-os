@@ -4,8 +4,9 @@
 
 **Date:** 2026-11-07  
 **Auditor host:** Ubuntu 24.04 cloud agent (`python3` only; `python` absent)  
-**Design intent source:** Adaptive Hybrid master prompt + attached concept UI / architecture diagram (file `Bunny_OS_2_Adaptive_Hybrid_Spec.md` was **not present** in the checkout; treat attached images + this prompt as design intent, **current source as authority**)  
-**Earlier design baseline SHA named in prompt:** `22e970d096d4867f986933fc86fb6768631fc30d` (2026-09-11)
+**Design authority:** [`docs/Bunny_OS_2_Adaptive_Hybrid_Spec.md`](Bunny_OS_2_Adaptive_Hybrid_Spec.md) (ingested 2026-11-07 from owner upload; status *proposed design specification*, supplements source — does not supersede security/release/licensing)  
+**Also consulted:** Adaptive Hybrid master prompt + concept UI / architecture images (non-authoritative visual intent only)  
+**Earlier design baseline SHA named in spec/prompt:** `22e970d096d4867f986933fc86fb6768631fc30d` (2026-09-11)
 
 ---
 
@@ -52,20 +53,21 @@ These states are **not** promoted by M0. Historical evidence remains authoritati
 
 ## 3. Actual vs proposed component map
 
-Proposed Adaptive Hybrid stack (from attached architecture diagram + prompt):
+### 3.0 Spec reconciliation (design authority vs concept images)
+
+[`Bunny_OS_2_Adaptive_Hybrid_Spec.md`](Bunny_OS_2_Adaptive_Hybrid_Spec.md) §3.1 / §10 is the design proposal. It **chooses** Fedora 44 bootc + GNOME/Mutter, existing **Python** CompanionRuntime, one canonical event store, existing 2D/3D renderer path, and four accessible token families. Owner sign-off is required before replacing GNOME/Mutter, moving core runtime to Rust, or changing the default humanoid identity (§9.2 / §10.4).
+
+An earlier concept architecture image labeled “Bunny Core — Rust.” That image is **not** design authority. Live source and the written spec both defer any Rust Core rewrite. M0 defers to **current source + written Adaptive Hybrid Spec**.
+
+Spec-proposed Adaptive Hybrid stack (§3.1):
 
 ```text
-Bunny Shell + Humanoid
-        ↕
-State API + Event Bus
-        ↕
-Bunny Core — Rust
-   ↙              ↘
-AI Router +      Permission & Task Engine
-Voice + Memory         ↓
-                 Sandboxed Apps and Tools
-                         ↓
-              Fedora bootc + Linux Services
+GNOME Bunny Shell and GTK clients
+        → Versioned local UI and event projection
+        → Canonical CompanionRuntime and task store
+           ├→ Capability router and policy
+           ├→ Executor + observer-only reviewers → tools/portals → broker → Fedora/GNOME
+           └→ Character and voice presentation adapters → UI projection
 ```
 
 **Actual `main@22e970d0` stack (source authority):**
@@ -86,15 +88,15 @@ bunny-system-broker (peer-verified UDS) + Polkit + portals + SELinux
 Fedora 44 bootc + systemd + GNOME/Mutter Wayland + GDM (+ Bunny Safe Shell)
 ```
 
-| Proposed concept | Actual authority | Delta |
+| Spec / proposed concept | Actual authority | Delta |
 |---|---|---|
 | Bunny Shell + Humanoid | `shell/components/gnome-shell-extension/`, `companion/gtk_shell.py`, `companion/character/` | **Reuse** — polish layouts; do not rewrite |
-| State API + Event Bus | `companion/protocol.py` + `companion/events.py` + `companion/store.py` | **Reuse** — no second bus |
-| Bunny Core — Rust | Python `companion/runtime.py` + services | **Defer** — no Rust Core without profiling + owner agreement |
-| AI Router + Voice + Memory | `CompanionGateway`, `companion/speech/`, `companion/voice/`, `companion/memory*`, agent adapters | **Reuse** as versioned adapters; push-to-talk default |
-| Permission & Task Engine | `companion/approvals.py`, `capability/`, Trust surfaces | **Reuse** — no UI-owned permission switch |
-| Sandboxed Apps and Tools | capsules / ToolBroker / desktop actions | **Reuse** |
-| Fedora bootc + Linux | Phase 1 image + broker | **Preserve** |
+| Versioned UI / event projection | `companion/protocol.py` + `companion/presentation.py` | **Reuse** — no second bus |
+| CompanionRuntime (Python; Rust not chosen) | `companion/runtime.py` + services | **Keep Python**; Rust only with owner sign-off after profiling |
+| Character / voice adapters | `CompanionGateway`, `companion/speech/`, `companion/voice/`, `companion/character/` | **Reuse**; push-to-talk default |
+| Capability + approvals | `companion/approvals.py`, `capability/`, Trust surfaces | **Reuse** — no UI-owned permission switch |
+| Tools / portals / broker | capsules, ToolBroker, desktop actions, broker `METHODS` | **Reuse** |
+| Fedora bootc + GNOME | Phase 1 image + sessions | **Preserve**; Hyprland PR #62 conflicts with spec §10.1 |
 
 **UI layout gap vs Adaptive Hybrid:**
 
@@ -220,8 +222,8 @@ Legend: **Keep** = preserve contracts; **Extend** = Adaptive Hybrid work attache
 | Spoken STT/TTS/model assets not in image | Voice e2e remains **NOT_RUN** |
 | Stable **NO-GO** / pilots **BLOCKED** | Product polish PRs must not claim release readiness |
 | Open Hyprland PR #62 vs GNOME Adaptive Hybrid | Owner decision before dual-path chrome |
-| Companion motion token range `[300,420]` vs prompt `300–700` | Reconcile in M2 token change with tests |
-| Concept UI shows different humanoid styling than default package | Character identity changes need **owner approval** (M3) |
+| Companion motion token range `[300,420]` vs spec §5.1 `300–700` | Reconcile in M2 token change with tests |
+| Concept UI shows different humanoid styling than default package | Spec §5.2 / §10.4: keep `bunny-humanoid-1` identity until owner-approved revision |
 
 ---
 
@@ -293,9 +295,10 @@ Revert the PR; `skeleton`/`full` remain; Safe Shell / base GNOME unchanged; no b
 
 | Field | Value |
 |---|---|
-| **Verdict** | `PARTIAL` — M0 complete; Adaptive Hybrid implementation **not** started; release remains independently **NO-GO** |
+| **Verdict** | `PARTIAL` — M0 complete per spec §9 exit (“read-only architecture delta and baseline measurement plan”); Adaptive Hybrid implementation **not** started; release remains independently **NO-GO** |
 | **Repo/branch** | Base `main@22e970d096d4867f986933fc86fb6768631fc30d`; docs-only head on `cursor/m0-adaptive-hybrid-delta-ec9e` |
-| **Implemented** | Architecture delta + reuse matrix + backlog only |
+| **Design authority filed** | `docs/Bunny_OS_2_Adaptive_Hybrid_Spec.md` |
+| **Implemented** | Architecture delta + reuse matrix + backlog only; no M1+ runtime changes |
 | **Validated** | audit/validate/test/test-shell/test-desktop-security PASS; demo10 host PASS with guest/screenshots NOT_RUN |
 | **Security / a11y** | No policy changes; Trust AT-SPI names untouched; desktop-security 53 PASS |
 | **Performance** | **NOT_MEASURED** (thresholds remain acceptance targets) |
