@@ -5,11 +5,12 @@
 
 ## Verdict
 
-**PARTIAL** — host source integration and unit evidence PASS; live Hyprland session, guest AT-SPI, and hardware remain **NOT_RUN** on this cloud host. Release gates unchanged (**NO-GO** / pilots **BLOCKED**).
+**PARTIAL** — host source integration, unit evidence, and **PR-head CI (23 checks, 0 failures)** PASS; live Hyprland session, guest AT-SPI, and hardware remain **NOT_RUN** on this cloud host. Release gates unchanged (**NO-GO** / pilots **BLOCKED**).
 
 ## Post-merge CI (`f1fa2053`)
 
-Re-checked before PR open: **22 success, 0 failed, 1 skipped** (`full-image-gate`), **0 pending**. Host baseline merge CI is green for available checks. Re-confirm on this PR head before merge.
+- Baseline `f1fa2053`: **22 success, 0 failed, 1 skipped** (`full-image-gate`).
+- PR head `b1813c89`: **all 23 CI checks completed without failures** (subscription `github:ci:branch` on `cursor/m1r-hyprland-live-integration-ec9e`).
 
 ## Implemented
 
